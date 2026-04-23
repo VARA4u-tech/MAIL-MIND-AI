@@ -1,6 +1,29 @@
 import { FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// ─── Shared timing configuration ───
+// Single source of truth for all accordion transitions
+const ACCORDION_EASING: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const ACCORDION_DURATION = 0.5;
+const DETAIL_STAGGER = 0.04;
+const DETAIL_DURATION = 0.28;
+
+const heightTransition = {
+  duration: ACCORDION_DURATION,
+  ease: ACCORDION_EASING,
+};
+
+const opacityTransition = {
+  duration: ACCORDION_DURATION * 0.7,
+  ease: ACCORDION_EASING,
+  delay: 0.03,
+};
+
+const iconTransition = {
+  duration: ACCORDION_DURATION * 0.8,
+  ease: ACCORDION_EASING,
+};
+
 interface Feature {
   number: string;
   title: string;
@@ -84,7 +107,7 @@ const FeatureAccordion: FC = () => {
               </div>
               <motion.span
                 animate={{ rotate: isOpen ? 45 : 0 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                transition={iconTransition}
                 className="text-primary/60 text-base md:text-lg leading-none"
               >
                 ⨁
@@ -97,8 +120,8 @@ const FeatureAccordion: FC = () => {
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{
-                    height: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-                    opacity: { duration: 0.35, ease: "easeOut", delay: 0.05 },
+                    height: heightTransition,
+                    opacity: opacityTransition,
                   }}
                   className="overflow-hidden"
                 >
@@ -108,7 +131,11 @@ const FeatureAccordion: FC = () => {
                         key={j}
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: j * 0.06, ease: "easeOut" }}
+                        transition={{
+                          duration: DETAIL_DURATION,
+                          delay: j * DETAIL_STAGGER,
+                          ease: ACCORDION_EASING,
+                        }}
                         className="font-mono text-[10px] md:text-[11px] text-primary/40 leading-[1.8] tracking-wide"
                       >
                         <span className="text-primary/20 mr-2 select-none">//</span>
