@@ -37,6 +37,7 @@ const HeroSection: FC = () => {
     <section
       ref={ref}
       className="relative h-[100svh] flex items-center justify-center overflow-hidden"
+      data-debug="hero"
     >
       {/* Clip-path masked background layer */}
       <div

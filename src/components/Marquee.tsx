@@ -86,7 +86,7 @@ const MarqueeTrack: FC<{ text: string; direction?: "left" | "right"; speed?: num
 
 const Marquee: FC<MarqueeProps> = ({ text }) => {
   return (
-    <div className="w-full overflow-hidden border-y border-primary/40 py-3 md:py-3.5 select-none">
+    <div className="w-full overflow-hidden border-y border-primary/40 py-3 md:py-3.5 select-none" data-debug="marquee">
       <MarqueeTrack text={text} direction="left" speed={60} />
     </div>
   );

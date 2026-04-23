@@ -88,7 +88,7 @@ const FeatureAccordion: FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto" data-debug="accordion">
       {features.map((feature, i) => {
         const isOpen = openIndex === i;
         return (

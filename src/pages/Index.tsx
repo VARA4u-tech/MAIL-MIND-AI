@@ -3,8 +3,9 @@ import Marquee from "@/components/Marquee";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import FeatureAccordion from "@/components/FeatureAccordion";
 import PropertyDemo from "@/components/PropertyDemo";
+import DebugOverlay from "@/components/DebugOverlay";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 const SubtitleSection = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -74,8 +75,11 @@ const Footer = () => (
 );
 
 const Index = () => {
+  const [debugEnabled, setDebugEnabled] = useState(false);
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      <DebugOverlay enabled={debugEnabled} onToggle={() => setDebugEnabled(v => !v)} />
       <HeroSection />
       <Marquee text="GET REVELO ON FRAMER MARKETPLACE" />
 
