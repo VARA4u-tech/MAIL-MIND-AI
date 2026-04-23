@@ -2,6 +2,7 @@ import HeroSection from "@/components/HeroSection";
 import Marquee from "@/components/Marquee";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import FeatureAccordion from "@/components/FeatureAccordion";
+import PropertyDemo from "@/components/PropertyDemo";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 
@@ -50,35 +51,6 @@ const SubtitleLine = ({ text, progress, range }: { text: string; progress: any; 
       <div className="border-t border-primary/40 w-full mb-2" />
       {text}
     </motion.div>
-  );
-};
-
-const PropertyGrid = () => {
-  const properties = ["POSITION", "SCALE", "BLUR", "SKEW", "OPACITY", "COLOR", "STROKE", "ROTATION"];
-
-  return (
-    <div className="py-24 flex flex-col items-center">
-      <ScrollRevealText
-        className="text-3xl md:text-6xl font-display uppercase max-w-5xl px-4"
-        words={[
-          { text: "PLAY" }, { text: "WITH" },
-        ]}
-      />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-4xl mx-auto px-4">
-        {properties.map((prop, i) => (
-          <motion.div
-            key={prop}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08, duration: 0.5 }}
-            viewport={{ once: true }}
-            className="border border-primary/30 px-6 py-4 text-center font-display text-lg md:text-2xl text-primary hover:bg-primary hover:text-background transition-colors duration-300 cursor-default"
-          >
-            {prop}
-          </motion.div>
-        ))}
-      </div>
-    </div>
   );
 };
 
@@ -158,7 +130,7 @@ const Index = () => {
         </motion.p>
       </section>
 
-      <PropertyGrid />
+      <PropertyDemo />
 
       {/* Easings section */}
       <section className="py-32 px-4">
