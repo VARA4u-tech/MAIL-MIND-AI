@@ -2,20 +2,37 @@ import { FC } from "react";
 
 interface MarqueeProps {
   text: string;
-  icon?: string;
 }
 
-const Marquee: FC<MarqueeProps> = ({ text, icon = "◼" }) => {
-  const items = Array.from({ length: 12 });
+const MarqueeTrack: FC<{ text: string; direction?: "left" | "right" }> = ({
+  text,
+  direction = "left",
+}) => {
+  // Double the items so the second half seamlessly replaces the first
+  const items = Array.from({ length: 20 });
+  const animClass = direction === "left" ? "animate-marquee" : "animate-marquee-reverse";
+
   return (
-    <div className="w-full overflow-hidden border-y border-primary py-3">
-      <div className="animate-marquee flex whitespace-nowrap">
+    <div className="flex overflow-hidden">
+      <div className={`flex shrink-0 ${animClass}`}>
         {items.map((_, i) => (
-          <span key={i} className="mx-6 text-xs font-mono uppercase tracking-[0.3em] text-primary flex items-center gap-4">
-            {icon} {text} ↗
+          <span
+            key={i}
+            className="flex items-center shrink-0 px-4 gap-3 text-[11px] font-mono uppercase tracking-[0.25em] text-primary whitespace-nowrap"
+          >
+            <span className="text-[8px]">◼</span>
+            {text} ↗
           </span>
         ))}
       </div>
+    </div>
+  );
+};
+
+const Marquee: FC<MarqueeProps> = ({ text }) => {
+  return (
+    <div className="w-full overflow-hidden border-y border-primary/60 py-2.5 select-none">
+      <MarqueeTrack text={text} direction="left" />
     </div>
   );
 };
