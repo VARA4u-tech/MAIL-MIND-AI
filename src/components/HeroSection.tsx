@@ -1,9 +1,10 @@
-import { FC, useRef, useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { FC, useRef, useEffect, useState, useMemo } from "react";
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 
 const HeroSection: FC = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [clipValue, setClipValue] = useState("inset(0% 0% 0% 0%)");
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -11,8 +12,22 @@ const HeroSection: FC = () => {
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.92]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const textY = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  // Clip reveal from center outward
-  const clipProgress = useTransform(scrollYProgress, [0, 0.4], [1, 0.85]);
+
+  // Scroll-linked clip-path: reveals from center outward on load,
+  // then closes inward as user scrolls down
+  const clipTop = useTransform(scrollYProgress, [0, 0.6], [0, 18]);
+  const clipRight = useTransform(scrollYProgress, [0, 0.6], [0, 12]);
+  const clipBottom = useTransform(scrollYProgress, [0, 0.6], [0, 22]);
+  const clipLeft = useTransform(scrollYProgress, [0, 0.6], [0, 12]);
+
+  // Sync clip-path to a CSS string
+  useMotionValueEvent(clipTop, "change", () => {
+    const t = clipTop.get();
+    const r = clipRight.get();
+    const b = clipBottom.get();
+    const l = clipLeft.get();
+    setClipValue(`inset(${t}% ${r}% ${b}% ${l}%)`);
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -22,16 +37,34 @@ const HeroSection: FC = () => {
     <section
       ref={ref}
       className="relative h-[100svh] flex items-center justify-center overflow-hidden"
+      data-debug="hero"
     >
-      {/* Background grid pattern */}
+      {/* Clip-path masked background layer */}
       <div
-        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        className="absolute inset-0 pointer-events-none transition-[clip-path] duration-100"
         style={{
-          backgroundImage:
-            "linear-gradient(hsl(0 100% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 100% 50%) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
+          clipPath: clipValue,
+          willChange: "clip-path",
         }}
-      />
+      >
+        {/* Grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "linear-gradient(hsl(0 100% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 100% 50%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        {/* Red glow at center */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(0 100% 50% / 0.06) 0%, transparent 70%)",
+          }}
+        />
+      </div>
 
       {/* Noise overlay */}
       <div
@@ -50,7 +83,7 @@ const HeroSection: FC = () => {
       />
 
       <motion.div
-        style={{ scale, opacity, y: textY }}
+        style={{ scale, opacity, y: textY, clipPath: clipValue }}
         className="relative w-full flex flex-col items-center justify-center px-[1vw]"
       >
         {/* Main title with entrance animation */}
