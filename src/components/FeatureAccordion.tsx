@@ -65,27 +65,27 @@ const FeatureAccordion: FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       {features.map((feature, i) => {
         const isOpen = openIndex === i;
         return (
-          <div key={i} className="border-t border-primary/20">
+          <div key={i} className="border-t border-primary/15">
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}
-              className="w-full flex items-center justify-between py-4 px-0 text-left group cursor-pointer"
+              className="w-full flex items-center justify-between py-5 md:py-6 px-0 text-left group cursor-pointer"
             >
-              <div className="flex items-baseline gap-5">
-                <span className="font-mono text-[10px] text-primary/40 tabular-nums">
+              <div className="flex items-baseline gap-4 md:gap-6">
+                <span className="font-mono text-[9px] md:text-[10px] text-primary/30 tabular-nums">
                   [{feature.number}]
                 </span>
-                <span className="font-mono text-[13px] uppercase tracking-[0.15em] text-primary">
+                <span className="font-mono text-[12px] md:text-[13px] uppercase tracking-[0.18em] text-primary/90">
                   {feature.title}
                 </span>
               </div>
               <motion.span
                 animate={{ rotate: isOpen ? 45 : 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="text-primary text-lg leading-none"
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="text-primary/60 text-base md:text-lg leading-none"
               >
                 ⨁
               </motion.span>
@@ -96,18 +96,24 @@ const FeatureAccordion: FC = () => {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={{
+                    height: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+                    opacity: { duration: 0.35, ease: "easeOut", delay: 0.05 },
+                  }}
                   className="overflow-hidden"
                 >
-                  <div className="pb-5 pl-[52px] pr-8 space-y-2.5">
+                  <div className="pb-6 md:pb-8 pl-[44px] md:pl-[56px] pr-6 md:pr-10 space-y-2">
                     {feature.details.map((detail, j) => (
-                      <p
+                      <motion.p
                         key={j}
-                        className="font-mono text-[11px] text-primary/50 leading-[1.7] tracking-wide"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: j * 0.06, ease: "easeOut" }}
+                        className="font-mono text-[10px] md:text-[11px] text-primary/40 leading-[1.8] tracking-wide"
                       >
-                        <span className="text-primary/25 mr-2 select-none">//</span>
+                        <span className="text-primary/20 mr-2 select-none">//</span>
                         {detail}
-                      </p>
+                      </motion.p>
                     ))}
                   </div>
                 </motion.div>
@@ -116,7 +122,7 @@ const FeatureAccordion: FC = () => {
           </div>
         );
       })}
-      <div className="border-t border-primary/20" />
+      <div className="border-t border-primary/15" />
     </div>
   );
 };
