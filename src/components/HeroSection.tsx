@@ -1,5 +1,20 @@
-import { FC, useRef, useEffect, useState, useMemo } from "react";
+import { FC, useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+
+// ============================================================
+// Hero clip-path keyframe timings — exposed for quick iteration
+// Each stop is [scrollProgress, insetPercent] for top/right/bottom/left.
+// Pattern: REVEAL (open from edges) → HOLD (stay open) → CLOSE (re-mask edges)
+// ============================================================
+export const HERO_CLIP_KEYFRAMES = {
+  // scroll progress stops: start, end-of-reveal, start-of-close, full-close
+  progress: [0, 0.08, 0.45, 0.9] as const,
+  // inset % at each stop, in order: [reveal-start, reveal-end, hold-end, close]
+  top:    [14, 0, 0, 18] as number[],
+  right:  [10, 0, 0, 12] as number[],
+  bottom: [18, 0, 0, 22] as number[],
+  left:   [10, 0, 0, 12] as number[],
+};
 
 const HeroSection: FC = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -13,12 +28,12 @@ const HeroSection: FC = () => {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const textY = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
-  // Scroll-linked clip-path: reveals from center outward on load,
-  // then closes inward as user scrolls down
-  const clipTop = useTransform(scrollYProgress, [0, 0.6], [0, 18]);
-  const clipRight = useTransform(scrollYProgress, [0, 0.6], [0, 12]);
-  const clipBottom = useTransform(scrollYProgress, [0, 0.6], [0, 22]);
-  const clipLeft = useTransform(scrollYProgress, [0, 0.6], [0, 12]);
+  // Keyframed scroll-linked clip-path: reveal → hold → close
+  const K = HERO_CLIP_KEYFRAMES;
+  const clipTop    = useTransform(scrollYProgress, [...K.progress], K.top);
+  const clipRight  = useTransform(scrollYProgress, [...K.progress], K.right);
+  const clipBottom = useTransform(scrollYProgress, [...K.progress], K.bottom);
+  const clipLeft   = useTransform(scrollYProgress, [...K.progress], K.left);
 
   // Sync clip-path to a CSS string
   useMotionValueEvent(clipTop, "change", () => {
