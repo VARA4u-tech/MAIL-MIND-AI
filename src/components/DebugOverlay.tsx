@@ -162,6 +162,95 @@ const DebugOverlay: FC<DebugOverlayProps> = ({ enabled, onToggle }) => {
 
       {enabled && (
         <>
+          {/* Hero background reveal edges — SVG guide lines + numbered callouts */}
+          {edges && (
+            <div className="pointer-events-none fixed inset-0 z-[9996]">
+              <svg
+                width={edges.rect.width}
+                height={edges.rect.height}
+                style={{
+                  position: "absolute",
+                  left: edges.rect.left,
+                  top: edges.rect.top,
+                  overflow: "visible",
+                }}
+              >
+                {/* Hero outer bounds (dashed magenta) */}
+                <rect
+                  x={0.5}
+                  y={0.5}
+                  width={edges.rect.width - 1}
+                  height={edges.rect.height - 1}
+                  fill="none"
+                  stroke="hsl(300 100% 60% / 0.35)"
+                  strokeDasharray="4 4"
+                />
+                {/* Reveal inset rect (solid cyan) */}
+                <rect
+                  x={edges.leftPx}
+                  y={edges.topPx}
+                  width={Math.max(0, edges.rect.width - edges.leftPx - edges.rightPx)}
+                  height={Math.max(0, edges.rect.height - edges.topPx - edges.bottomPx)}
+                  fill="none"
+                  stroke="hsl(180 100% 60% / 0.9)"
+                  strokeWidth={1}
+                />
+                {/* Edge tick lines extending across the hero for distance reading */}
+                {/* top */}
+                <line
+                  x1={0} y1={edges.topPx}
+                  x2={edges.rect.width} y2={edges.topPx}
+                  stroke="hsl(180 100% 60% / 0.35)" strokeDasharray="2 4"
+                />
+                {/* bottom */}
+                <line
+                  x1={0} y1={edges.rect.height - edges.bottomPx}
+                  x2={edges.rect.width} y2={edges.rect.height - edges.bottomPx}
+                  stroke="hsl(180 100% 60% / 0.35)" strokeDasharray="2 4"
+                />
+                {/* left */}
+                <line
+                  x1={edges.leftPx} y1={0}
+                  x2={edges.leftPx} y2={edges.rect.height}
+                  stroke="hsl(180 100% 60% / 0.35)" strokeDasharray="2 4"
+                />
+                {/* right */}
+                <line
+                  x1={edges.rect.width - edges.rightPx} y1={0}
+                  x2={edges.rect.width - edges.rightPx} y2={edges.rect.height}
+                  stroke="hsl(180 100% 60% / 0.35)" strokeDasharray="2 4"
+                />
+              </svg>
+
+              {/* Numbered px callouts for each reveal edge */}
+              {[
+                { n: 5, label: "reveal→top",    px: edges.topPx,    left: edges.rect.left + 12,                              top: edges.rect.top + edges.topPx - 18 },
+                { n: 6, label: "reveal→right",  px: edges.rightPx,  left: edges.rect.right - edges.rightPx + 6,              top: edges.rect.top + 12 },
+                { n: 7, label: "reveal→bottom", px: edges.bottomPx, left: edges.rect.left + 12,                              top: edges.rect.bottom - edges.bottomPx + 4 },
+                { n: 8, label: "reveal→left",   px: edges.leftPx,   left: edges.rect.left + edges.leftPx + 6,                top: edges.rect.top + 12 },
+              ].map((c) => (
+                <div
+                  key={c.n}
+                  style={{
+                    position: "absolute",
+                    left: c.left,
+                    top: c.top,
+                    fontFamily: "Space Mono, monospace",
+                    fontSize: 9,
+                    padding: "2px 5px",
+                    border: "1px solid hsl(180 100% 60% / 0.8)",
+                    color: "hsl(180 100% 80%)",
+                    background: "hsl(0 0% 0% / 0.85)",
+                    letterSpacing: "0.1em",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span style={{ opacity: 0.55 }}>{c.n}·</span> {c.label} {c.px}px
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Hero dimension callouts (numbered px badges) */}
           <div className="pointer-events-none fixed inset-0 z-[9996]">
             {HERO_CALLOUTS.map((c, i) => {
