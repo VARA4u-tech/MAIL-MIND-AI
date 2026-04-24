@@ -31,9 +31,38 @@ function measureHero(kind: string): number {
   return 0;
 }
 
+// Read the live clip-path inset() values from the hero background layer.
+// Returns pixel offsets for each edge (top/right/bottom/left) and the hero rect.
+function measureRevealEdges(): {
+  rect: DOMRect;
+  topPx: number;
+  rightPx: number;
+  bottomPx: number;
+  leftPx: number;
+} | null {
+  const hero = document.querySelector('[data-debug="hero"]') as HTMLElement | null;
+  if (!hero) return null;
+  const rect = hero.getBoundingClientRect();
+  // The clipped layer is the first child div with inline clipPath
+  const layer = hero.querySelector('div[style*="clip-path"]') as HTMLElement | null;
+  const cp = layer?.style.clipPath || "inset(0% 0% 0% 0%)";
+  const m = cp.match(/inset\(([\d.]+)%\s+([\d.]+)%\s+([\d.]+)%\s+([\d.]+)%\)/);
+  const [t, r, b, l] = m
+    ? [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3]), parseFloat(m[4])]
+    : [0, 0, 0, 0];
+  return {
+    rect,
+    topPx: Math.round((t / 100) * rect.height),
+    rightPx: Math.round((r / 100) * rect.width),
+    bottomPx: Math.round((b / 100) * rect.height),
+    leftPx: Math.round((l / 100) * rect.width),
+  };
+}
+
 const DebugOverlay: FC<DebugOverlayProps> = ({ enabled, onToggle }) => {
   const [marquee, setMarquee] = useState<MarqueeDebugInfo | null>(null);
   const [callouts, setCallouts] = useState<Record<string, number>>({});
+  const [edges, setEdges] = useState<ReturnType<typeof measureRevealEdges>>(null);
   const [exporting, setExporting] = useState(false);
   const rafRef = useRef<number>();
 
@@ -51,6 +80,7 @@ const DebugOverlay: FC<DebugOverlayProps> = ({ enabled, onToggle }) => {
       const next: Record<string, number> = {};
       for (const c of HERO_CALLOUTS) next[c.id] = c.valuePx();
       setCallouts(next);
+      setEdges(measureRevealEdges());
     };
     const tick = () => {
       recompute();
