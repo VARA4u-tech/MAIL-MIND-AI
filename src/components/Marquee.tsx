@@ -33,10 +33,18 @@ function getBreakpointKey(width: number): string {
   return "sm";
 }
 
-const MarqueeTrack: FC<{ text: string; direction?: "left" | "right"; speed?: number }> = ({
+export interface MarqueeDebugInfo {
+  bpKey: string;
+  itemCount: number;
+  gapClass: string;
+  duration: number;
+}
+
+const MarqueeTrack: FC<{ text: string; direction?: "left" | "right"; speed?: number; onDebug?: (info: MarqueeDebugInfo) => void }> = ({
   text,
   direction = "left",
   speed = 50,
+  onDebug,
 }) => {
   const trackRef = useRef<HTMLDivElement>(null);
   const [bpKey, setBpKey] = useState(() => getBreakpointKey(typeof window !== "undefined" ? window.innerWidth : 1024));
@@ -58,6 +66,14 @@ const MarqueeTrack: FC<{ text: string; direction?: "left" | "right"; speed?: num
   const items = Array.from({ length: config.itemCount });
   // Duration based on total track width / speed — half because animation moves -50%
   const duration = (config.itemCount * config.itemWidthEstimate) / speed / 2;
+
+  useEffect(() => {
+    onDebug?.({ bpKey, itemCount: config.itemCount, gapClass: config.gapClass, duration });
+    // dispatch a global event so any debug readout can subscribe
+    window.dispatchEvent(new CustomEvent("marquee:debug", {
+      detail: { bpKey, itemCount: config.itemCount, gapClass: config.gapClass, duration },
+    }));
+  }, [bpKey, config.itemCount, config.gapClass, duration, onDebug]);
 
   return (
     <div className="flex overflow-hidden whitespace-nowrap">
