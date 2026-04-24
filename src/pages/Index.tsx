@@ -5,7 +5,7 @@ import FeatureAccordion from "@/components/FeatureAccordion";
 import PropertyDemo from "@/components/PropertyDemo";
 import DebugOverlay from "@/components/DebugOverlay";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SubtitleSection = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -75,7 +75,14 @@ const Footer = () => (
 );
 
 const Index = () => {
-  const [debugEnabled, setDebugEnabled] = useState(false);
+  const [debugEnabled, setDebugEnabled] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return window.localStorage.getItem("revelo:debug") === "1"; } catch { return false; }
+  });
+
+  useEffect(() => {
+    try { window.localStorage.setItem("revelo:debug", debugEnabled ? "1" : "0"); } catch {}
+  }, [debugEnabled]);
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
