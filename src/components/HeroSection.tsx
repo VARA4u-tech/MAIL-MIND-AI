@@ -111,7 +111,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           animate={mounted ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
           className="font-display text-primary select-none leading-[0.9] tracking-tight w-full text-center"
-          style={{ fontSize: "clamp(48px, 18vw, 440px)" }}
+          style={{ fontSize: "clamp(40px, 16vw, 440px)" }}
         >
           MAILMIND
         </motion.h1>

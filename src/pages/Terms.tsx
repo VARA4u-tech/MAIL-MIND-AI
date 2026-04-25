@@ -10,15 +10,15 @@ const fadeUp = {
 };
 
 const TermsPage: FC = () => (
-  <div className="min-h-screen bg-background text-foreground px-6 py-20 max-w-4xl mx-auto">
+  <div className="min-h-screen bg-background text-foreground px-4 md:px-6 py-12 md:py-20 max-w-4xl mx-auto">
     <motion.div {...fadeUp}>
-      <Link to="/" className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary/50 hover:text-primary transition-colors mb-16">
+      <Link to="/" className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary/50 hover:text-primary transition-colors mb-12 md:mb-16">
         <ArrowLeft className="w-3 h-3" /> Back to Home
       </Link>
 
       <div className="mb-12 border-b border-primary/20 pb-8">
         <span className="font-mono text-xs uppercase tracking-[0.3em] text-primary/40 mb-4 block">[05] LEGAL</span>
-        <h1 className="font-display text-primary uppercase leading-none" style={{ fontSize: "clamp(48px, 8vw, 112px)" }}>
+        <h1 className="font-display text-primary uppercase leading-none" style={{ fontSize: "clamp(36px, 8vw, 112px)" }}>
           TERMS OF<br />SERVICE
         </h1>
         <p className="font-mono text-xs text-primary/30 mt-4">Last updated: April 2026</p>

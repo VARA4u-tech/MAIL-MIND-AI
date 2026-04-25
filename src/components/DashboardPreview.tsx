@@ -26,7 +26,7 @@ const DashboardPreview: FC = () => {
           className="relative bg-background border border-primary/20 shadow-[0_0_100px_rgba(255,0,0,0.05)] rounded-sm overflow-hidden flex flex-col md:flex-row min-h-[600px] w-full"
         >
           {/* Sidebar */}
-          <div className="w-full md:w-64 border-r border-primary/15 bg-primary/[0.02] flex flex-col p-6 gap-8">
+          <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-primary/15 bg-primary/[0.02] flex flex-col p-6 gap-8">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-primary flex items-center justify-center">
                 <span className="font-display text-background text-sm">M</span>
@@ -59,7 +59,7 @@ const DashboardPreview: FC = () => {
               </div>
             </header>
 
-            <main className="p-8 flex flex-col gap-6 overflow-y-auto">
+            <main className="p-4 md:p-8 flex flex-col gap-6 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <StatusCard title="AI PROCESSING" value="ACTIVE" pulse />
                 <StatusCard title="TIME SAVED" value="4.2H" />
