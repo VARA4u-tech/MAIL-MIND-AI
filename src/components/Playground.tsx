@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
@@ -31,21 +31,38 @@ const sampleThread: Message[] = [
 
 type Mode = "reply" | "summary" | "schedule";
 
-function generateOutput(mode: Mode, draft: string) {
-  if (mode === "reply") {
-    return draft.trim()
-      ? `Hi Sarah,\n\n${draft.trim()}\n\nLet's lock in Wednesday at 2pm PT — I'll send a calendar invite with the phased rollout deck attached. End of Q3 is realistic if we kick off discovery this week.\n\nBest,`
-      : `Hi Sarah,\n\nThanks for the quick turnaround. Wednesday at 2pm PT works well — I'll send an invite with the phased rollout deck and an APAC onboarding draft attached.\n\nEnd of Q3 go-live is realistic if we kick off discovery this week. I'll have my team start prep on our side.\n\nBest,`;
-  }
-  if (mode === "summary") {
-    return [
-      "• Sarah's team is aligned on the proposal.",
-      "• Open questions: APAC onboarding flow & rollout timeline.",
-      "• She's offering Wed 2–4pm PT or Thu before 11am for a call.",
-      "• Leadership wants a confirmed Q3 go-live estimate.",
-    ].join("\n");
-  }
-  return [
+const REPLY_VARIANTS = [
+  (intent: string) =>
+    `Hi Sarah,\n\n${intent}Wednesday at 2pm PT works well on my end. I'll send a calendar invite with the phased rollout deck and an APAC-specific onboarding draft attached.\n\nA Q3 go-live is realistic if we kick off discovery this week — I'll have my team start prep on our side.\n\nBest,`,
+  (intent: string) =>
+    `Hi Sarah,\n\nThanks for the quick turnaround. ${intent}Let's lock Wednesday 2pm PT. I'll bring the rollout phases (pilot → APAC → global) and a draft onboarding playbook tailored to your offices.\n\nOn timing: end of Q3 is achievable assuming we sign off on scope by next Friday.\n\nTalk soon,`,
+  (intent: string) =>
+    `Hi Sarah,\n\nAppreciate the alignment. ${intent}I'll grab Wednesday at 2pm PT and send an invite shortly with two attachments — phased rollout plan and APAC onboarding outline.\n\nEnd of Q3 is on the table if discovery wraps in the next two weeks.\n\nBest,`,
+];
+
+const SUMMARY_VARIANTS = [
+  [
+    "• Sarah's team is aligned on the proposal.",
+    "• Open questions: APAC onboarding flow & rollout timeline.",
+    "• She's offering Wed 2–4pm PT or Thu before 11am for a call.",
+    "• Leadership wants a confirmed Q3 go-live estimate.",
+  ].join("\n"),
+  [
+    "TL;DR — Acme is in. Two blockers to clear:",
+    "  1. APAC onboarding plan needs detail.",
+    "  2. Rollout timeline + Q3 go-live confirmation.",
+    "Sarah is asking for a 30-min call this week.",
+  ].join("\n"),
+  [
+    "Status:    Proposal accepted, pending details",
+    "Asks:      APAC onboarding · rollout phases · Q3 ETA",
+    "Meeting:   Wed 2–4pm PT  /  Thu pre-11am PT",
+    "Owner:     you (response expected today)",
+  ].join("\n"),
+];
+
+const SCHEDULE_VARIANTS = [
+  [
     "DETECTED MEETING",
     "──────────────────",
     "Title:     MailMind × Acme — APAC rollout sync",
@@ -53,15 +70,81 @@ function generateOutput(mode: Mode, draft: string) {
     "Attendees: you, sarah.lin@acme.co",
     "Duration:  30 min",
     "",
-    "→ Click \"Create Event\" to add to your calendar",
-  ].join("\n");
+    '→ Click "Create Event" to add to your calendar',
+  ].join("\n"),
+  [
+    "EVENT DRAFT",
+    "──────────────────",
+    "Subject:   Acme x MailMind — discovery + rollout",
+    "When:      Wed, 2:00–2:30 PM PT (preferred)",
+    "Backup:    Thu, 9:30–10:00 AM PT",
+    "Location:  Google Meet (auto-generated)",
+    "Agenda:    1. APAC onboarding  2. Phasing  3. Q3 ETA",
+    "",
+    "→ 1 click to send invites + add to your calendar",
+  ].join("\n"),
+  [
+    "CALENDAR ACTION",
+    "──────────────────",
+    "▸ Block 30 min, Wed 14:00 PT",
+    "▸ Invite: sarah.lin@acme.co",
+    "▸ Attach: rollout-deck-v3.pdf",
+    "▸ Reminder: 10 min before",
+    "",
+    "Hold a tentative Thu 09:30 PT slot? [Y/N]",
+  ].join("\n"),
+];
+
+function generateOutput(mode: Mode, draft: string, variant: number) {
+  const intent = draft.trim() ? `${draft.trim()}\n\n` : "";
+  if (mode === "reply") return REPLY_VARIANTS[variant % REPLY_VARIANTS.length](intent);
+  if (mode === "summary") return SUMMARY_VARIANTS[variant % SUMMARY_VARIANTS.length];
+  return SCHEDULE_VARIANTS[variant % SCHEDULE_VARIANTS.length];
+}
+
+const STORAGE_KEY = "mailmind:playground";
+interface PersistedState {
+  mode: Mode;
+  draft: string;
+  output: string | null;
+  variant: number;
+}
+
+function loadPersisted(): PersistedState {
+  if (typeof window === "undefined") return { mode: "reply", draft: "", output: null, variant: 0 };
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { mode: "reply", draft: "", output: null, variant: 0 };
+    const parsed = JSON.parse(raw);
+    const mode: Mode = ["reply", "summary", "schedule"].includes(parsed.mode) ? parsed.mode : "reply";
+    return {
+      mode,
+      draft: typeof parsed.draft === "string" ? parsed.draft.slice(0, 500) : "",
+      output: typeof parsed.output === "string" ? parsed.output : null,
+      variant: Number.isInteger(parsed.variant) ? parsed.variant : 0,
+    };
+  } catch {
+    return { mode: "reply", draft: "", output: null, variant: 0 };
+  }
 }
 
 const Playground: FC = () => {
-  const [mode, setMode] = useState<Mode>("reply");
-  const [draft, setDraft] = useState("");
-  const [generated, setGenerated] = useState<string | null>(null);
+  const initial = useMemo(() => loadPersisted(), []);
+  const [mode, setMode] = useState<Mode>(initial.mode);
+  const [draft, setDraft] = useState(initial.draft);
+  const [generated, setGenerated] = useState<string | null>(initial.output);
+  const [variant, setVariant] = useState(initial.variant);
   const [pending, setPending] = useState(false);
+
+  // Persist state
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ mode, draft, output: generated, variant })
+      );
+    } catch {}
+  }, [mode, draft, generated, variant]);
 
   const output = useMemo(
     () => (generated !== null ? generated : ""),
@@ -70,18 +153,28 @@ const Playground: FC = () => {
 
   const handleGenerate = () => {
     setPending(true);
+    const nextVariant = variant + 1;
+    setVariant(nextVariant);
     setGenerated(null);
-    // Mock async generation
+    // Mock async generation — cycles variants for "regenerate" feel
     setTimeout(() => {
-      setGenerated(generateOutput(mode, draft));
+      setGenerated(generateOutput(mode, draft, nextVariant));
       setPending(false);
     }, 650);
   };
 
+  // Live update output when switching modes (if we already have one) so preview stays in sync
   const handleModeChange = (m: Mode) => {
     setMode(m);
-    setGenerated(null);
+    if (generated !== null) setGenerated(generateOutput(m, draft, variant));
   };
+
+  // Live re-render reply when draft changes (only when currently showing a reply)
+  useEffect(() => {
+    if (mode !== "reply" || generated === null || pending) return;
+    setGenerated(generateOutput("reply", draft, variant));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft]);
 
   return (
     <section
