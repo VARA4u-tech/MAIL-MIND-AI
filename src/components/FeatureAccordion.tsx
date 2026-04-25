@@ -33,53 +33,53 @@ interface Feature {
 const features: Feature[] = [
   {
     number: "01",
-    title: "Animation Modes",
+    title: "Smart Reply Generation",
     details: [
-      "progress mode: The animation syncs with the scroll progress of the linked section.",
-      "trigger mode: The animation is triggered when the linked section enters the viewport.",
+      "context-aware: drafts professional replies that match the tone, intent, and history of the thread.",
+      "one-click regenerate: cycle through alternative responses until the wording feels right.",
     ],
   },
   {
     number: "02",
-    title: "Styling Freedom",
+    title: "Email Summarization",
     details: [
-      "Style text however you want: mix weights, fonts, colors, paragraphs. All inside the same text layer.",
-      "Full support of responsive text styles: enable seamless responsive behaviour with breakpoints and rem sizes.",
+      "long threads, short summaries: condense back-and-forth conversations into a few clear sentences.",
+      "key points first: surfaces decisions, action items, and open questions at a glance.",
     ],
   },
   {
     number: "03",
-    title: "Parallel Animation",
+    title: "Intent Detection",
     details: [
-      "split text into: Lines, Words or Letters.",
-      "get independent animation controls for each layer.",
-      "Parallel animations across layers combine into a synchronized motion experience.",
+      "auto-classified: every email is tagged as Reply, Schedule, or Ignore so your inbox sorts itself.",
+      "prioritized queue: focus on what actually needs you and skip the noise.",
     ],
   },
   {
     number: "04",
-    title: "Animated Properties",
+    title: "Meeting Scheduler",
     details: [
-      "animate everything: control Mask, color, stroke, opacity, position, scale, blur, rotation, skew, per layer.",
-      "Each property supports \"from\" and \"to\" values with ranges and units.",
+      "auto-extract: pulls dates, times, attendees, and locations directly from the email body.",
+      "calendar-ready: turn detected meeting details into a calendar event in a single click.",
     ],
   },
   {
     number: "05",
-    title: "Animation Settings",
+    title: "How It Works",
     details: [
-      "tune it your way: Adjust duration, delay, stagger, easing, and origin (start, center, end, edges or random). Again, per layer.",
-      "choose from 25 easing curves presets, powered by GSAP.",
+      "step 1: connect or paste your email content into the assistant.",
+      "step 2: the AI analyzes intent, context, and key details from the message.",
+      "step 3: receive a summary, a suggested reply, and ready-to-use scheduling actions.",
     ],
   },
   {
     number: "06",
     title: "\u2026and more",
     details: [
-      "canvas: Preview animations on canvas.",
-      "performance: Only triggers when needed. Zero layout shift. GPU-accelerated.",
-      "accessibility: Text remains selectable, readable, and screen-reader safe.",
-      "SEO: Text remains in the DOM, with invisible fallback for indexing.",
+      "privacy-first: your email content stays in your control \u2014 no training on your data.",
+      "performance: instant suggestions with zero workflow disruption.",
+      "accessibility: clean, keyboard-navigable UI that works with screen readers.",
+      "extensible: ready to plug into Gmail, Outlook, and your favorite calendar.",
     ],
   },
 ];

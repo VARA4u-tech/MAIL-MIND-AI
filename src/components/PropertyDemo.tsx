@@ -114,7 +114,7 @@ const PropertyDemo: FC = () => {
         className="font-display text-primary text-center uppercase mb-16"
         style={{ fontSize: "clamp(32px, 6vw, 80px)" }}
       >
-        PLAY WITH
+        SEE IT IN ACTION
       </h2>
 
       {/* Property selector tabs */}
@@ -175,7 +175,7 @@ const PropertyDemo: FC = () => {
               animate={active.preview.animate}
               transition={active.preview.transition}
             >
-              REVELO
+              MAILMIND
             </motion.span>
           </motion.div>
         </AnimatePresence>

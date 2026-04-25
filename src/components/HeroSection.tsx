@@ -107,9 +107,9 @@ const HeroSection: FC = () => {
           animate={mounted ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
           className="font-display text-primary select-none leading-[0.82] tracking-[-0.03em] w-full text-center"
-          style={{ fontSize: "clamp(72px, 28vw, 520px)" }}
+          style={{ fontSize: "clamp(60px, 22vw, 440px)" }}
         >
-          REVELO
+          MAILMIND
         </motion.h1>
 
         {/* Subtitle below title */}
@@ -119,7 +119,7 @@ const HeroSection: FC = () => {
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
           className="font-mono text-[9px] md:text-[10px] text-primary/30 uppercase tracking-[0.5em] mt-4 md:mt-6"
         >
-          Text Reveal Component
+          AI Email & Calendar Assistant
         </motion.p>
       </motion.div>
 
@@ -134,7 +134,7 @@ const HeroSection: FC = () => {
         className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2"
       >
         <span className="w-2 h-2 bg-primary" />
-        <span className="font-mono text-[9px] text-primary/30 tracking-widest uppercase">Revelo</span>
+        <span className="font-mono text-[9px] text-primary/30 tracking-widest uppercase">MailMind AI</span>
       </motion.div>
       <motion.div
         initial={{ opacity: 0 }}
