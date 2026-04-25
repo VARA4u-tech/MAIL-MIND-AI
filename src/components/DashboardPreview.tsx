@@ -28,9 +28,7 @@ const DashboardPreview: FC = () => {
           {/* Sidebar */}
           <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-primary/15 bg-primary/[0.02] flex flex-col p-6 gap-8">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary flex items-center justify-center">
-                <span className="font-display text-background text-sm">M</span>
-              </div>
+              <img src="/favicon.png" alt="MailMind Logo" className="w-8 h-8 object-contain" />
               <span className="font-mono text-xs uppercase tracking-widest text-primary font-bold">MailMind</span>
             </div>
 
