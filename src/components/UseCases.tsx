@@ -25,7 +25,7 @@ const cases = [
   {
     tag: "IGNORE",
     sender: "newsletter@bytes.dev",
-    subject: "🚀 5 frameworks you didn't know you needed",
+    subject: "5 frameworks you didn't know you needed",
     snippet:
       "This week we're diving into the latest meta-frameworks shaping the modern web stack…",
     intent: "Promotional · safe to skip",
@@ -62,7 +62,7 @@ const UseCases: FC = () => {
             key={c.tag}
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: false, margin: "-80px" }}
             transition={{
               duration: 0.6,
               delay: i * 0.08,

@@ -45,7 +45,7 @@ const LetterReveal: FC<LetterRevealProps> = ({ text, className = "", delay = 0 }
       variants={container}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-100px" }}
+      viewport={{ once: false, margin: "-100px" }}
     >
       {letters.map((letter, index) => (
         <motion.span

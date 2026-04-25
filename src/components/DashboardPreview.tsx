@@ -21,7 +21,7 @@ const DashboardPreview: FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="relative bg-background border border-primary/20 shadow-[0_0_100px_rgba(255,0,0,0.05)] rounded-sm overflow-hidden flex flex-col md:flex-row min-h-[600px] w-full"
         >

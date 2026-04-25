@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { motion } from "framer-motion";
 import { Inbox, Brain, Zap } from "lucide-react";
+import LetterReveal from "./LetterReveal";
 
 const STEPS = [
   {
@@ -33,12 +34,10 @@ const HowItWorks: FC = () => {
   return (
     <section id="how-it-works" className="py-32 px-4 max-w-6xl mx-auto">
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
-        <h2
-          className="font-display text-primary uppercase leading-none"
-          style={{ fontSize: "clamp(36px, 7vw, 96px)" }}
-        >
-          HOW IT WORKS
-        </h2>
+        <LetterReveal
+          text="HOW IT WORKS"
+          className="font-display text-primary uppercase leading-none text-[36px] md:text-7xl lg:text-[96px]"
+        />
         <span className="font-mono text-xs text-primary/40 tracking-widest hidden md:inline">
           [02] PROCESS
         </span>
@@ -52,7 +51,7 @@ const HowItWorks: FC = () => {
               key={step.number}
               initial={{ opacity: 0, y: 32 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
+              viewport={{ once: false, margin: "-60px" }}
               transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
               className="bg-background p-8 md:p-10 flex flex-col gap-6 group relative overflow-hidden"
             >
