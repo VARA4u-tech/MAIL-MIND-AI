@@ -85,7 +85,7 @@ const Navbar: FC = () => {
             {/* CTA */}
             <button
               onClick={() => document.getElementById("get-started")?.scrollIntoView({ behavior: "smooth" })}
-              className="font-mono text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30 px-4 py-2 hover:bg-primary hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30 px-4 py-2 hover:bg-primary hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               Join Waitlist
             </button>

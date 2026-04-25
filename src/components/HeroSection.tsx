@@ -155,12 +155,12 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
-      {/* Version marker — top right only */}
+      {/* Version marker — bottom right to avoid navbar overlap */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={mounted ? { opacity: 1 } : {}}
         transition={{ duration: 0.6, delay: 1.2 }}
-        className="absolute top-6 right-6 md:top-8 md:right-8 font-mono text-[9px] text-primary/20 tracking-widest"
+        className="absolute bottom-6 right-6 md:bottom-8 md:right-8 font-mono text-[9px] text-primary/20 tracking-widest"
       >
         v1.0
       </motion.div>
