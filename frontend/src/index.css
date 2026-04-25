@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@1,700&family=Outfit:wght@400;600;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -121,6 +121,9 @@
 @layer utilities {
   .font-display {
     font-family: 'Anton', sans-serif;
+  }
+  .font-title {
+    font-family: 'Outfit', sans-serif;
   }
   .font-serif-italic {
     font-family: 'Playfair Display', serif;
