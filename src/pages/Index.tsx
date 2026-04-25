@@ -4,6 +4,10 @@ import ScrollRevealText from "@/components/ScrollRevealText";
 import FeatureAccordion from "@/components/FeatureAccordion";
 import PropertyDemo from "@/components/PropertyDemo";
 import DebugOverlay from "@/components/DebugOverlay";
+import UseCases from "@/components/UseCases";
+import Playground from "@/components/Playground";
+import WaitlistForm from "@/components/WaitlistForm";
+import DemoModal from "@/components/DemoModal";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
@@ -79,6 +83,7 @@ const Index = () => {
     if (typeof window === "undefined") return false;
     try { return window.localStorage.getItem("revelo:debug") === "1"; } catch { return false; }
   });
+  const [demoOpen, setDemoOpen] = useState(false);
 
   useEffect(() => {
     try { window.localStorage.setItem("revelo:debug", debugEnabled ? "1" : "0"); } catch {}
@@ -87,7 +92,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <DebugOverlay enabled={debugEnabled} onToggle={() => setDebugEnabled(v => !v)} />
-      <HeroSection />
+      <HeroSection onViewDemo={() => setDemoOpen(true)} />
+      <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
       <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
       <SubtitleSection />
@@ -160,6 +166,12 @@ const Index = () => {
       <section className="py-24 px-4">
         <FeatureAccordion />
       </section>
+
+      <UseCases />
+
+      <Playground />
+
+      <WaitlistForm />
 
       <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 

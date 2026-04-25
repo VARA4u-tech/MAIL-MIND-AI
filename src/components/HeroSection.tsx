@@ -16,7 +16,11 @@ export const HERO_CLIP_KEYFRAMES = {
   left:   [10, 0, 0, 12] as number[],
 };
 
-const HeroSection: FC = () => {
+interface HeroSectionProps {
+  onViewDemo?: () => void;
+}
+
+const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [clipValue, setClipValue] = useState("inset(0% 0% 0% 0%)");
@@ -121,6 +125,31 @@ const HeroSection: FC = () => {
         >
           AI Email & Calendar Assistant
         </motion.p>
+
+        {/* CTA buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={mounted ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 1 }}
+          className="flex flex-col sm:flex-row items-center gap-3 mt-8 md:mt-10"
+        >
+          <button
+            onClick={() => {
+              document
+                .getElementById("demo")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-5 py-3 hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            Get Started →
+          </button>
+          <button
+            onClick={onViewDemo}
+            className="font-mono text-[11px] uppercase tracking-[0.25em] border border-primary/40 text-primary px-5 py-3 hover:border-primary transition-colors cursor-pointer"
+          >
+            View Demo
+          </button>
+        </motion.div>
       </motion.div>
 
       {/* Bottom gradient fade */}
