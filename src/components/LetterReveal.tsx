@@ -23,7 +23,7 @@ const LetterReveal: FC<LetterRevealProps> = ({ text, className = "", delay = 0 }
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 12,
         stiffness: 200,
       },
@@ -32,7 +32,7 @@ const LetterReveal: FC<LetterRevealProps> = ({ text, className = "", delay = 0 }
       opacity: 0,
       y: 20,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 12,
         stiffness: 200,
       },

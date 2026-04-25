@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import LetterReveal from "./LetterReveal";
+import { FC } from "react";
 
 const cases = [
   {
@@ -40,7 +41,11 @@ const tagColor: Record<string, string> = {
 
 const UseCases: FC = () => {
   return (
-    <section id="use-cases" className="py-32 px-4 max-w-6xl mx-auto" data-debug="use-cases">
+    <section
+      id="use-cases"
+      className="py-32 px-4 max-w-6xl mx-auto"
+      data-debug="use-cases"
+    >
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
         <LetterReveal
           text="INBOX, SORTED"
@@ -58,7 +63,11 @@ const UseCases: FC = () => {
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+            transition={{
+              duration: 0.6,
+              delay: i * 0.08,
+              ease: [0.16, 1, 0.3, 1],
+            }}
             className="bg-background p-6 md:p-8 flex flex-col gap-4 min-h-[320px] relative group hover:bg-primary/[0.02] transition-colors duration-500 border border-transparent hover:border-primary/20"
           >
             {/* Hover glow effect */}
@@ -75,7 +84,9 @@ const UseCases: FC = () => {
             </div>
 
             <div className="space-y-1">
-              <p className="font-mono text-xs text-primary/40 truncate">{c.sender}</p>
+              <p className="font-mono text-xs text-primary/40 truncate">
+                {c.sender}
+              </p>
               <p className="font-display text-primary text-xl md:text-2xl leading-tight uppercase tracking-tight group-hover:text-accent transition-colors">
                 {c.subject}
               </p>

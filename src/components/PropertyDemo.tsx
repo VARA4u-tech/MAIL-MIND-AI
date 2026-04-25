@@ -1,12 +1,13 @@
 import { FC, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, TargetAndTransition, Transition } from "framer-motion";
+import LetterReveal from "./LetterReveal";
 
 interface PropertyConfig {
   name: string;
   preview: {
-    initial: Record<string, any>;
-    animate: Record<string, any>;
-    transition?: Record<string, any>;
+    initial: TargetAndTransition;
+    animate: TargetAndTransition;
+    transition?: Transition;
   };
   label: string;
 }
@@ -18,7 +19,7 @@ const properties: PropertyConfig[] = [
     preview: {
       initial: { y: 40 },
       animate: { y: [40, -40, 40] },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
     },
   },
   {
@@ -27,7 +28,7 @@ const properties: PropertyConfig[] = [
     preview: {
       initial: { scale: 0.6 },
       animate: { scale: [0.6, 1.2, 0.6] },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
     },
   },
   {
@@ -45,7 +46,7 @@ const properties: PropertyConfig[] = [
     preview: {
       initial: { skewX: -15 },
       animate: { skewX: [-15, 15, -15] },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
     },
   },
   {
@@ -54,7 +55,7 @@ const properties: PropertyConfig[] = [
     preview: {
       initial: { opacity: 0.1 },
       animate: { opacity: [0.1, 1, 0.1] },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
     },
   },
   {
@@ -78,18 +79,18 @@ const properties: PropertyConfig[] = [
     label: "stroke",
     preview: {
       initial: {
-        WebkitTextStroke: "2px hsl(0, 100%, 50%)",
+        webkitTextStroke: "2px hsl(0, 100%, 50%)",
         color: "transparent",
       },
       animate: {
-        WebkitTextStroke: [
+        webkitTextStroke: [
           "2px hsl(0, 100%, 50%)",
           "1px hsl(0, 100%, 30%)",
           "3px hsl(0, 100%, 50%)",
         ],
         color: "transparent",
       },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
     },
   },
   {
@@ -110,12 +111,10 @@ const PropertyDemo: FC = () => {
   return (
     <div className="py-24 max-w-5xl mx-auto px-4">
       {/* Header */}
-      <h2
-        className="font-display text-primary text-center uppercase mb-16"
-        style={{ fontSize: "clamp(32px, 6vw, 80px)" }}
-      >
-        SEE IT IN ACTION
-      </h2>
+      <LetterReveal
+        text="SEE IT IN ACTION"
+        className="font-display text-primary text-center uppercase mb-16 text-[32px] md:text-6xl lg:text-8xl"
+      />
 
       {/* Property selector tabs */}
       <div className="flex flex-wrap justify-center gap-2 mb-12">
