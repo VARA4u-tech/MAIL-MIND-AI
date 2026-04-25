@@ -233,8 +233,9 @@ const Index = () => {
 
       <SubtitleSection />
 
-      {/* Choose between section */}
-      <section id="use-cases" className="py-32 px-4">
+      {/* Use Cases section */}
+      <div id="use-cases">
+        <section className="py-32 px-4">
         <ScrollRevealText
           className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
           words={[
@@ -288,6 +289,7 @@ const Index = () => {
           your inbox sorts itself, so you focus only on what matters.
         </motion.p>
       </section>
+      </div>
 
       <HowItWorks />
 

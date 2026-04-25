@@ -41,8 +41,10 @@ const Navbar: FC = () => {
       const el = document.getElementById(id);
       if (!el) return null;
       const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
-        { rootMargin: "-30% 0px -60% 0px" }
+        ([entry]) => { 
+          if (entry.isIntersecting) setActiveSection(id); 
+        },
+        { rootMargin: "-15% 0px -65% 0px" }
       );
       obs.observe(el);
       return obs;
@@ -53,7 +55,12 @@ const Navbar: FC = () => {
   const handleNavClick = (href: string) => {
     setMenuOpen(false);
     const id = href.replace("#", "");
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const element = document.getElementById(id);
+    if (element) {
+      const yOffset = -80; // Navbar height offset
+      const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   };
 
   return (
