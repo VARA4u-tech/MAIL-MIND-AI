@@ -1,5 +1,5 @@
-import { FC } from "react";
 import { motion } from "framer-motion";
+import LetterReveal from "./LetterReveal";
 
 const cases = [
   {
@@ -42,12 +42,10 @@ const UseCases: FC = () => {
   return (
     <section id="use-cases" className="py-32 px-4 max-w-6xl mx-auto" data-debug="use-cases">
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
-        <h2
-          className="font-display text-primary uppercase leading-none"
-          style={{ fontSize: "clamp(36px, 7vw, 96px)" }}
-        >
-          INBOX, SORTED
-        </h2>
+        <LetterReveal
+          text="INBOX, SORTED"
+          className="font-display text-primary uppercase leading-none text-[36px] md:text-7xl lg:text-[96px]"
+        />
         <span className="font-mono text-xs text-primary/40 tracking-widest hidden md:inline">
           [03] USE CASES
         </span>

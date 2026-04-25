@@ -10,6 +10,7 @@ import CareersPage from "./pages/Careers.tsx";
 import ContactPage from "./pages/Contact.tsx";
 import PrivacyPage from "./pages/Privacy.tsx";
 import TermsPage from "./pages/Terms.tsx";
+import CursorSpotlight from "./components/CursorSpotlight.tsx";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <div className="noise-overlay" />
+        <CursorSpotlight />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<AboutPage />} />

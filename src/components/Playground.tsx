@@ -1,6 +1,7 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Mail, MessageSquare, Calendar, Check } from "lucide-react";
+import LetterReveal from "./LetterReveal";
 
 interface Message {
   from: "them" | "you";
@@ -189,12 +190,10 @@ const Playground: FC = () => {
       {/* Aliases for smooth-scroll targets */}
       <span id="demo" className="block -mt-20 pt-20" aria-hidden="true" />
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
-        <h2
-          className="font-display text-primary uppercase leading-none"
-          style={{ fontSize: "clamp(36px, 7vw, 96px)" }}
-        >
-          TRY THE DEMO
-        </h2>
+        <LetterReveal
+          text="TRY THE DEMO"
+          className="font-display text-primary uppercase leading-none text-[36px] md:text-7xl lg:text-[96px]"
+        />
         <span className="font-mono text-[10px] text-primary/40 tracking-widest hidden md:inline">
           [04] PLAYGROUND
         </span>

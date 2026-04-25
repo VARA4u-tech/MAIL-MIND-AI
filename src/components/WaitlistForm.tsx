@@ -1,6 +1,8 @@
 import { FC, FormEvent, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
+import Magnetic from "./Magnetic";
+import LetterReveal from "./LetterReveal";
 
 const waitlistSchema = z.object({
   name: z
@@ -61,12 +63,10 @@ const WaitlistForm: FC = () => {
       />
 
       <div className="mb-12 flex items-baseline justify-between border-b border-primary/20 pb-6">
-        <h2
-          className="font-display text-primary uppercase leading-none"
-          style={{ fontSize: "clamp(36px, 7vw, 96px)" }}
-        >
-          JOIN WAITLIST
-        </h2>
+        <LetterReveal
+          text="JOIN WAITLIST"
+          className="font-display text-primary uppercase leading-none text-[36px] md:text-7xl lg:text-[96px]"
+        />
         <span className="font-mono text-xs text-primary/40 tracking-widest hidden md:inline">
           [05] EARLY ACCESS
         </span>
@@ -204,30 +204,32 @@ const WaitlistForm: FC = () => {
               </div>
 
               <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={status === "submitting" || !isValid}
-                  className="group relative overflow-hidden font-mono text-xs uppercase tracking-[0.3em] bg-primary text-background px-8 py-4 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <span className="relative z-10 flex items-center gap-3">
-                    {status === "submitting" ? (
-                      <>
-                        <span className="w-2 h-2 bg-background animate-ping" />
-                        PROCESSING...
-                      </>
-                    ) : (
-                      "REQUEST EARLY ACCESS →"
+                <Magnetic>
+                  <button
+                    type="submit"
+                    disabled={status === "submitting" || !isValid}
+                    className="group relative overflow-hidden font-mono text-xs uppercase tracking-[0.3em] bg-primary text-background px-8 py-4 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <span className="relative z-10 flex items-center gap-3">
+                      {status === "submitting" ? (
+                        <>
+                          <span className="w-2 h-2 bg-background animate-ping" />
+                          PROCESSING...
+                        </>
+                      ) : (
+                        "REQUEST EARLY ACCESS →"
+                      )}
+                    </span>
+                    {status === "submitting" && (
+                      <motion.div 
+                        className="absolute inset-0 bg-white/10"
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "0%" }}
+                        transition={{ duration: 1.2, ease: "linear" }}
+                      />
                     )}
-                  </span>
-                  {status === "submitting" && (
-                    <motion.div
-                      className="absolute inset-0 bg-white/10"
-                      initial={{ x: "-100%" }}
-                      animate={{ x: "0%" }}
-                      transition={{ duration: 1.2, ease: "linear" }}
-                    />
-                  )}
-                </button>
+                  </button>
+                </Magnetic>
               </div>
             </motion.form>
           )}

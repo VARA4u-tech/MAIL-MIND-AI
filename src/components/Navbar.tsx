@@ -1,5 +1,6 @@
 import { FC, useState, useEffect } from "react";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import Magnetic from "./Magnetic";
 
 const NAV_LINKS = [
   { label: "Demo", href: "#demo" },
@@ -70,29 +71,32 @@ const Navbar: FC = () => {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map(({ label, href }) => (
-              <a
-                key={href}
-                href={href}
-                onClick={(e) => { e.preventDefault(); handleNavClick(href); }}
-                className={`font-mono text-xs uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                  activeSection === href.replace("#", "")
-                    ? "text-primary"
-                    : "text-primary/50 hover:text-primary"
-                }`}
-              >
-                {label}
-              </a>
+              <Magnetic key={href}>
+                <a
+                  href={href}
+                  onClick={(e) => { e.preventDefault(); handleNavClick(href); }}
+                  className={`font-mono text-xs uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    activeSection === href.replace("#", "")
+                      ? "text-primary"
+                      : "text-primary/50 hover:text-primary"
+                  }`}
+                >
+                  {label}
+                </a>
+              </Magnetic>
             ))}
           </nav>
 
           <div className="flex items-center gap-4">
             {/* CTA */}
-            <button
-              onClick={() => document.getElementById("get-started")?.scrollIntoView({ behavior: "smooth" })}
-              className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30 px-4 py-2 hover:bg-primary hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              Join Waitlist
-            </button>
+            <Magnetic>
+              <button
+                onClick={() => document.getElementById("get-started")?.scrollIntoView({ behavior: "smooth" })}
+                className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30 px-4 py-2 hover:bg-primary hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                Join Waitlist
+              </button>
+            </Magnetic>
 
             {/* Hamburger (mobile only) */}
             <button
