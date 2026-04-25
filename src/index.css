@@ -7,7 +7,7 @@
 @layer base {
   :root {
     --background: 0 0% 3%;
-    --foreground: 0 95% 55%;
+    --foreground: 0 0% 92%;
 
     --card: 0 0% 6%;
     --card-foreground: 0 95% 55%;
@@ -55,6 +55,12 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Space Mono', monospace;
+  }
+
+  /* Global focus-visible ring for keyboard accessibility */
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 3px;
   }
 }
 

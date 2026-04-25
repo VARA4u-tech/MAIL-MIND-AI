@@ -2,7 +2,8 @@ import HeroSection from "@/components/HeroSection";
 import Marquee from "@/components/Marquee";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import FeatureAccordion from "@/components/FeatureAccordion";
-import PropertyDemo from "@/components/PropertyDemo";
+import HowItWorks from "@/components/HowItWorks";
+import ScrollToTop from "@/components/ScrollToTop";
 import UseCases from "@/components/UseCases";
 import Playground from "@/components/Playground";
 import WaitlistForm from "@/components/WaitlistForm";
@@ -192,7 +193,7 @@ const Index = () => {
         </motion.p>
       </section>
 
-      <PropertyDemo />
+      <HowItWorks />
 
       <DashboardPreview />
 
@@ -229,6 +230,7 @@ const Index = () => {
       <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
