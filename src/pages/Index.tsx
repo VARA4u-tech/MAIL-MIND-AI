@@ -10,7 +10,7 @@ import WaitlistForm from "@/components/WaitlistForm";
 import DemoModal from "@/components/DemoModal";
 import Navbar from "@/components/Navbar";
 import LogoCloud from "@/components/LogoCloud";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 const SubtitleSection = () => {
@@ -62,7 +62,7 @@ const SubtitleLine = ({
   range,
 }: {
   text: string;
-  progress: any;
+  progress: MotionValue<number>;
   range: [number, number];
 }) => {
   const opacity = useTransform(progress, range, [0, 1]);
@@ -139,7 +139,9 @@ const Index = () => {
   useEffect(() => {
     try {
       window.localStorage.setItem("revelo:debug", debugEnabled ? "1" : "0");
-    } catch {}
+    } catch {
+      // Silence persistence errors
+    }
   }, [debugEnabled]);
 
   return (

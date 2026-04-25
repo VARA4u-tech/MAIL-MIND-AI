@@ -145,7 +145,9 @@ const Playground: FC = () => {
         STORAGE_KEY,
         JSON.stringify({ mode, draft, output: generated, variant })
       );
-    } catch {}
+    } catch {
+      // Silence persistence errors
+    }
   }, [mode, draft, generated, variant]);
 
   const output = useMemo(
@@ -200,9 +202,9 @@ const Playground: FC = () => {
 
       <div className="mb-8 flex items-center gap-4 text-primary/40">
         <span className="font-mono text-[10px] uppercase tracking-widest">Works with:</span>
-        <Mail className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" title="Gmail" />
-        <MessageSquare className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" title="Slack" />
-        <Calendar className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" title="Google Calendar" />
+        <Mail className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" />
+        <MessageSquare className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" />
+        <Calendar className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-primary/15 border border-primary/20">

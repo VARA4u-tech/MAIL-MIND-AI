@@ -6,14 +6,14 @@ import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-mot
 // Each stop is [scrollProgress, insetPercent] for top/right/bottom/left.
 // Pattern: REVEAL (open from edges) → HOLD (stay open) → CLOSE (re-mask edges)
 // ============================================================
-export const HERO_CLIP_KEYFRAMES = {
+const HERO_CLIP_KEYFRAMES = {
   // scroll progress stops: start, end-of-reveal, start-of-close, full-close
   progress: [0, 0.08, 0.45, 0.9] as const,
   // inset % at each stop, in order: [reveal-start, reveal-end, hold-end, close]
-  top:    [14, 0, 0, 18] as number[],
-  right:  [10, 0, 0, 12] as number[],
-  bottom: [18, 0, 0, 22] as number[],
-  left:   [10, 0, 0, 12] as number[],
+  top:    [8, 0, 0, 18] as number[],
+  right:  [6, 0, 0, 12] as number[],
+  bottom: [10, 0, 0, 22] as number[],
+  left:   [6, 0, 0, 12] as number[],
 };
 
 interface HeroSectionProps {
@@ -110,7 +110,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={mounted ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          className="font-display text-primary select-none leading-[0.82] tracking-[-0.03em] w-full text-center"
+          className="font-display text-primary select-none leading-[0.9] tracking-tight w-full text-center"
           style={{ fontSize: "clamp(60px, 22vw, 440px)" }}
         >
           MAILMIND
