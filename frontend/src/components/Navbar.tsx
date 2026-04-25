@@ -1,11 +1,13 @@
 import { FC, useState, useEffect } from "react";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Magnetic from "./Magnetic";
 
 const NAV_LINKS = [
-  { label: "Demo", href: "#demo" },
   { label: "Features", href: "#features" },
   { label: "Use Cases", href: "#use-cases" },
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Demo", href: "#playground" },
 ];
 
 const Navbar: FC = () => {
@@ -15,6 +17,7 @@ const Navbar: FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is logged in
@@ -34,7 +37,7 @@ const Navbar: FC = () => {
 
   // Track active section with IntersectionObserver
   useEffect(() => {
-    const ids = ["demo", "features", "use-cases"];
+    const ids = ["features", "use-cases", "how-it-works", "playground"];
     const observers = ids.map((id) => {
       const el = document.getElementById(id);
       if (!el) return null;
@@ -66,7 +69,7 @@ const Navbar: FC = () => {
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary group">
+          <a href="/" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary group">
             <img 
               src="/favicon.png" 
               alt="MailMind Logo" 
@@ -99,7 +102,7 @@ const Navbar: FC = () => {
             <Magnetic>
               {userEmail ? (
                 <button
-                  onClick={() => document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" })}
+                  onClick={() => navigate('/dashboard')}
                   className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary text-background px-4 py-2 hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   Open Inbox
@@ -160,7 +163,7 @@ const Navbar: FC = () => {
             <div className="px-6 pt-4 border-t border-primary/10 mt-2">
               {userEmail ? (
                 <button
-                  onClick={() => { setMenuOpen(false); document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" }); }}
+                  onClick={() => { setMenuOpen(false); navigate('/dashboard'); }}
                   className="w-full font-mono text-xs uppercase tracking-[0.25em] bg-primary text-background px-4 py-3 hover:bg-primary/90 transition-colors"
                 >
                   Open Inbox →

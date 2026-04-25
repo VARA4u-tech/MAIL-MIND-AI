@@ -132,7 +132,7 @@ const Footer = () => (
           Use Cases
         </a>
         <a
-          href="#demo"
+          href="#playground"
           className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
         >
           Playground Demo
@@ -233,7 +233,7 @@ const Index = () => {
       <SubtitleSection />
 
       {/* Choose between section */}
-      <section className="py-32 px-4">
+      <section id="use-cases" className="py-32 px-4">
         <ScrollRevealText
           className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
           words={[
@@ -310,11 +310,13 @@ const Index = () => {
       <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
       {/* Features */}
-      <section className="py-24 px-4">
+      <section id="features" className="py-24 px-4">
         <FeatureAccordion />
       </section>
 
-      <Playground />
+      <section id="playground">
+        <Playground previewOnly={true} />
+      </section>
 
       <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 

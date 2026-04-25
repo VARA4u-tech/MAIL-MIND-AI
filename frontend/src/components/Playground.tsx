@@ -1,9 +1,10 @@
 import { FC, useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Mail, MessageSquare, Calendar, Check, LogIn, RefreshCcw } from "lucide-react";
+import { Copy, Mail, MessageSquare, Calendar, Check, LogIn, RefreshCcw, LogOut, Inbox, Sparkles, Command } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import LetterReveal from "./LetterReveal";
 
-type Mode = "reply" | "summary";
+type Mode = "reply" | "summary" | "schedule";
 
 interface EmailMessage {
   id: string;
@@ -14,12 +15,18 @@ interface EmailMessage {
   body: string;
 }
 
+interface PlaygroundProps {
+  previewOnly?: boolean;
+}
+
 const STORAGE_KEY = "mailmind:playground";
 
-const Playground: FC = () => {
+const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("reply");
   const [draft, setDraft] = useState("");
   const [generated, setGenerated] = useState<string | null>(null);
+  const [calUrl, setCalUrl] = useState<string | null>(null);
   const [pendingAI, setPendingAI] = useState(false);
   const [copied, setCopied] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -61,7 +68,22 @@ const Playground: FC = () => {
     setLoadingEmails(true);
     try {
       const res = await fetch(`/api/gmail/inbox?email=${encodeURIComponent(email)}`);
-      const data = await res.json();
+      
+      if (res.status === 401) {
+        window.localStorage.removeItem(STORAGE_KEY + ':email');
+        setUserEmail(null);
+        alert("Your session has expired. Please log in again.");
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
+
+      const text = await res.text();
+      if (!text) throw new Error("Empty response from server");
+      
+      const data = JSON.parse(text);
       if (data.emails && data.emails.length > 0) {
         setEmails(data.emails);
         setSelectedEmail(data.emails[0]); // Select first email by default
@@ -77,18 +99,34 @@ const Playground: FC = () => {
     window.location.href = '/api/auth/google';
   };
 
+  const handleLogout = () => {
+    window.localStorage.removeItem(STORAGE_KEY + ':email');
+    setUserEmail(null);
+    setEmails([]);
+    setSelectedEmail(null);
+    setGenerated(null);
+  };
+
   const handleGenerate = async () => {
     if (!selectedEmail) return;
     
     setPendingAI(true);
     setGenerated(null);
+    setCalUrl(null);
     setSendSuccess(false);
 
     try {
-      const endpoint = mode === "reply" ? "/api/ai/reply" : "/api/ai/summarize";
-      const payload = mode === "reply" 
-        ? { emailBody: selectedEmail.body || selectedEmail.snippet, intent: draft }
-        : { emailBody: selectedEmail.body || selectedEmail.snippet };
+      let endpoint = "/api/ai/summarize";
+      const payload: Record<string, string> = { 
+        emailBody: selectedEmail.body || selectedEmail.snippet 
+      };
+      
+      if (mode === "reply") {
+        endpoint = "/api/ai/reply";
+        payload.intent = draft;
+      } else if (mode === "schedule") {
+        endpoint = "/api/ai/schedule";
+      }
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -96,11 +134,26 @@ const Playground: FC = () => {
         body: JSON.stringify(payload)
       });
       
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
+
+      const text = await res.text();
+      if (!text) throw new Error("Empty response from server");
+      
+      const data = JSON.parse(text);
       if (mode === "reply") {
         setGenerated(data.reply);
-      } else {
+      } else if (mode === "summary") {
         setGenerated(data.summary);
+      } else if (mode === "schedule") {
+        if (data.error) {
+          setGenerated("AI could not detect a meeting in this email.");
+        } else {
+          setGenerated(`📅 Event: ${data.title}\n📍 Location: ${data.location || 'TBD'}\n📝 Note: ${data.description}`);
+          const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(data.title)}&dates=${data.startDate}/${data.endDate}&details=${encodeURIComponent(data.description)}&location=${encodeURIComponent(data.location)}`;
+          setCalUrl(url);
+        }
       }
     } catch (error) {
       console.error("AI Error:", error);
@@ -152,6 +205,7 @@ const Playground: FC = () => {
   const handleModeChange = (m: Mode) => {
     setMode(m);
     setGenerated(null); // Reset output when mode changes
+    setCalUrl(null);
     setSendSuccess(false);
   };
 
@@ -192,12 +246,26 @@ const Playground: FC = () => {
                 ▣ Inbox 
                 {loadingEmails && <RefreshCcw className="w-3 h-3 animate-spin" />}
               </span>
-              <span className="font-mono text-[9px] text-primary/30">{userEmail}</span>
+              <div className="flex items-center gap-4">
+                <span className="font-mono text-[9px] text-primary/30 hidden sm:inline">{userEmail}</span>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center gap-1 text-[9px] font-mono text-primary/40 hover:text-red-500 transition-colors uppercase tracking-widest"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4 flex-1 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
               {emails.length === 0 && !loadingEmails ? (
-                <p className="font-mono text-xs text-primary/40 text-center mt-10">No emails found.</p>
+                <div className="flex flex-col items-center justify-center mt-12 opacity-50">
+                  <Inbox className="w-8 h-8 mb-4 text-primary/40" />
+                  <p className="font-mono text-xs text-primary/60 text-center uppercase tracking-widest">Inbox Empty</p>
+                  <p className="font-mono text-[9px] text-primary/30 text-center mt-2 max-w-[200px]">No emails found or API returned an empty list.</p>
+                </div>
               ) : (
                 emails.map((email) => {
                   const isSelected = selectedEmail?.id === email.id;
@@ -236,11 +304,29 @@ const Playground: FC = () => {
           </div>
 
           {/* AI Action Panel */}
-          <div className="bg-background p-6 md:p-8 flex flex-col border-l border-primary/20">
+          <div className="bg-background p-6 md:p-8 flex flex-col border-l border-primary/20 relative overflow-hidden">
+            {previewOnly && userEmail && (
+              <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center">
+                <div className="mb-6 p-4 border border-primary/20 bg-background/90 space-y-4 max-w-xs">
+                  <Sparkles className="w-8 h-8 text-primary mx-auto animate-pulse" />
+                  <h4 className="font-display text-xl uppercase text-primary">Full AI Access</h4>
+                  <p className="font-mono text-[10px] text-primary/60 tracking-widest leading-relaxed">
+                    REPLYING, SUMMARIZING, AND SCHEDULING ARE AVAILABLE IN THE DEDICATED DASHBOARD.
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="font-mono text-[10px] uppercase tracking-[0.3em] bg-primary text-background px-8 py-4 hover:bg-primary/90 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-3 shadow-[0_0_30px_rgba(255,0,0,0.2)]"
+                >
+                  <Command className="w-4 h-4" /> Open Dashboard
+                </button>
+              </div>
+            )}
+
             {selectedEmail ? (
               <>
                 <div className="flex items-center gap-px mb-6 border border-primary/20 w-fit">
-                  {(["reply", "summary"] as Mode[]).map((m) => (
+                  {(["reply", "summary", "schedule"] as Mode[]).map((m) => (
                     <button
                       key={m}
                       onClick={() => handleModeChange(m)}
@@ -279,14 +365,26 @@ const Playground: FC = () => {
                   {pendingAI ? "Thinking..." : `Generate ${mode}`}
                 </button>
 
-                <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[250px] flex flex-col relative overflow-y-auto">
+                <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[250px] flex flex-col relative overflow-y-auto custom-scrollbar">
                   <div className="font-mono text-[9px] uppercase tracking-widest text-primary/40 mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className={`w-1.5 h-1.5 ${pendingAI ? 'bg-primary animate-pulse' : 'bg-primary/50'}`} />
-                      AI {mode === 'reply' ? 'Draft' : 'Summary'}
+                      AI {mode === 'reply' ? 'Draft' : mode === 'schedule' ? 'Event Extractor' : 'Summary'}
                     </div>
                     {generated && !pendingAI && (
                       <div className="flex items-center gap-4">
+                        {mode === 'schedule' && calUrl && (
+                          <a
+                            href={calUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-[9px] uppercase tracking-widest flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
+                            title="Add to Google Calendar"
+                          >
+                            <Calendar className="w-3 h-3" />
+                            <span className="hidden sm:inline">ADD TO CALENDAR</span>
+                          </a>
+                        )}
                         {mode === 'reply' && (
                           <button
                             onClick={handleSendReply}
@@ -327,7 +425,10 @@ const Playground: FC = () => {
                         exit={{ opacity: 0 }}
                         className="font-mono text-[11px] text-primary/40 mt-4"
                       >
-                        Analyzing email and writing {mode}...
+                        <span className="flex items-center gap-2">
+                          <span className="w-1 h-3 bg-primary animate-ping" />
+                          Processing {mode} request...
+                        </span>
                       </motion.p>
                     ) : generated ? (
                       <motion.pre
@@ -353,8 +454,10 @@ const Playground: FC = () => {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-center">
-                <p className="font-mono text-[11px] text-primary/40">Select an email from your inbox to start.</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center border border-dashed border-primary/20 bg-primary/[0.01]">
+                <MessageSquare className="w-8 h-8 text-primary/20 mb-4" />
+                <p className="font-mono text-[11px] text-primary/40 uppercase tracking-widest">Awaiting Selection</p>
+                <p className="font-mono text-[9px] text-primary/30 mt-2 max-w-[200px]">Select an email from the left panel to begin AI processing.</p>
               </div>
             )}
           </div>

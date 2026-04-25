@@ -1,8 +1,23 @@
 import { getAuthUrl, getTokensFromCode, createAuthenticatedClient } from '../config/googleAuth.js';
 import { google } from 'googleapis';
+import fs from 'fs';
+import path from 'path';
 
-// In-memory token store (replace with DB in production)
-const tokenStore = {};
+// Simple file-based token store to survive backend restarts
+const STORE_PATH = path.resolve('./tokens.json');
+
+const loadTokens = () => {
+  if (fs.existsSync(STORE_PATH)) {
+    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8'));
+  }
+  return {};
+};
+
+const saveTokens = (store) => {
+  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+};
+
+let tokenStore = loadTokens();
 
 // Step 1: Redirect user to Google consent screen
 export const startAuth = (req, res) => {
@@ -28,9 +43,10 @@ export const handleCallback = async (req, res) => {
 
     // Store tokens mapped to user's email
     tokenStore[userInfo.email] = tokens;
+    saveTokens(tokenStore);
 
     // Redirect back to frontend with email in query string
-    res.redirect(`http://localhost:8080/?email=${encodeURIComponent(userInfo.email)}#playground`);
+    res.redirect(`http://localhost:8080/dashboard?email=${encodeURIComponent(userInfo.email)}`);
   } catch (error) {
     console.error('Auth callback error:', error.message);
     res.status(500).json({ error: 'Failed to exchange code for tokens' });
