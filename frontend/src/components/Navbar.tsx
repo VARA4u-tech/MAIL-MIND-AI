@@ -14,6 +14,13 @@ const Navbar: FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const email = window.localStorage.getItem('mailmind:playground:email');
+    if (email) setUserEmail(email);
+  }, []);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
@@ -90,12 +97,21 @@ const Navbar: FC = () => {
           <div className="flex items-center gap-4">
             {/* CTA */}
             <Magnetic>
-              <button
-                onClick={() => document.getElementById("get-started")?.scrollIntoView({ behavior: "smooth" })}
-                className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30 px-4 py-2 hover:bg-primary hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                Join Waitlist
-              </button>
+              {userEmail ? (
+                <button
+                  onClick={() => document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" })}
+                  className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary text-background px-4 py-2 hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  Open Inbox
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.href = '/api/auth/google'}
+                  className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30 px-4 py-2 hover:bg-primary hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  Sign in with Google
+                </button>
+              )}
             </Magnetic>
 
             {/* Hamburger (mobile only) */}
@@ -142,12 +158,21 @@ const Navbar: FC = () => {
               </button>
             ))}
             <div className="px-6 pt-4 border-t border-primary/10 mt-2">
-              <button
-                onClick={() => { setMenuOpen(false); document.getElementById("get-started")?.scrollIntoView({ behavior: "smooth" }); }}
-                className="w-full font-mono text-xs uppercase tracking-[0.25em] bg-primary text-background px-4 py-3 hover:bg-primary/90 transition-colors"
-              >
-                Join Waitlist →
-              </button>
+              {userEmail ? (
+                <button
+                  onClick={() => { setMenuOpen(false); document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" }); }}
+                  className="w-full font-mono text-xs uppercase tracking-[0.25em] bg-primary text-background px-4 py-3 hover:bg-primary/90 transition-colors"
+                >
+                  Open Inbox →
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setMenuOpen(false); window.location.href = '/api/auth/google'; }}
+                  className="w-full font-mono text-xs uppercase tracking-[0.25em] bg-primary text-background px-4 py-3 hover:bg-primary/90 transition-colors"
+                >
+                  Sign in with Google →
+                </button>
+              )}
             </div>
           </motion.div>
         )}

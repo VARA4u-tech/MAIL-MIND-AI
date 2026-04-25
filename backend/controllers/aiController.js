@@ -30,7 +30,7 @@ export const generateReply = async (req, res) => {
     
     // Using a reliable model like google/gemini-2.5-flash or anthropic/claude-3-haiku via OpenRouter
     // You can change this to any model OpenRouter supports (e.g., 'openai/gpt-4o-mini', 'meta-llama/llama-3-8b-instruct')
-    const model = 'google/gemini-2.5-flash'; 
+    const model = 'google/gemma-4-26b-a4b-it:free'; 
 
     const completion = await openai.chat.completions.create({
       model: model,
@@ -66,7 +66,7 @@ export const summarizeEmail = async (req, res) => {
 
   try {
     const openai = getOpenRouterClient();
-    const model = 'google/gemini-2.5-flash'; 
+    const model = 'google/gemma-4-26b-a4b-it:free'; 
 
     const completion = await openai.chat.completions.create({
       model: model,

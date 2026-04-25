@@ -4,12 +4,9 @@ import ScrollRevealText from "@/components/ScrollRevealText";
 import FeatureAccordion from "@/components/FeatureAccordion";
 import HowItWorks from "@/components/HowItWorks";
 import ScrollToTop from "@/components/ScrollToTop";
-import UseCases from "@/components/UseCases";
 import Playground from "@/components/Playground";
-import WaitlistForm from "@/components/WaitlistForm";
 import DemoModal from "@/components/DemoModal";
 import Navbar from "@/components/Navbar";
-import DashboardPreview from "@/components/DashboardPreview";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -293,8 +290,6 @@ const Index = () => {
 
       <HowItWorks />
 
-      <DashboardPreview />
-
       {/* Easings section */}
       <section className="py-32 px-4">
         <ScrollRevealText
@@ -319,11 +314,7 @@ const Index = () => {
         <FeatureAccordion />
       </section>
 
-      <UseCases />
-
       <Playground />
-
-      <WaitlistForm />
 
       <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
