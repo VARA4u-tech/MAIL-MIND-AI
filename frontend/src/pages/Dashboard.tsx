@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Mail, MessageSquare, Calendar, Check, LogOut, 
   Search, Filter, Star, Archive, Trash2, Send, 
-  ChevronRight, RefreshCcw, Sparkles, User, 
+  ChevronRight, ChevronLeft, RefreshCcw, Sparkles, User, 
   Menu, X, Command, Inbox, LayoutDashboard
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -199,19 +199,31 @@ const Dashboard: FC = () => {
         className="border-r border-primary/10 bg-primary/[0.02] flex flex-col z-20"
       >
         <div 
-          onClick={() => navigate('/')}
-          className="p-6 flex items-center gap-3 border-b border-primary/10 cursor-pointer hover:bg-primary/5 transition-colors group"
+          className="p-6 flex items-center justify-between border-b border-primary/10 bg-primary/[0.01]"
         >
-          <img 
-            src="/favicon.png" 
-            alt="MailMind Logo" 
-            className="w-8 h-8 object-contain transition-transform group-hover:scale-110" 
-          />
-          {isSidebarOpen && (
-            <span className="font-display tracking-widest text-primary text-xl uppercase">
-              MailMind
-            </span>
-          )}
+          <div 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity group"
+          >
+            <img 
+              src="/favicon.png" 
+              alt="MailMind Logo" 
+              className="w-8 h-8 object-contain transition-transform group-hover:scale-110" 
+            />
+            {isSidebarOpen && (
+              <span className="font-display tracking-widest text-primary text-xl uppercase">
+                MailMind
+              </span>
+            )}
+          </div>
+          
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-1 hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary hidden md:block"
+            title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+          >
+            {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
