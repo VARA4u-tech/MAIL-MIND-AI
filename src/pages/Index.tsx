@@ -128,6 +128,20 @@ const Footer = () => (
         <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">LinkedIn</a>
       </div>
     </div>
+
+    <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-primary/10 text-center">
+      <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary/40">
+        Cooked and served by{" "}
+        <a 
+          href="https://github.com/VARA4u-tech" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-primary hover:text-primary/80 transition-colors font-bold"
+        >
+          VARA
+        </a>
+      </p>
+    </div>
   </footer>
 );
 
