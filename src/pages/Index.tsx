@@ -11,6 +11,7 @@ import DemoModal from "@/components/DemoModal";
 import Navbar from "@/components/Navbar";
 import DashboardPreview from "@/components/DashboardPreview";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 const SubtitleSection = () => {
@@ -114,17 +115,17 @@ const Footer = () => (
 
       <div className="flex flex-col gap-3">
         <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">Company</h3>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">About Us</a>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Careers</a>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Contact</a>
+        <Link to="/about" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">About Us</Link>
+        <Link to="/careers" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Careers</Link>
+        <Link to="/contact" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Contact</Link>
       </div>
 
       <div className="flex flex-col gap-3">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">Legal & Social</h3>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Privacy Policy</a>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Terms of Service</a>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Twitter / X</a>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">LinkedIn</a>
+        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">Legal &amp; Social</h3>
+        <Link to="/privacy" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Privacy Policy</Link>
+        <Link to="/terms" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Terms of Service</Link>
+        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Twitter / X</a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">LinkedIn</a>
       </div>
     </div>
   </footer>
