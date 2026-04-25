@@ -1,5 +1,6 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Copy, Mail, MessageSquare, Calendar, Check } from "lucide-react";
 
 interface Message {
   from: "them" | "you";
@@ -135,6 +136,7 @@ const Playground: FC = () => {
   const [generated, setGenerated] = useState<string | null>(initial.output);
   const [variant, setVariant] = useState(initial.variant);
   const [pending, setPending] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Persist state
   useEffect(() => {
@@ -194,6 +196,13 @@ const Playground: FC = () => {
         <span className="font-mono text-[10px] text-primary/40 tracking-widest hidden md:inline">
           [04] PLAYGROUND
         </span>
+      </div>
+
+      <div className="mb-8 flex items-center gap-4 text-primary/40">
+        <span className="font-mono text-[10px] uppercase tracking-widest">Works with:</span>
+        <Mail className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" title="Gmail" />
+        <MessageSquare className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" title="Slack" />
+        <Calendar className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" title="Google Calendar" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-primary/15 border border-primary/20">
@@ -272,10 +281,26 @@ const Playground: FC = () => {
             {pending ? "Generating…" : generated ? `Regenerate ${mode}` : `Generate ${mode}`}
           </button>
 
-          <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[200px]">
-            <div className="font-mono text-[9px] uppercase tracking-widest text-primary/40 mb-3 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-primary animate-pulse" />
-              AI output
+          <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[200px] flex flex-col relative">
+            <div className="font-mono text-[9px] uppercase tracking-widest text-primary/40 mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-primary animate-pulse" />
+                AI output
+              </div>
+              {output && !pending && (
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(output);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="hover:text-primary transition-colors flex items-center gap-1"
+                  title="Copy to clipboard"
+                >
+                  {copied ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
+                  <span className="hidden sm:inline">{copied ? "COPIED" : "COPY"}</span>
+                </button>
+              )}
             </div>
             <AnimatePresence mode="wait">
               {pending ? (
