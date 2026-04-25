@@ -102,8 +102,8 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
       />
 
       <motion.div
-        style={{ scale, opacity, y: textY, clipPath: clipValue }}
-        className="relative w-full flex flex-col items-center justify-center px-[1vw]"
+        style={{ scale, opacity, y: textY }}
+        className="relative w-full flex flex-col items-center justify-center px-[1vw] py-12"
       >
         {/* Main title with entrance animation */}
         <motion.h1
