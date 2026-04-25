@@ -93,11 +93,11 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
         }}
       />
 
-      {/* Radial vignette */}
+      {/* Radial vignette — softened so edges don't go pitch black */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 40%, hsl(0 0% 0%) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 3% / 0.85) 100%)",
         }}
       />
 
@@ -121,9 +121,9 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={mounted ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
-          className="font-mono text-[9px] md:text-[10px] text-primary/30 uppercase tracking-[0.5em] mt-4 md:mt-6"
+          className="font-mono text-xs md:text-sm text-primary/60 uppercase tracking-[0.4em] mt-4 md:mt-6"
         >
-          AI Email & Calendar Assistant
+          AI Email &amp; Calendar Assistant
         </motion.p>
 
         {/* CTA buttons */}
@@ -145,7 +145,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           </button>
           <button
             onClick={onViewDemo}
-            className="font-mono text-[11px] uppercase tracking-[0.25em] border border-primary/40 text-primary px-5 py-3 hover:border-primary transition-colors cursor-pointer"
+            className="font-mono text-[11px] uppercase tracking-[0.25em] border border-primary/60 text-primary px-5 py-3 hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer"
           >
             View Demo
           </button>
@@ -155,16 +155,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
-      {/* Corner markers */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={mounted ? { opacity: 1 } : {}}
-        transition={{ duration: 0.6, delay: 1.2 }}
-        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2"
-      >
-        <span className="w-2 h-2 bg-primary" />
-        <span className="font-mono text-[9px] text-primary/30 tracking-widest uppercase">MailMind AI</span>
-      </motion.div>
+      {/* Version marker — top right only */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={mounted ? { opacity: 1 } : {}}
