@@ -68,7 +68,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
       >
         {/* Grid pattern */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.1]"
           style={{
             backgroundImage:
               "linear-gradient(hsl(0 100% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 100% 50%) 1px, transparent 1px)",
@@ -80,7 +80,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(0 100% 50% / 0.06) 0%, transparent 70%)",
+              "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(0 100% 50% / 0.1) 0%, transparent 70%)",
           }}
         />
       </div>
