@@ -95,7 +95,7 @@ const Footer = () => (
         </p>
         <div className="flex flex-col gap-1">
           <a
-            href="https://github.com/VARA4u-tech"
+            href="https://github.com/VARA4u-tech/MAIL-MIND-AI"
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-[10px] uppercase tracking-widest text-primary/40 hover:text-primary transition-colors"
