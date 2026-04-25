@@ -1,25 +1,43 @@
-import { FC, FormEvent, useState } from "react";
+import { FC, FormEvent, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { z } from "zod";
+
+const waitlistSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: "Name is required" })
+    .max(100, { message: "Name must be under 100 characters" }),
+  email: z
+    .string()
+    .trim()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Please enter a valid email" })
+    .max(255, { message: "Email must be under 255 characters" }),
+});
 
 const WaitlistForm: FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState<{ name: boolean; email: boolean }>({ name: false, email: false });
+
+  const validation = useMemo(() => waitlistSchema.safeParse({ name, email }), [name, email]);
+  const isValid = validation.success;
+  const fieldErrors: Record<string, string> = {};
+  if (!isValid) {
+    for (const issue of validation.error.issues) {
+      const key = issue.path[0] as string;
+      if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
-    if (!name.trim() || !email.trim()) {
-      setError("Both fields are required.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Please enter a valid email.");
-      return;
-    }
+    setTouched({ name: true, email: true });
+    if (!isValid) return;
     setStatus("submitting");
-    // Mock submission
+    // Mock submission only — no network call
     setTimeout(() => setStatus("done"), 700);
   };
 
@@ -29,6 +47,9 @@ const WaitlistForm: FC = () => {
       className="py-32 px-4 max-w-3xl mx-auto"
       data-debug="waitlist"
     >
+      {/* Anchor alias for "Get Started" CTA */}
+      <span id="get-started" className="block -mt-20 pt-20" aria-hidden="true" />
+
       <div className="mb-12 flex items-baseline justify-between border-b border-primary/20 pb-6">
         <h2
           className="font-display text-primary uppercase leading-none"
@@ -62,7 +83,7 @@ const WaitlistForm: FC = () => {
               </span>
             </div>
             <p className="font-display text-primary text-3xl md:text-4xl uppercase leading-tight mb-3">
-              YOU'RE ON THE LIST, {name.split(" ")[0].toUpperCase()}.
+              YOU'RE ON THE LIST, {name.trim().split(" ")[0].toUpperCase()}.
             </p>
             <p className="font-mono text-[11px] text-primary/50 leading-relaxed">
               We sent a confirmation to{" "}
@@ -77,6 +98,7 @@ const WaitlistForm: FC = () => {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, y: -8 }}
             className="space-y-6"
+            noValidate
           >
             <div>
               <label className="font-mono text-[9px] uppercase tracking-widest text-primary/40 block mb-2">
@@ -85,10 +107,23 @@ const WaitlistForm: FC = () => {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.slice(0, 100))}
+                onBlur={() => setTouched((t) => ({ ...t, name: true }))}
+                maxLength={100}
+                autoComplete="name"
                 placeholder="Ada Lovelace"
-                className="w-full bg-transparent border border-primary/25 focus:border-primary outline-none font-mono text-[13px] text-primary p-3 placeholder:text-primary/25 transition-colors"
+                aria-invalid={touched.name && !!fieldErrors.name}
+                className={`w-full bg-transparent border outline-none font-mono text-[13px] text-primary p-3 placeholder:text-primary/25 transition-colors ${
+                  touched.name && fieldErrors.name
+                    ? "border-primary"
+                    : "border-primary/25 focus:border-primary"
+                }`}
               />
+              {touched.name && fieldErrors.name && (
+                <p className="font-mono text-[10px] text-primary/80 uppercase tracking-widest mt-2">
+                  ! {fieldErrors.name}
+                </p>
+              )}
             </div>
             <div>
               <label className="font-mono text-[9px] uppercase tracking-widest text-primary/40 block mb-2">
@@ -97,22 +132,29 @@ const WaitlistForm: FC = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.slice(0, 255))}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                maxLength={255}
+                autoComplete="email"
                 placeholder="ada@analytical.engine"
-                className="w-full bg-transparent border border-primary/25 focus:border-primary outline-none font-mono text-[13px] text-primary p-3 placeholder:text-primary/25 transition-colors"
+                aria-invalid={touched.email && !!fieldErrors.email}
+                className={`w-full bg-transparent border outline-none font-mono text-[13px] text-primary p-3 placeholder:text-primary/25 transition-colors ${
+                  touched.email && fieldErrors.email
+                    ? "border-primary"
+                    : "border-primary/25 focus:border-primary"
+                }`}
               />
+              {touched.email && fieldErrors.email && (
+                <p className="font-mono text-[10px] text-primary/80 uppercase tracking-widest mt-2">
+                  ! {fieldErrors.email}
+                </p>
+              )}
             </div>
-
-            {error && (
-              <p className="font-mono text-[10px] text-primary/80 uppercase tracking-widest">
-                ! {error}
-              </p>
-            )}
 
             <button
               type="submit"
-              disabled={status === "submitting"}
-              className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-6 py-3 hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+              disabled={status === "submitting" || !isValid}
+              className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-6 py-3 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {status === "submitting" ? "Adding…" : "Request access →"}
             </button>
