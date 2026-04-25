@@ -269,7 +269,7 @@ const Playground: FC = () => {
             disabled={pending}
             className="font-mono text-[10px] uppercase tracking-[0.25em] bg-primary text-background px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer w-fit mb-6"
           >
-            {pending ? "Generating…" : `Generate ${mode}`}
+            {pending ? "Generating…" : generated ? `Regenerate ${mode}` : `Generate ${mode}`}
           </button>
 
           <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[200px]">
