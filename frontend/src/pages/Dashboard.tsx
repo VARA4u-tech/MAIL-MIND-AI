@@ -199,31 +199,37 @@ const Dashboard: FC = () => {
         className="border-r border-primary/10 bg-primary/[0.02] flex flex-col z-20"
       >
         <div 
-          className="p-6 flex items-center justify-between border-b border-primary/10 bg-primary/[0.01]"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className={`p-6 flex items-center gap-3 border-b border-primary/10 cursor-pointer hover:bg-primary/5 transition-all duration-300 group relative ${!isSidebarOpen ? 'justify-center' : ''}`}
+          title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
         >
-          <div 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity group"
-          >
-            <img 
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <motion.img 
               src="/favicon.png" 
               alt="MailMind Logo" 
-              className="w-8 h-8 object-contain transition-transform group-hover:scale-110" 
+              className="w-8 h-8 object-contain transition-all duration-300 group-hover:opacity-0 group-hover:scale-75" 
             />
-            {isSidebarOpen && (
-              <span className="font-display tracking-widest text-primary text-xl uppercase">
-                MailMind
-              </span>
-            )}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-primary">
+              {isSidebarOpen ? (
+                <ChevronLeft className="w-6 h-6" />
+              ) : (
+                <ChevronRight className="w-6 h-6" />
+              )}
+            </div>
           </div>
           
-          <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-1 hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary hidden md:block"
-            title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          >
-            {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
+          <AnimatePresence>
+            {isSidebarOpen && (
+              <motion.span 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap"
+              >
+                MailMind
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
