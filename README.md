@@ -1,3 +1,10 @@
-# Welcome to your Lovable project
+# MailMind AI
+Your AI-powered Email & Calendar Assistant.
 
-TODO: Document your project here
+## Overview
+MailMind AI generates smart replies, summarizes threads, detects intent, and schedules meetings automatically.
+
+## Tech Stack
+- **Frontend**: React + Vite + TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Animations**: Framer Motion
