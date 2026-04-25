@@ -136,7 +136,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           <button
             onClick={() => {
               document
-                .getElementById("demo")
+                .getElementById("get-started")
                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
             className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-5 py-3 hover:bg-primary/90 transition-colors cursor-pointer"
