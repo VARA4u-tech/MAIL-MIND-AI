@@ -4,7 +4,7 @@ import {
   Mail, MessageSquare, Calendar, Check, LogOut, 
   Search, Filter, Star, Archive, Trash2, Send, 
   ChevronRight, ChevronLeft, RefreshCcw, Sparkles, User, 
-  Menu, X, Command, Inbox, LayoutDashboard
+  Menu, X, Command, Inbox, LayoutDashboard, ArrowLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -38,8 +38,25 @@ const Dashboard: FC = () => {
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Sidebar/Responsive State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+  
   const initialized = useRef(false);
+
+  // Handle Resize
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      if (width > 1024) setIsSidebarOpen(true);
+      else if (width < 768) setIsSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleLogout = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY + ':email');
@@ -63,15 +80,17 @@ const Dashboard: FC = () => {
       const data = JSON.parse(text);
       if (data.emails) {
         setEmails(data.emails);
-        // Only select first email if none is currently selected
-        setSelectedEmail(prev => prev || (data.emails.length > 0 ? data.emails[0] : null));
+        // On desktop, auto-select first email
+        if (!isMobile) {
+          setSelectedEmail(prev => prev || (data.emails.length > 0 ? data.emails[0] : null));
+        }
       }
     } catch (error) {
       console.error("Failed to fetch inbox:", error);
     } finally {
       setLoadingEmails(false);
     }
-  }, [handleLogout]);
+  }, [handleLogout, isMobile]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -190,99 +209,145 @@ const Dashboard: FC = () => {
     e.from.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleEmailSelect = (email: EmailMessage) => {
+    setSelectedEmail(email);
+    if (isMobile) {
+      setMobileView("detail");
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-background text-primary font-mono overflow-hidden selection:bg-primary/20 selection:text-primary">
-      {/* Sidebar Navigation */}
-      <motion.aside 
-        initial={false}
-        animate={{ width: isSidebarOpen ? 260 : 80 }}
-        className="border-r border-primary/10 bg-primary/[0.02] flex flex-col z-20"
-      >
-        <div 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`p-6 flex items-center gap-3 border-b border-primary/10 cursor-pointer hover:bg-primary/5 transition-all duration-300 group relative ${!isSidebarOpen ? 'justify-center' : ''}`}
-          title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-        >
-          <div className="relative w-8 h-8 flex items-center justify-center">
-            <motion.img 
-              src="/favicon.png" 
-              alt="MailMind Logo" 
-              className="w-8 h-8 object-contain transition-all duration-300 group-hover:opacity-0 group-hover:scale-75" 
-            />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-primary">
-              {isSidebarOpen ? (
-                <ChevronLeft className="w-6 h-6" />
-              ) : (
-                <ChevronRight className="w-6 h-6" />
-              )}
-            </div>
-          </div>
-          
-          <AnimatePresence>
-            {isSidebarOpen && (
-              <motion.span 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap"
-              >
-                MailMind
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-          {[
-            { icon: <LayoutDashboard className="w-4 h-4" />, label: "Home", path: "/" },
-            { icon: <Inbox className="w-4 h-4" />, label: "Inbox", count: emails.length },
-            { icon: <Star className="w-4 h-4" />, label: "Starred" },
-            { icon: <Send className="w-4 h-4" />, label: "Sent" },
-            { icon: <Archive className="w-4 h-4" />, label: "Archive" },
-            { icon: <Trash2 className="w-4 h-4" />, label: "Trash" },
-          ].map((item) => (
-            <button 
-              key={item.label}
-              onClick={() => item.path ? navigate(item.path) : null}
-              className="w-full flex items-center gap-3 p-3 hover:bg-primary/5 transition-colors text-xs uppercase tracking-widest text-primary/60 hover:text-primary group"
-            >
-              <span className="text-primary/40 group-hover:text-primary">{item.icon}</span>
-              {isSidebarOpen && (
-                <>
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {item.count !== undefined && <span className="text-[10px] opacity-40">[{item.count}]</span>}
-                </>
-              )}
-            </button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-primary/10 space-y-4">
-          <div className={`flex items-center gap-3 ${isSidebarOpen ? '' : 'justify-center'}`}>
-            <div className="w-8 h-8 border border-primary/20 rounded-none flex items-center justify-center bg-primary/5">
-              <User className="w-4 h-4 text-primary/40" />
-            </div>
-            {isSidebarOpen && (
-              <div className="flex-1 overflow-hidden">
-                <p className="text-[10px] truncate text-primary/60">{userEmail}</p>
-              </div>
-            )}
-          </div>
+    <div className="flex h-screen bg-background text-primary font-mono overflow-hidden selection:bg-primary/20 selection:text-primary relative">
+      
+      {/* Mobile Top Header */}
+      {isMobile && (
+        <div className="fixed top-0 inset-x-0 h-16 border-b border-primary/10 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 z-30">
           <button 
-            onClick={handleLogout}
-            className={`w-full flex items-center gap-3 p-2 text-red-500/60 hover:text-red-500 hover:bg-red-500/5 transition-colors text-[10px] uppercase tracking-[0.2em] ${isSidebarOpen ? '' : 'justify-center'}`}
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 text-primary/60"
           >
-            <LogOut className="w-4 h-4" />
-            {isSidebarOpen && <span>Logout</span>}
+            <Menu className="w-6 h-6" />
           </button>
+          <div className="flex items-center gap-2">
+            <img src="/favicon.png" alt="Logo" className="w-6 h-6 object-contain" />
+            <span className="font-display tracking-widest text-primary text-sm uppercase">MailMind</span>
+          </div>
+          <div className="w-10" /> {/* Spacer */}
         </div>
-      </motion.aside>
+      )}
+
+      {/* Sidebar Navigation */}
+      <AnimatePresence mode="wait">
+        {(isSidebarOpen || !isMobile) && (
+          <>
+            {/* Overlay for mobile */}
+            {isMobile && isSidebarOpen && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsSidebarOpen(false)}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40"
+              />
+            )}
+            
+            <motion.aside 
+              initial={isMobile ? { x: -300 } : false}
+              animate={{ 
+                x: 0,
+                width: isSidebarOpen ? (isMobile ? 280 : 260) : 80,
+                position: isMobile ? "fixed" : "relative"
+              }}
+              exit={isMobile ? { x: -300 } : undefined}
+              className={`h-full border-r border-primary/10 bg-primary/[0.02] flex flex-col z-50 overflow-hidden ${isMobile ? "fixed inset-y-0 left-0" : ""}`}
+            >
+              <div 
+                onClick={() => isMobile ? setIsSidebarOpen(false) : setIsSidebarOpen(!isSidebarOpen)}
+                className={`p-6 flex items-center gap-3 border-b border-primary/10 cursor-pointer hover:bg-primary/5 transition-all duration-300 group relative ${!isSidebarOpen && !isMobile ? 'justify-center' : ''}`}
+              >
+                <div className="relative w-8 h-8 flex items-center justify-center">
+                  <motion.img 
+                    src="/favicon.png" 
+                    alt="MailMind Logo" 
+                    className="w-8 h-8 object-contain transition-all duration-300 group-hover:opacity-0 group-hover:scale-75" 
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-primary">
+                    {isSidebarOpen ? (
+                      <ChevronLeft className="w-6 h-6" />
+                    ) : (
+                      <ChevronRight className="w-6 h-6" />
+                    )}
+                  </div>
+                </div>
+                
+                {(isSidebarOpen || isMobile) && (
+                  <motion.span 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap"
+                  >
+                    MailMind
+                  </motion.span>
+                )}
+              </div>
+
+              <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+                {[
+                  { icon: <LayoutDashboard className="w-4 h-4" />, label: "Home", path: "/" },
+                  { icon: <Inbox className="w-4 h-4" />, label: "Inbox", count: emails.length },
+                  { icon: <Star className="w-4 h-4" />, label: "Starred" },
+                  { icon: <Send className="w-4 h-4" />, label: "Sent" },
+                  { icon: <Archive className="w-4 h-4" />, label: "Archive" },
+                  { icon: <Trash2 className="w-4 h-4" />, label: "Trash" },
+                ].map((item) => (
+                  <button 
+                    key={item.label}
+                    onClick={() => {
+                      if (item.path) navigate(item.path);
+                      if (isMobile) setIsSidebarOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-primary/5 transition-colors text-xs uppercase tracking-widest text-primary/60 hover:text-primary group"
+                  >
+                    <span className="text-primary/40 group-hover:text-primary">{item.icon}</span>
+                    {(isSidebarOpen || isMobile) && (
+                      <>
+                        <span className="flex-1 text-left">{item.label}</span>
+                        {item.count !== undefined && <span className="text-[10px] opacity-40">[{item.count}]</span>}
+                      </>
+                    )}
+                  </button>
+                ))}
+              </nav>
+
+              <div className="p-4 border-t border-primary/10 space-y-4">
+                <div className={`flex items-center gap-3 ${(isSidebarOpen || isMobile) ? '' : 'justify-center'}`}>
+                  <div className="w-8 h-8 border border-primary/20 rounded-none flex items-center justify-center bg-primary/5">
+                    <User className="w-4 h-4 text-primary/40" />
+                  </div>
+                  {(isSidebarOpen || isMobile) && (
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-[10px] truncate text-primary/60">{userEmail}</p>
+                    </div>
+                  )}
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className={`w-full flex items-center gap-3 p-2 text-red-500/60 hover:text-red-500 hover:bg-red-500/5 transition-colors text-[10px] uppercase tracking-[0.2em] ${(isSidebarOpen || isMobile) ? '' : 'justify-center'}`}
+                >
+                  <LogOut className="w-4 h-4" />
+                  {(isSidebarOpen || isMobile) && <span>Logout</span>}
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className={`flex-1 flex overflow-hidden ${isMobile ? "mt-16" : ""}`}>
         
         {/* Email List Column */}
-        <div className="w-full md:w-[400px] border-r border-primary/10 flex flex-col bg-background relative z-10">
+        <div className={`${isMobile && mobileView === "detail" ? "hidden" : "flex"} w-full md:w-[400px] border-r border-primary/10 flex-col bg-background relative z-10`}>
           <div className="p-6 border-b border-primary/10 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xs uppercase tracking-[0.3em] font-bold text-primary/40">Messages</h2>
@@ -320,7 +385,7 @@ const Dashboard: FC = () => {
               filteredEmails.map((email) => (
                 <div
                   key={email.id}
-                  onClick={() => setSelectedEmail(email)}
+                  onClick={() => handleEmailSelect(email)}
                   className={`p-6 border-b border-primary/5 cursor-pointer transition-all relative overflow-hidden group ${
                     selectedEmail?.id === email.id 
                       ? "bg-primary/[0.04] border-l-2 border-l-primary" 
@@ -353,38 +418,52 @@ const Dashboard: FC = () => {
         </div>
 
         {/* Reading Pane + AI Tools */}
-        <div className="flex-1 flex flex-col bg-background relative overflow-hidden">
+        <div className={`${isMobile && mobileView === "list" ? "hidden" : "flex"} flex-1 flex flex-col bg-background relative overflow-hidden`}>
+          
+          {/* Mobile Back Header */}
+          {isMobile && (
+            <div className="p-4 border-b border-primary/10 flex items-center gap-4 bg-primary/[0.02]">
+              <button 
+                onClick={() => setMobileView("list")}
+                className="p-2 border border-primary/20 text-primary hover:bg-primary/10 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <span className="text-[10px] uppercase tracking-widest font-bold">Back to Inbox</span>
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             {selectedEmail ? (
               <motion.div 
                 key={selectedEmail.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
                 className="flex flex-col h-full overflow-hidden"
               >
                 {/* Email Header Area */}
-                <div className="p-8 border-b border-primary/10 bg-primary/[0.01]">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h1 className="text-xl font-bold mb-4 tracking-tight leading-tight max-w-2xl">
+                <div className="p-6 md:p-8 border-b border-primary/10 bg-primary/[0.01]">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <h1 className="text-lg md:text-xl font-bold mb-4 tracking-tight leading-tight max-w-2xl">
                         {selectedEmail.subject || '(NO SUBJECT)'}
                       </h1>
-                      <div className="flex items-center gap-3 text-[10px]">
+                      <div className="flex flex-wrap items-center gap-3 text-[10px]">
                         <div className="w-6 h-6 bg-primary/10 flex items-center justify-center text-primary/60 font-bold">
                           {selectedEmail.from[0].toUpperCase()}
                         </div>
-                        <span className="text-primary/60 tracking-widest">{selectedEmail.from}</span>
-                        <span className="w-1 h-1 bg-primary/20 rounded-full" />
+                        <span className="text-primary/60 tracking-widest truncate max-w-[200px]">{selectedEmail.from}</span>
+                        <span className="hidden sm:inline w-1 h-1 bg-primary/20 rounded-full" />
                         <span className="text-primary/40 uppercase tracking-widest">{selectedEmail.date}</span>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="p-2 border border-primary/10 hover:bg-primary/5 text-primary/40 hover:text-primary transition-colors">
+                    <div className="flex gap-2 w-full md:w-auto">
+                      <button className="flex-1 md:flex-none p-2 border border-primary/10 hover:bg-primary/5 text-primary/40 hover:text-primary transition-colors flex justify-center">
                         <Star className="w-4 h-4" />
                       </button>
-                      <button className="p-2 border border-primary/10 hover:bg-primary/5 text-primary/40 hover:text-primary transition-colors">
+                      <button className="flex-1 md:flex-none p-2 border border-primary/10 hover:bg-primary/5 text-primary/40 hover:text-primary transition-colors flex justify-center">
                         <Archive className="w-4 h-4" />
                       </button>
                     </div>
@@ -392,17 +471,17 @@ const Dashboard: FC = () => {
                 </div>
 
                 {/* Split Content: Body and AI Sidebar */}
-                <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                   
                   {/* Email Body */}
-                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
                     <div className="max-w-3xl font-sans text-[13px] text-primary/80 leading-[1.8] whitespace-pre-wrap">
                       {selectedEmail.body || selectedEmail.snippet}
                     </div>
                   </div>
 
                   {/* AI Actions Sidebar */}
-                  <div className="w-96 border-l border-primary/10 bg-primary/[0.01] flex flex-col">
+                  <div className="w-full md:w-96 border-t md:border-t-0 md:border-l border-primary/10 bg-primary/[0.01] flex flex-col h-auto md:h-full">
                     <div className="p-6 border-b border-primary/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-primary" />
@@ -521,7 +600,7 @@ const Dashboard: FC = () => {
                 </div>
               </motion.div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center space-y-6 opacity-20">
+              <div className="flex-1 flex flex-col items-center justify-center space-y-6 opacity-20 p-8 text-center">
                 <LayoutDashboard className="w-16 h-16" />
                 <div className="text-center">
                   <p className="text-xs uppercase tracking-[0.5em] font-bold">MailMind Command Center</p>
