@@ -178,10 +178,12 @@ const Playground: FC = () => {
 
   return (
     <section
-      id="demo"
+      id="playground"
       className="py-32 px-4 max-w-6xl mx-auto scroll-mt-20"
       data-debug="playground"
     >
+      {/* Aliases for smooth-scroll targets */}
+      <span id="demo" className="block -mt-20 pt-20" aria-hidden="true" />
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
         <h2
           className="font-display text-primary uppercase leading-none"
@@ -249,13 +251,14 @@ const Playground: FC = () => {
           {mode === "reply" && (
             <div className="mb-4">
               <label className="font-mono text-[9px] uppercase tracking-widest text-primary/40 block mb-2">
-                Your intent (optional)
+                Your intent (optional · max 500 chars)
               </label>
               <textarea
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => setDraft(e.target.value.slice(0, 500))}
                 placeholder="e.g. Confirm Wednesday and attach the rollout deck…"
                 rows={3}
+                maxLength={500}
                 className="w-full bg-transparent border border-primary/25 focus:border-primary/60 outline-none font-mono text-[11px] text-primary p-3 placeholder:text-primary/25 resize-none transition-colors"
               />
             </div>
