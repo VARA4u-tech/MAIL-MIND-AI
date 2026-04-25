@@ -202,8 +202,16 @@ const Dashboard: FC = () => {
           onClick={() => navigate('/')}
           className="p-6 flex items-center gap-3 border-b border-primary/10 cursor-pointer hover:bg-primary/5 transition-colors group"
         >
-          <div className="w-8 h-8 bg-primary text-background flex items-center justify-center font-bold group-hover:scale-110 transition-transform">M</div>
-          {isSidebarOpen && <span className="font-display text-lg tracking-tighter uppercase">MailMind</span>}
+          <img 
+            src="/favicon.png" 
+            alt="MailMind Logo" 
+            className="w-8 h-8 object-contain transition-transform group-hover:scale-110" 
+          />
+          {isSidebarOpen && (
+            <span className="font-display tracking-widest text-primary text-xl uppercase">
+              MailMind
+            </span>
+          )}
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
