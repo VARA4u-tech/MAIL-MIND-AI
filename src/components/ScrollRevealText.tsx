@@ -1,5 +1,5 @@
 import { FC, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 
 interface ScrollRevealTextProps {
   words: { text: string; className?: string }[];
@@ -26,7 +26,7 @@ const ScrollRevealText: FC<ScrollRevealTextProps> = ({ words, className = "" }) 
 
 interface WordProps {
   range: [number, number];
-  progress: any;
+  progress: MotionValue<number>;
   text: string;
   wordClass?: string;
 }
