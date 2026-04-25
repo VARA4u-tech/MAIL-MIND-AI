@@ -6,6 +6,7 @@ import HowItWorks from "@/components/HowItWorks";
 import ScrollToTop from "@/components/ScrollToTop";
 import Playground from "@/components/Playground";
 import DemoModal from "@/components/DemoModal";
+import PropertyDemo from "@/components/PropertyDemo";
 import Navbar from "@/components/Navbar";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -313,6 +314,8 @@ const Index = () => {
       <section id="features" className="py-24 px-4">
         <FeatureAccordion />
       </section>
+
+      <PropertyDemo />
 
       <section id="playground">
         <Playground previewOnly={true} />
