@@ -86,17 +86,22 @@ const Footer = () => (
           <span className="w-2 h-2 bg-primary" />
           <span className="font-display tracking-widest text-primary text-xl uppercase">MailMind</span>
         </div>
-        <p className="font-mono text-xs text-primary/50 leading-relaxed mb-6">
-          AI-powered email and calendar assistant to help you focus on what actually matters.
+        <p className="font-mono text-xs text-primary/60 leading-relaxed mb-6 max-w-[280px]">
+          Designed and engineered as a student-driven initiative to strengthen real-world skills, innovation, and professional growth.
         </p>
-        <a
-          href="https://github.com/VARA4u-tech"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-mono text-xs text-primary/40 hover:text-primary transition-colors"
-        >
-          Built by VARA❤️.
-        </a>
+        <div className="flex flex-col gap-1">
+          <a
+            href="https://github.com/VARA4u-tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[10px] uppercase tracking-widest text-primary/40 hover:text-primary transition-colors"
+          >
+            Project Repository →
+          </a>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-primary/20">
+            © 2026 Crafted by VARA.
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
