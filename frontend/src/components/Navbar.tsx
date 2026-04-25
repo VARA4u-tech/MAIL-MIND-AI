@@ -7,7 +7,6 @@ const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Use Cases", href: "#use-cases" },
   { label: "How it works", href: "#how-it-works" },
-  { label: "Demo", href: "#playground" },
 ];
 
 const Navbar: FC = () => {
@@ -37,7 +36,7 @@ const Navbar: FC = () => {
 
   // Track active section with IntersectionObserver
   useEffect(() => {
-    const ids = ["features", "use-cases", "how-it-works", "playground"];
+    const ids = ["features", "use-cases", "how-it-works"];
     const observers = ids.map((id) => {
       const el = document.getElementById(id);
       if (!el) return null;
