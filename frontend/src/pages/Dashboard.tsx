@@ -49,7 +49,7 @@ const Dashboard: FC = () => {
   const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1100);
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [activeTab, setActiveTab] = useState<MobileTab>("inbox");
-  const [isAiPanelOpen, setIsAiPanelOpen] = useState(window.innerWidth > 1300);
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false); // Default closed on tablet/small screens
   
   const initialized = useRef(false);
 
@@ -63,8 +63,10 @@ const Dashboard: FC = () => {
       setIsTablet(tablet);
       if (width > 1200) setIsSidebarOpen(true);
       else if (tablet || mobile) setIsSidebarOpen(false);
-      if (width < 1300) setIsAiPanelOpen(false);
-      else setIsAiPanelOpen(true);
+      
+      // Auto-open AI panel only on large desktops
+      if (width > 1400) setIsAiPanelOpen(true);
+      else if (width < 1300) setIsAiPanelOpen(false);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -143,10 +145,7 @@ const Dashboard: FC = () => {
       });
       
       const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.details || data.error || `Server Error ${res.status}`);
-      }
+      if (!res.ok) throw new Error(data.details || data.error || `Server Error ${res.status}`);
 
       if (mode === "reply") setGenerated(data.reply);
       else if (mode === "summary") setGenerated(data.summary);
@@ -197,10 +196,17 @@ const Dashboard: FC = () => {
     if (isMobile) setMobileView("detail");
   };
 
+  const cleanEmailBody = (html: string) => {
+    if (!html) return "";
+    // Basic cleanup of raw HTML if it's being displayed as text
+    return html.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+  };
+
   return (
     <div className="flex h-screen bg-background text-primary font-mono overflow-hidden selection:bg-primary/20 selection:text-primary relative">
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[100] mix-blend-overlay noise-overlay" />
 
+      {/* Adaptive Sidebar */}
       {!isMobile && (
         <motion.aside 
           initial={false}
@@ -234,12 +240,6 @@ const Dashboard: FC = () => {
               </button>
             ))}
           </nav>
-          <div className="p-4 border-t border-primary/10">
-            <button onClick={handleLogout} className={`w-full flex items-center gap-3 p-2 text-red-500/60 hover:text-red-500 hover:bg-red-500/5 transition-colors text-[10px] uppercase tracking-[0.2em] ${isSidebarOpen ? '' : 'justify-center'}`}>
-              <LogOut className="w-4 h-4" />
-              {isSidebarOpen && <span>Logout</span>}
-            </button>
-          </div>
         </motion.aside>
       )}
 
@@ -247,10 +247,6 @@ const Dashboard: FC = () => {
         {(isMobile || !isSidebarOpen) && (
           <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/50 backdrop-blur-md z-30">
             <div className="flex items-center gap-3">
-              {isMobile && <Menu className="w-5 h-5 text-primary/60" />}
-              {!isMobile && !isSidebarOpen && (
-                <button onClick={() => setIsSidebarOpen(true)} className="p-1.5 hover:bg-primary/5 rounded-sm"><ChevronRight className="w-4 h-4" /></button>
-              )}
               <div className="flex items-center gap-2">
                 <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
                 <span className="font-display tracking-widest text-primary text-xs uppercase">MailMind</span>
@@ -264,10 +260,11 @@ const Dashboard: FC = () => {
         )}
 
         <div className="flex-1 flex overflow-hidden relative">
+          {/* Inbox List */}
           <motion.div 
             animate={{ x: isMobile && mobileView === "detail" ? "-100%" : "0%", opacity: isMobile && mobileView === "detail" ? 0 : 1 }}
             className={`flex flex-col bg-background border-r border-primary/10 z-10 transition-all duration-300 shrink-0
-              ${isMobile ? "fixed inset-x-0 top-14 bottom-16" : isTablet ? "w-[300px]" : "w-[380px] lg:w-[420px]"}`}
+              ${isMobile ? "fixed inset-x-0 top-14 bottom-16" : isTablet ? "w-[260px]" : "w-[360px] lg:w-[400px]"}`}
           >
             <div className="p-5 border-b border-primary/10 bg-primary/[0.01] flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
@@ -285,7 +282,7 @@ const Dashboard: FC = () => {
               {loadingEmails ? (
                 <div className="p-12 text-center opacity-20"><RefreshCcw className="w-8 h-8 animate-spin mx-auto mb-4" /><p className="text-[9px] uppercase tracking-widest">Decrypting...</p></div>
               ) : filteredEmails.map((email) => (
-                <div key={email.id} onClick={() => handleEmailSelect(email)} className={`p-4 md:p-5 border-b border-primary/5 cursor-pointer transition-all relative ${selectedEmail?.id === email.id ? "bg-primary/[0.05]" : "hover:bg-primary/[0.02]"}`}>
+                <div key={email.id} onClick={() => handleEmailSelect(email)} className={`p-4 border-b border-primary/5 cursor-pointer transition-all relative ${selectedEmail?.id === email.id ? "bg-primary/[0.05]" : "hover:bg-primary/[0.02]"}`}>
                   {selectedEmail?.id === email.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
                   <div className="flex justify-between items-start mb-2"><span className="text-[9px] font-bold text-primary uppercase tracking-wider truncate max-w-[60%]">{email.from.split('<')[0].trim()}</span><span className="text-[8px] opacity-40">{email.date.split(',')[0]}</span></div>
                   <h3 className={`text-[11px] mb-2 font-title font-semibold truncate leading-tight ${selectedEmail?.id === email.id ? 'text-primary' : 'text-primary/80'}`}>{email.subject || '(NO SUBJECT)'}</h3>
@@ -295,6 +292,7 @@ const Dashboard: FC = () => {
             </div>
           </motion.div>
 
+          {/* Reading Pane */}
           <motion.div 
             animate={{ x: isMobile && mobileView === "list" ? "100%" : "0%", opacity: isMobile && mobileView === "list" ? 0 : 1 }}
             className={`flex-1 flex flex-col bg-background relative overflow-hidden z-20 transition-all duration-300
@@ -315,9 +313,13 @@ const Dashboard: FC = () => {
                   </div>
                 )}
               </div>
-              {!isMobile && !isAiPanelOpen && (
-                <button onClick={() => setIsAiPanelOpen(true)} className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-[9px] uppercase tracking-widest font-bold hover:bg-primary/20 transition-all">
-                  <Sparkles className="w-3.5 h-3.5" /> AI Assistant
+              {!isMobile && (
+                <button 
+                  onClick={() => setIsAiPanelOpen(!isAiPanelOpen)} 
+                  className={`flex items-center gap-2 px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold transition-all
+                    ${isAiPanelOpen ? 'bg-primary text-background' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> {isAiPanelOpen ? 'Hide AI' : 'AI Assistant'}
                 </button>
               )}
             </nav>
@@ -326,32 +328,44 @@ const Dashboard: FC = () => {
               {selectedEmail ? (
                 <motion.div key={selectedEmail.id} className="flex flex-col h-full overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <div className="p-6 md:p-8 lg:p-10 border-b border-primary/10 bg-primary/[0.01] flex-shrink-0">
-                    <h1 className="text-xl md:text-2xl lg:text-3xl font-title font-extrabold mb-4 tracking-tight leading-[1.2] text-primary max-w-4xl break-words">
+                    <h1 className="text-xl md:text-2xl lg:text-3xl font-title font-extrabold mb-4 tracking-tight leading-[1.2] text-primary max-w-4xl break-words uppercase">
                       {selectedEmail.subject || '(NO SUBJECT)'}
                     </h1>
                     <div className="flex flex-wrap items-center gap-4 text-[9px] md:text-[10px]">
                       <div className="w-8 h-8 bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20">{selectedEmail.from[0].toUpperCase()}</div>
-                      <div className="flex flex-col"><span className="text-primary font-bold tracking-widest uppercase">{selectedEmail.from.split('<')[0].trim()}</span><span className="text-primary/40 lowercase tracking-tighter truncate max-w-[200px]">{selectedEmail.from.match(/<([^>]+)>/)?.[1] || selectedEmail.from}</span></div>
+                      <div className="flex flex-col">
+                        <span className="text-primary font-bold tracking-widest uppercase">{selectedEmail.from.split('<')[0].trim()}</span>
+                        <span className="text-primary/40 lowercase tracking-tighter truncate max-w-[200px]">{selectedEmail.from.match(/<([^>]+)>/)?.[1] || selectedEmail.from}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex-1 flex overflow-hidden">
+                  <div className="flex-1 flex overflow-hidden relative">
                     <div className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 custom-scrollbar bg-primary/[0.005]">
-                      <div className="max-w-3xl font-mono text-[11px] md:text-[12px] lg:text-[13px] text-primary/80 leading-[1.8] whitespace-pre-wrap">
-                        {selectedEmail.body || selectedEmail.snippet}
-                      </div>
+                      {selectedEmail.body && selectedEmail.body.includes('<') ? (
+                        <div className="max-w-3xl font-sans text-[13px] text-primary/90 leading-relaxed overflow-hidden bg-white/5 p-6 border border-primary/10 rounded-sm">
+                          <div dangerouslySetInnerHTML={{ __html: selectedEmail.body }} />
+                        </div>
+                      ) : (
+                        <div className="max-w-3xl font-mono text-[11px] md:text-[12px] lg:text-[13px] text-primary/80 leading-[1.8] whitespace-pre-wrap">
+                          {selectedEmail.body || selectedEmail.snippet}
+                        </div>
+                      )}
                     </div>
 
+                    {/* AI Sidebar - Improved Overlay for Tablet */}
                     <AnimatePresence>
                       {isAiPanelOpen && !isMobile && (
                         <motion.aside 
-                          initial={{ width: 0, opacity: 0 }}
-                          animate={{ width: isTablet ? 320 : 400, opacity: 1 }}
-                          exit={{ width: 0, opacity: 0 }}
-                          className="border-l border-primary/10 bg-primary/[0.015] flex flex-col shrink-0 overflow-hidden"
+                          initial={{ x: "100%" }}
+                          animate={{ x: 0 }}
+                          exit={{ x: "100%" }}
+                          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                          className={`border-l border-primary/10 bg-background/95 backdrop-blur-xl flex flex-col shrink-0 z-40 shadow-2xl
+                            ${isTablet ? "absolute inset-y-0 right-0 w-[320px]" : "relative w-[400px]"}`}
                         >
                           <div className="p-5 border-b border-primary/10 flex items-center justify-between flex-shrink-0">
-                            <div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-primary animate-pulse" /><span className="text-[10px] font-bold uppercase tracking-[0.4em]">AI Core</span></div>
+                            <div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-primary" /><span className="text-[10px] font-bold uppercase tracking-[0.4em]">Neural Core</span></div>
                             <button onClick={() => setIsAiPanelOpen(false)} className="p-1 hover:text-primary transition-colors"><PanelRightClose className="w-4 h-4" /></button>
                           </div>
                           <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
@@ -365,7 +379,7 @@ const Dashboard: FC = () => {
                               <div className="p-4 bg-red-500/10 border border-red-500/20 flex items-start gap-3 rounded-sm">
                                 <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                                 <div className="space-y-1">
-                                  <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Connection Error</p>
+                                  <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Error</p>
                                   <p className="text-[9px] text-red-500/70 leading-relaxed break-words">{aiError}</p>
                                 </div>
                               </div>
@@ -399,6 +413,26 @@ const Dashboard: FC = () => {
           </motion.div>
         </div>
 
+        {/* Mobile AI Overlay */}
+        {isMobile && activeTab === "ai" && (
+          <div className="fixed inset-0 top-14 bottom-16 bg-background z-40 flex flex-col p-6 animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em]">Neural Core</span>
+            </div>
+            <div className="flex-1 space-y-6">
+              <div className="flex p-1 bg-primary/5 border border-primary/10">
+                {(["reply", "summary", "schedule"] as Mode[]).map((m) => (
+                  <button key={m} onClick={() => setMode(m)} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] ${mode === m ? 'bg-primary text-background' : 'text-primary/40'}`}>{m}</button>
+                ))}
+              </div>
+              <button onClick={handleGenerate} className="w-full py-4 bg-primary text-background text-[10px] font-bold uppercase tracking-[0.4em]">Generate</button>
+              {generated && <div className="p-4 border border-primary/20 text-[11px] whitespace-pre-wrap">{generated}</div>}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Bottom Navigation */}
         {isMobile && (
           <nav className="h-16 flex-shrink-0 flex items-center justify-around bg-background/80 backdrop-blur-xl border-t border-primary/10 z-50">
             {[
