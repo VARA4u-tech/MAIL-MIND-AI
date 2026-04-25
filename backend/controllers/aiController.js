@@ -15,28 +15,28 @@ const getOpenRouterClient = () => {
   });
 };
 
-// Updated model list based on your request (using Gemma 2 27B as the large version)
+// Locked to your specified Gemma model only
 const MODELS = [
-  "google/gemma-2-27b-it", // Most likely the one you meant by 26B/A4B
+  "google/gemma-2-27b-it", 
 ];
 
-// Robust completion handler
+// Completion handler
 const getCompletion = async (
   openai,
   messages,
   temperature = 0.7,
-  json = false,
+  json = false, // We'll handle JSON manually for Gemma
 ) => {
   let lastError = null;
 
   for (const model of MODELS) {
     try {
-      console.log(`AI Strategy: Attempting with ${model}...`);
+      console.log(`AI Strategy: Executing with ${model}...`);
       const response = await openai.chat.completions.create({
         model: model,
         messages,
         temperature,
-        ...(json ? { response_format: { type: "json_object" } } : {}),
+        // Gemma 2 27B doesn't always support native JSON mode on OpenRouter
       });
       return response;
     } catch (error) {
@@ -69,9 +69,7 @@ export const generateReply = async (req, res) => {
 
     res.json({ reply: completion.choices[0].message.content.trim() });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "AI Generation Failed", details: error.message });
+    res.status(500).json({ error: "AI Generation Failed", details: error.message });
   }
 };
 
@@ -100,9 +98,7 @@ export const summarizeEmail = async (req, res) => {
 
     res.json({ summary: completion.choices[0].message.content.trim() });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to summarize", details: error.message });
+    res.status(500).json({ error: "Failed to summarize", details: error.message });
   }
 };
 
@@ -119,7 +115,9 @@ export const scheduleEvent = async (req, res) => {
       [
         {
           role: "system",
-          content: `Extract meeting details as JSON.`,
+          content: `Extract meeting details from the email and return ONLY a valid JSON object. 
+          Structure: {"title": "...", "description": "...", "location": "...", "startDate": "YYYYMMDDTHHMMSSZ", "endDate": "YYYYMMDDTHHMMSSZ"}.
+          Do not include any other text or markdown formatting.`,
         },
         {
           role: "user",
@@ -127,13 +125,20 @@ export const scheduleEvent = async (req, res) => {
         },
       ],
       0,
-      true,
     );
 
-    res.json(JSON.parse(completion.choices[0].message.content.trim()));
+    let output = completion.choices[0].message.content.trim();
+    // Clean potential markdown ticks
+    output = output.replace(/```json\n?|\n?```/g, "");
+    
+    try {
+      const parsed = JSON.parse(output);
+      res.json(parsed);
+    } catch (parseErr) {
+      console.error("Manual JSON Parse Error:", output);
+      res.status(500).json({ error: "AI returned invalid JSON format", details: output });
+    }
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to extract schedule", details: error.message });
+    res.status(500).json({ error: "Failed to extract schedule", details: error.message });
   }
 };
