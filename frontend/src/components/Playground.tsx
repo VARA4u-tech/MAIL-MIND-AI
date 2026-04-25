@@ -1,343 +1,365 @@
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Mail, MessageSquare, Calendar, Check } from "lucide-react";
+import { Copy, Mail, MessageSquare, Calendar, Check, LogIn, RefreshCcw } from "lucide-react";
 import LetterReveal from "./LetterReveal";
 
-interface Message {
-  from: "them" | "you";
-  author: string;
-  time: string;
+type Mode = "reply" | "summary";
+
+interface EmailMessage {
+  id: string;
+  subject: string;
+  from: string;
+  date: string;
+  snippet: string;
   body: string;
 }
 
-const sampleThread: Message[] = [
-  {
-    from: "them",
-    author: "sarah.lin@acme.co",
-    time: "Mon · 9:42",
-    body: "Hey — loved the proposal you sent over. The team is mostly aligned, but we had a few questions about the rollout timeline and how onboarding would work for our APAC offices.",
-  },
-  {
-    from: "you",
-    author: "you",
-    time: "Mon · 10:11",
-    body: "Thanks Sarah! Happy to dig in. I can share a phased rollout plan and a separate onboarding doc tailored to APAC. Want to jump on a quick call this week?",
-  },
-  {
-    from: "them",
-    author: "sarah.lin@acme.co",
-    time: "Mon · 14:03",
-    body: "That sounds great. I'm open Wednesday 2–4pm PT or Thursday morning before 11. Also — could you ballpark go-live by end of Q3? Leadership is asking.",
-  },
-];
-
-type Mode = "reply" | "summary" | "schedule";
-
-const REPLY_VARIANTS = [
-  (intent: string) =>
-    `Hi Sarah,\n\n${intent}Wednesday at 2pm PT works well on my end. I'll send a calendar invite with the phased rollout deck and an APAC-specific onboarding draft attached.\n\nA Q3 go-live is realistic if we kick off discovery this week — I'll have my team start prep on our side.\n\nBest,`,
-  (intent: string) =>
-    `Hi Sarah,\n\nThanks for the quick turnaround. ${intent}Let's lock Wednesday 2pm PT. I'll bring the rollout phases (pilot → APAC → global) and a draft onboarding playbook tailored to your offices.\n\nOn timing: end of Q3 is achievable assuming we sign off on scope by next Friday.\n\nTalk soon,`,
-  (intent: string) =>
-    `Hi Sarah,\n\nAppreciate the alignment. ${intent}I'll grab Wednesday at 2pm PT and send an invite shortly with two attachments — phased rollout plan and APAC onboarding outline.\n\nEnd of Q3 is on the table if discovery wraps in the next two weeks.\n\nBest,`,
-];
-
-const SUMMARY_VARIANTS = [
-  [
-    "• Sarah's team is aligned on the proposal.",
-    "• Open questions: APAC onboarding flow & rollout timeline.",
-    "• She's offering Wed 2–4pm PT or Thu before 11am for a call.",
-    "• Leadership wants a confirmed Q3 go-live estimate.",
-  ].join("\n"),
-  [
-    "TL;DR — Acme is in. Two blockers to clear:",
-    "  1. APAC onboarding plan needs detail.",
-    "  2. Rollout timeline + Q3 go-live confirmation.",
-    "Sarah is asking for a 30-min call this week.",
-  ].join("\n"),
-  [
-    "Status:    Proposal accepted, pending details",
-    "Asks:      APAC onboarding · rollout phases · Q3 ETA",
-    "Meeting:   Wed 2–4pm PT  /  Thu pre-11am PT",
-    "Owner:     you (response expected today)",
-  ].join("\n"),
-];
-
-const SCHEDULE_VARIANTS = [
-  [
-    "DETECTED MEETING",
-    "──────────────────",
-    "Title:     MailMind × Acme — APAC rollout sync",
-    "Options:   Wed 2:00 PM PT  ·  Thu 9:30 AM PT",
-    "Attendees: you, sarah.lin@acme.co",
-    "Duration:  30 min",
-    "",
-    '→ Click "Create Event" to add to your calendar',
-  ].join("\n"),
-  [
-    "EVENT DRAFT",
-    "──────────────────",
-    "Subject:   Acme x MailMind — discovery + rollout",
-    "When:      Wed, 2:00–2:30 PM PT (preferred)",
-    "Backup:    Thu, 9:30–10:00 AM PT",
-    "Location:  Google Meet (auto-generated)",
-    "Agenda:    1. APAC onboarding  2. Phasing  3. Q3 ETA",
-    "",
-    "→ 1 click to send invites + add to your calendar",
-  ].join("\n"),
-  [
-    "CALENDAR ACTION",
-    "──────────────────",
-    "▸ Block 30 min, Wed 14:00 PT",
-    "▸ Invite: sarah.lin@acme.co",
-    "▸ Attach: rollout-deck-v3.pdf",
-    "▸ Reminder: 10 min before",
-    "",
-    "Hold a tentative Thu 09:30 PT slot? [Y/N]",
-  ].join("\n"),
-];
-
-function generateOutput(mode: Mode, draft: string, variant: number) {
-  const intent = draft.trim() ? `${draft.trim()}\n\n` : "";
-  if (mode === "reply") return REPLY_VARIANTS[variant % REPLY_VARIANTS.length](intent);
-  if (mode === "summary") return SUMMARY_VARIANTS[variant % SUMMARY_VARIANTS.length];
-  return SCHEDULE_VARIANTS[variant % SCHEDULE_VARIANTS.length];
-}
-
 const STORAGE_KEY = "mailmind:playground";
-interface PersistedState {
-  mode: Mode;
-  draft: string;
-  output: string | null;
-  variant: number;
-}
-
-function loadPersisted(): PersistedState {
-  if (typeof window === "undefined") return { mode: "reply", draft: "", output: null, variant: 0 };
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { mode: "reply", draft: "", output: null, variant: 0 };
-    const parsed = JSON.parse(raw);
-    const mode: Mode = ["reply", "summary", "schedule"].includes(parsed.mode) ? parsed.mode : "reply";
-    return {
-      mode,
-      draft: typeof parsed.draft === "string" ? parsed.draft.slice(0, 500) : "",
-      output: typeof parsed.output === "string" ? parsed.output : null,
-      variant: Number.isInteger(parsed.variant) ? parsed.variant : 0,
-    };
-  } catch {
-    return { mode: "reply", draft: "", output: null, variant: 0 };
-  }
-}
 
 const Playground: FC = () => {
-  const initial = useMemo(() => loadPersisted(), []);
-  const [mode, setMode] = useState<Mode>(initial.mode);
-  const [draft, setDraft] = useState(initial.draft);
-  const [generated, setGenerated] = useState<string | null>(initial.output);
-  const [variant, setVariant] = useState(initial.variant);
-  const [pending, setPending] = useState(false);
+  const [mode, setMode] = useState<Mode>("reply");
+  const [draft, setDraft] = useState("");
+  const [generated, setGenerated] = useState<string | null>(null);
+  const [pendingAI, setPendingAI] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState(false);
 
-  // Persist state
+  // Authentication & Gmail State
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [emails, setEmails] = useState<EmailMessage[]>([]);
+  const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
+  const [loadingEmails, setLoadingEmails] = useState(false);
+  const initialized = useRef(false);
+
   useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ mode, draft, output: generated, variant })
-      );
-    } catch {
-      // Silence persistence errors
+    // 1. Check URL for email (after Google redirect)
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    
+    if (emailParam) {
+      setUserEmail(emailParam);
+      window.localStorage.setItem(STORAGE_KEY + ':email', emailParam);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname + '#playground');
+    } else {
+      // 2. Check local storage
+      const savedEmail = window.localStorage.getItem(STORAGE_KEY + ':email');
+      if (savedEmail) setUserEmail(savedEmail);
     }
-  }, [mode, draft, generated, variant]);
+  }, []);
 
-  const output = useMemo(
-    () => (generated !== null ? generated : ""),
-    [generated]
-  );
+  // Fetch emails when userEmail is set
+  useEffect(() => {
+    if (userEmail && !initialized.current) {
+      initialized.current = true;
+      fetchInbox(userEmail);
+    }
+  }, [userEmail]);
 
-  const handleGenerate = () => {
-    setPending(true);
-    const nextVariant = variant + 1;
-    setVariant(nextVariant);
-    setGenerated(null);
-    // Mock async generation — cycles variants for "regenerate" feel
-    setTimeout(() => {
-      setGenerated(generateOutput(mode, draft, nextVariant));
-      setPending(false);
-    }, 650);
+  const fetchInbox = async (email: string) => {
+    setLoadingEmails(true);
+    try {
+      const res = await fetch(`/api/gmail/inbox?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (data.emails && data.emails.length > 0) {
+        setEmails(data.emails);
+        setSelectedEmail(data.emails[0]); // Select first email by default
+      }
+    } catch (error) {
+      console.error("Failed to fetch inbox:", error);
+    } finally {
+      setLoadingEmails(false);
+    }
   };
 
-  // Live update output when switching modes (if we already have one) so preview stays in sync
+  const handleLogin = () => {
+    window.location.href = '/api/auth/google';
+  };
+
+  const handleGenerate = async () => {
+    if (!selectedEmail) return;
+    
+    setPendingAI(true);
+    setGenerated(null);
+    setSendSuccess(false);
+
+    try {
+      const endpoint = mode === "reply" ? "/api/ai/reply" : "/api/ai/summarize";
+      const payload = mode === "reply" 
+        ? { emailBody: selectedEmail.body || selectedEmail.snippet, intent: draft }
+        : { emailBody: selectedEmail.body || selectedEmail.snippet };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json();
+      if (mode === "reply") {
+        setGenerated(data.reply);
+      } else {
+        setGenerated(data.summary);
+      }
+    } catch (error) {
+      console.error("AI Error:", error);
+      setGenerated("Error connecting to AI. Please check your API keys.");
+    } finally {
+      setPendingAI(false);
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!selectedEmail || !generated || !userEmail) return;
+    
+    setSendingEmail(true);
+    try {
+      // Basic extraction of raw email address if format is "Name <email@domain.com>"
+      const toMatch = selectedEmail.from.match(/<([^>]+)>/);
+      const toEmail = toMatch ? toMatch[1] : selectedEmail.from;
+      
+      const subject = selectedEmail.subject.toLowerCase().startsWith('re:') 
+        ? selectedEmail.subject 
+        : `Re: ${selectedEmail.subject}`;
+
+      const res = await fetch("/api/gmail/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+          to: toEmail,
+          subject: subject,
+          body: generated
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setSendSuccess(true);
+        setTimeout(() => setSendSuccess(false), 3000);
+      } else {
+        alert("Failed to send: " + data.error);
+      }
+    } catch (error) {
+      console.error("Send Error:", error);
+      alert("Failed to send email. Check console.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const handleModeChange = (m: Mode) => {
     setMode(m);
-    if (generated !== null) setGenerated(generateOutput(m, draft, variant));
+    setGenerated(null); // Reset output when mode changes
+    setSendSuccess(false);
   };
 
-  // Live re-render reply when draft changes (only when currently showing a reply)
-  useEffect(() => {
-    if (mode !== "reply" || generated === null || pending) return;
-    setGenerated(generateOutput("reply", draft, variant));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft]);
-
   return (
-    <section
-      id="playground"
-      className="py-32 px-4 max-w-6xl mx-auto scroll-mt-20"
-      data-debug="playground"
-    >
-      {/* Aliases for smooth-scroll targets */}
+    <section id="playground" className="py-32 px-4 max-w-6xl mx-auto scroll-mt-20">
       <span id="demo" className="block -mt-20 pt-20" aria-hidden="true" />
+      
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
-        <LetterReveal
-          text="TRY THE DEMO"
-          className="font-display text-primary uppercase leading-none text-[36px] md:text-7xl lg:text-[96px]"
-        />
+        <LetterReveal text="LIVE INBOX" className="font-display text-primary uppercase leading-none text-[36px] md:text-7xl lg:text-[96px]" />
         <span className="font-mono text-[10px] text-primary/40 tracking-widest hidden md:inline">
           [04] PLAYGROUND
         </span>
       </div>
 
-      <div className="mb-8 flex items-center gap-4 text-primary/40">
-        <span className="font-mono text-[10px] uppercase tracking-widest">Works with:</span>
-        <Mail className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" />
-        <MessageSquare className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" />
-        <Calendar className="w-4 h-4 hover:text-primary transition-colors cursor-pointer" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-primary/15 border border-primary/20">
-        {/* Sample conversation */}
-        <div className="bg-background p-6 md:p-8 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-primary/50">
-              ▣ Sample thread
-            </span>
-            <span className="font-mono text-[9px] text-primary/30">3 messages</span>
-          </div>
-
-          <div className="space-y-4 flex-1 max-h-[420px] overflow-y-auto pr-2">
-            {sampleThread.map((m, i) => (
-              <div
-                key={i}
-                className={`border ${
-                  m.from === "you"
-                    ? "border-primary/40 bg-primary/[0.04]"
-                    : "border-primary/15"
-                } p-4`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono text-[10px] text-primary/60 truncate">
-                    {m.author}
-                  </span>
-                  <span className="font-mono text-[9px] text-primary/30">{m.time}</span>
-                </div>
-                <p className="font-mono text-[11px] text-primary/70 leading-[1.75] whitespace-pre-wrap">
-                  {m.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* AI panel */}
-        <div className="bg-background p-6 md:p-8 flex flex-col">
-          <div className="flex items-center gap-px mb-6 border border-primary/20 w-fit">
-            {(["reply", "summary", "schedule"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => handleModeChange(m)}
-                className={`font-mono text-[10px] uppercase tracking-[0.2em] px-3 py-2 transition-colors ${
-                  mode === m
-                    ? "bg-primary text-background"
-                    : "text-primary/60 hover:text-primary"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-
-          {mode === "reply" && (
-            <div className="mb-4">
-              <label className="font-mono text-[9px] uppercase tracking-widest text-primary/40 block mb-2">
-                Your intent (optional · max 500 chars)
-              </label>
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value.slice(0, 500))}
-                placeholder="e.g. Confirm Wednesday and attach the rollout deck…"
-                rows={3}
-                maxLength={500}
-                className="w-full bg-transparent border border-primary/25 focus:border-primary/60 outline-none font-mono text-[11px] text-primary p-3 placeholder:text-primary/25 resize-none transition-colors"
-              />
-            </div>
-          )}
-
+      {!userEmail ? (
+        // --- LOGIN PROMPT ---
+        <div className="border border-primary/20 bg-primary/5 p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+          <Mail className="w-12 h-12 text-primary/40 mb-6" />
+          <h3 className="font-display text-2xl uppercase mb-4 text-primary">Connect your Inbox</h3>
+          <p className="font-mono text-xs text-primary/60 max-w-md mb-8 leading-relaxed">
+            Experience MailMind with your actual emails. We only request read access to generate summaries and draft replies. We do not store your emails.
+          </p>
           <button
-            onClick={handleGenerate}
-            disabled={pending}
-            className="font-mono text-[10px] uppercase tracking-[0.25em] bg-primary text-background px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer w-fit mb-6"
+            onClick={handleLogin}
+            className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-6 py-3 hover:bg-primary/90 transition-colors flex items-center gap-2 cursor-pointer"
           >
-            {pending ? "Generating…" : generated ? `Regenerate ${mode}` : `Generate ${mode}`}
+            <LogIn className="w-4 h-4" /> Sign in with Google
           </button>
+        </div>
+      ) : (
+        // --- LIVE PLAYGROUND ---
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-primary/15 border border-primary/20">
+          
+          {/* Inbox Panel */}
+          <div className="bg-background p-6 md:p-8 flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-primary/50 flex items-center gap-2">
+                ▣ Inbox 
+                {loadingEmails && <RefreshCcw className="w-3 h-3 animate-spin" />}
+              </span>
+              <span className="font-mono text-[9px] text-primary/30">{userEmail}</span>
+            </div>
 
-          <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[200px] flex flex-col relative">
-            <div className="font-mono text-[9px] uppercase tracking-widest text-primary/40 mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-primary animate-pulse" />
-                AI output
-              </div>
-              {output && !pending && (
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(output);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="hover:text-primary transition-colors flex items-center gap-1"
-                  title="Copy to clipboard"
-                >
-                  {copied ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
-                  <span className="hidden sm:inline">{copied ? "COPIED" : "COPY"}</span>
-                </button>
+            <div className="space-y-4 flex-1 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+              {emails.length === 0 && !loadingEmails ? (
+                <p className="font-mono text-xs text-primary/40 text-center mt-10">No emails found.</p>
+              ) : (
+                emails.map((email) => {
+                  const isSelected = selectedEmail?.id === email.id;
+                  // Extract just the name or email address nicely
+                  const fromName = email.from.split('<')[0].trim() || email.from;
+                  
+                  return (
+                    <div
+                      key={email.id}
+                      onClick={() => setSelectedEmail(email)}
+                      className={`border p-4 cursor-pointer transition-colors ${
+                        isSelected 
+                          ? "border-primary/60 bg-primary/[0.08]" 
+                          : "border-primary/15 hover:border-primary/40 hover:bg-primary/[0.02]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-[11px] text-primary font-bold truncate max-w-[70%]">
+                          {fromName}
+                        </span>
+                        <span className="font-mono text-[9px] text-primary/40 truncate ml-2">
+                          {email.date.split(',')[0]} {/* Just show day/date briefly */}
+                        </span>
+                      </div>
+                      <p className="font-mono text-[10px] text-primary/80 truncate mb-1">
+                        {email.subject || '(No Subject)'}
+                      </p>
+                      <p className="font-mono text-[9px] text-primary/50 line-clamp-2 leading-[1.6]">
+                        {email.snippet}
+                      </p>
+                    </div>
+                  );
+                })
               )}
             </div>
-            <AnimatePresence mode="wait">
-              {pending ? (
-                <motion.p
-                  key="pending"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="font-mono text-[11px] text-primary/30"
+          </div>
+
+          {/* AI Action Panel */}
+          <div className="bg-background p-6 md:p-8 flex flex-col border-l border-primary/20">
+            {selectedEmail ? (
+              <>
+                <div className="flex items-center gap-px mb-6 border border-primary/20 w-fit">
+                  {(["reply", "summary"] as Mode[]).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => handleModeChange(m)}
+                      className={`font-mono text-[10px] uppercase tracking-[0.2em] px-4 py-2 transition-colors ${
+                        mode === m
+                          ? "bg-primary text-background"
+                          : "text-primary/60 hover:text-primary"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+
+                {mode === "reply" && (
+                  <div className="mb-4">
+                    <label className="font-mono text-[9px] uppercase tracking-widest text-primary/40 block mb-2">
+                      Reply Intent (Optional)
+                    </label>
+                    <textarea
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value.slice(0, 500))}
+                      placeholder="e.g. Accept the meeting but suggest 3PM instead..."
+                      rows={2}
+                      maxLength={500}
+                      className="w-full bg-transparent border border-primary/25 focus:border-primary/60 outline-none font-mono text-[11px] text-primary p-3 placeholder:text-primary/25 resize-none transition-colors"
+                    />
+                  </div>
+                )}
+
+                <button
+                  onClick={handleGenerate}
+                  disabled={pendingAI}
+                  className="font-mono text-[10px] uppercase tracking-[0.25em] bg-primary text-background px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer w-fit mb-6"
                 >
-                  analyzing thread…
-                </motion.p>
-              ) : output ? (
-                <motion.pre
-                  key={output}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  className="font-mono text-[11px] text-primary/80 leading-[1.8] whitespace-pre-wrap"
-                >
-                  {output}
-                </motion.pre>
-              ) : (
-                <motion.p
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="font-mono text-[11px] text-primary/25"
-                >
-                  Click generate to see a {mode} for this thread.
-                </motion.p>
-              )}
-            </AnimatePresence>
+                  {pendingAI ? "Thinking..." : `Generate ${mode}`}
+                </button>
+
+                <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[250px] flex flex-col relative overflow-y-auto">
+                  <div className="font-mono text-[9px] uppercase tracking-widest text-primary/40 mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-1.5 h-1.5 ${pendingAI ? 'bg-primary animate-pulse' : 'bg-primary/50'}`} />
+                      AI {mode === 'reply' ? 'Draft' : 'Summary'}
+                    </div>
+                    {generated && !pendingAI && (
+                      <div className="flex items-center gap-4">
+                        {mode === 'reply' && (
+                          <button
+                            onClick={handleSendReply}
+                            disabled={sendingEmail || sendSuccess}
+                            className={`font-mono text-[9px] uppercase tracking-widest flex items-center gap-1 transition-colors disabled:opacity-50 ${
+                              sendSuccess ? 'text-green-500' : 'text-primary hover:text-primary/80'
+                            }`}
+                            title="Send Reply via Gmail"
+                          >
+                            <Mail className="w-3 h-3" />
+                            <span className="hidden sm:inline">
+                              {sendingEmail ? "SENDING..." : sendSuccess ? "SENT!" : "SEND REPLY"}
+                            </span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(generated);
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          }}
+                          className="hover:text-primary transition-colors flex items-center gap-1"
+                          title="Copy to clipboard"
+                        >
+                          {copied ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
+                          <span className="hidden sm:inline">{copied ? "COPIED" : "COPY"}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <AnimatePresence mode="wait">
+                    {pendingAI ? (
+                      <motion.p
+                        key="pending"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="font-mono text-[11px] text-primary/40 mt-4"
+                      >
+                        Analyzing email and writing {mode}...
+                      </motion.p>
+                    ) : generated ? (
+                      <motion.pre
+                        key={generated}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="font-mono text-[11px] text-primary/90 leading-[1.8] whitespace-pre-wrap font-sans"
+                      >
+                        {generated}
+                      </motion.pre>
+                    ) : (
+                      <motion.p
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="font-mono text-[11px] text-primary/30 mt-4"
+                      >
+                        Select an email from the left and click generate.
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-center">
+                <p className="font-mono text-[11px] text-primary/40">Select an email from your inbox to start.</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
     </section>
   );
 };
