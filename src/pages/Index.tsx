@@ -14,7 +14,7 @@ const SubtitleSection = () => {
     offset: ["start 0.8", "start 0.3"],
   });
 
-  const lines = ["THE ULTIMATE", "TEXT-REVEAL COMPONENT", "FOR FRAMER"];
+  const lines = ["YOUR AI-POWERED", "EMAIL & CALENDAR", "ASSISTANT"];
 
   return (
     <div ref={ref} className="py-32 flex flex-col items-center gap-2">
@@ -88,7 +88,7 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <DebugOverlay enabled={debugEnabled} onToggle={() => setDebugEnabled(v => !v)} />
       <HeroSection />
-      <Marquee text="GET REVELO ON FRAMER MARKETPLACE" />
+      <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
       <SubtitleSection />
 
@@ -97,11 +97,10 @@ const Index = () => {
         <ScrollRevealText
           className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
           words={[
-            { text: "CHOOSE" }, { text: "BETWEEN" },
-            { text: "SCROLL" }, { text: "PROGRESS" },
-            { text: "OR" },
-            { text: "TRIGGER-BASED" },
-            { text: "ANIMATIONS." },
+            { text: "GENERATE" }, { text: "SMART," },
+            { text: "CONTEXT-AWARE" },
+            { text: "REPLIES" }, { text: "IN" },
+            { text: "SECONDS." },
           ]}
         />
       </section>
@@ -111,12 +110,11 @@ const Index = () => {
         <ScrollRevealText
           className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
           words={[
-            { text: "YOU'RE" }, { text: "FREE" },
-            { text: "TO" }, { text: "MIX" },
-            { text: "Fonts,", className: "font-serif-italic normal-case" },
-            { text: "STYLES," }, { text: "COLORS," },
-            { text: "OR" }, { text: "PARAGRAPHS" },
-            { text: "HOWEVER" }, { text: "YOU" }, { text: "WANT." },
+            { text: "TURN" }, { text: "LONG" },
+            { text: "threads,", className: "font-serif-italic normal-case" },
+            { text: "MEETINGS," }, { text: "AND" },
+            { text: "DECISIONS" },
+            { text: "INTO" }, { text: "CLEAR" }, { text: "SUMMARIES." },
           ]}
         />
       </section>
@@ -126,8 +124,8 @@ const Index = () => {
         <ScrollRevealText
           className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
           words={[
-            { text: "SPLIT" }, { text: "TEXT" }, { text: "BY" },
-            { text: "LINES," }, { text: "WORDS," }, { text: "LETTERS," },
+            { text: "DETECT" }, { text: "INTENT:" },
+            { text: "REPLY," }, { text: "SCHEDULE," }, { text: "IGNORE." },
           ]}
         />
         <motion.p
@@ -137,7 +135,7 @@ const Index = () => {
           viewport={{ once: true }}
           className="font-mono text-xs md:text-sm text-muted-foreground text-center mt-8 tracking-wider max-w-2xl mx-auto"
         >
-          with their own motion, all playing in sync.
+          your inbox sorts itself, so you focus only on what matters.
         </motion.p>
       </section>
 
@@ -148,21 +146,22 @@ const Index = () => {
         <ScrollRevealText
           className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
           words={[
-            { text: "APPLY" }, { text: "CUSTOM" },
-            { text: "EASINGS," }, { text: "STAGGER" }, { text: "ORIGIN," },
-            { text: "DURATION" }, { text: "&" }, { text: "DELAY." },
+            { text: "EXTRACT" }, { text: "MEETINGS," },
+            { text: "DATES," }, { text: "ATTENDEES" },
+            { text: "&" }, { text: "BUILD" }, { text: "EVENTS" },
+            { text: "INSTANTLY." },
           ]}
         />
       </section>
 
-      <Marquee text="GET REVELO ON FRAMER MARKETPLACE" />
+      <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
       {/* Features */}
       <section className="py-24 px-4">
         <FeatureAccordion />
       </section>
 
-      <Marquee text="GET REVELO ON FRAMER MARKETPLACE" />
+      <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
       <Footer />
     </div>
