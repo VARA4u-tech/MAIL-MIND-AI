@@ -57,7 +57,7 @@ const WaitlistForm: FC = () => {
         >
           JOIN WAITLIST
         </h2>
-        <span className="font-mono text-[10px] text-primary/40 tracking-widest hidden md:inline">
+        <span className="font-mono text-xs text-primary/40 tracking-widest hidden md:inline">
           [05] EARLY ACCESS
         </span>
       </div>
@@ -78,14 +78,14 @@ const WaitlistForm: FC = () => {
           >
             <div className="flex items-center gap-3 mb-3">
               <span className="w-2 h-2 bg-primary" />
-              <span className="font-mono text-[10px] uppercase tracking-widest text-primary">
+              <span className="font-mono text-xs uppercase tracking-widest text-primary">
                 CONFIRMED
               </span>
             </div>
             <p className="font-display text-primary text-3xl md:text-4xl uppercase leading-tight mb-3">
               YOU'RE ON THE LIST, {name.trim().split(" ")[0].toUpperCase()}.
             </p>
-            <p className="font-mono text-[11px] text-primary/50 leading-relaxed">
+            <p className="font-mono text-xs text-primary/50 leading-relaxed">
               We sent a confirmation to{" "}
               <span className="text-primary/80">{email}</span>. Keep an eye on
               your inbox — irony intended.
@@ -101,7 +101,7 @@ const WaitlistForm: FC = () => {
             noValidate
           >
             <div>
-              <label className="font-mono text-[9px] uppercase tracking-widest text-primary/40 block mb-2">
+              <label className="font-mono text-xs uppercase tracking-widest text-primary/40 block mb-2">
                 Name
               </label>
               <input
@@ -120,13 +120,13 @@ const WaitlistForm: FC = () => {
                 }`}
               />
               {touched.name && fieldErrors.name && (
-                <p className="font-mono text-[10px] text-primary/80 uppercase tracking-widest mt-2">
+                <p className="font-mono text-xs text-primary/80 uppercase tracking-widest mt-2">
                   ! {fieldErrors.name}
                 </p>
               )}
             </div>
             <div>
-              <label className="font-mono text-[9px] uppercase tracking-widest text-primary/40 block mb-2">
+              <label className="font-mono text-xs uppercase tracking-widest text-primary/40 block mb-2">
                 Email
               </label>
               <input
@@ -145,7 +145,7 @@ const WaitlistForm: FC = () => {
                 }`}
               />
               {touched.email && fieldErrors.email && (
-                <p className="font-mono text-[10px] text-primary/80 uppercase tracking-widest mt-2">
+                <p className="font-mono text-xs text-primary/80 uppercase tracking-widest mt-2">
                   ! {fieldErrors.email}
                 </p>
               )}
@@ -154,7 +154,7 @@ const WaitlistForm: FC = () => {
             <button
               type="submit"
               disabled={status === "submitting" || !isValid}
-              className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-6 py-3 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="font-mono text-xs uppercase tracking-[0.25em] bg-primary text-background px-6 py-3 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {status === "submitting" ? "Adding…" : "Request access →"}
             </button>

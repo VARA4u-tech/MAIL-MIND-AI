@@ -98,10 +98,10 @@ const FeatureAccordion: FC = () => {
               className="w-full flex items-center justify-between py-5 md:py-6 px-0 text-left group cursor-pointer"
             >
               <div className="flex items-baseline gap-4 md:gap-6">
-                <span className="font-mono text-[9px] md:text-[10px] text-primary/30 tabular-nums">
+                <span className="font-mono text-xs text-primary/30 tabular-nums">
                   [{feature.number}]
                 </span>
-                <span className="font-mono text-[12px] md:text-[13px] uppercase tracking-[0.18em] text-primary/90">
+                <span className="font-mono text-sm uppercase tracking-[0.18em] text-primary/90 group-hover:text-primary transition-colors">
                   {feature.title}
                 </span>
               </div>
@@ -136,7 +136,7 @@ const FeatureAccordion: FC = () => {
                           delay: j * DETAIL_STAGGER,
                           ease: ACCORDION_EASING,
                         }}
-                        className="font-mono text-[10px] md:text-[11px] text-primary/40 leading-[1.8] tracking-wide"
+                        className="font-mono text-xs md:text-sm text-primary/40 leading-[1.8] tracking-wide"
                       >
                         <span className="text-primary/20 mr-2 select-none">//</span>
                         {detail}

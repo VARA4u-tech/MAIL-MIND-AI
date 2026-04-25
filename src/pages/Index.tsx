@@ -3,13 +3,12 @@ import Marquee from "@/components/Marquee";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import FeatureAccordion from "@/components/FeatureAccordion";
 import PropertyDemo from "@/components/PropertyDemo";
-import DebugOverlay from "@/components/DebugOverlay";
 import UseCases from "@/components/UseCases";
 import Playground from "@/components/Playground";
 import WaitlistForm from "@/components/WaitlistForm";
 import DemoModal from "@/components/DemoModal";
 import Navbar from "@/components/Navbar";
-import LogoCloud from "@/components/LogoCloud";
+import DashboardPreview from "@/components/DashboardPreview";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
@@ -126,33 +125,12 @@ const Footer = () => (
 );
 
 const Index = () => {
-  const [debugEnabled, setDebugEnabled] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.localStorage.getItem("revelo:debug") === "1";
-    } catch {
-      return false;
-    }
-  });
   const [demoOpen, setDemoOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem("revelo:debug", debugEnabled ? "1" : "0");
-    } catch {
-      // Silence persistence errors
-    }
-  }, [debugEnabled]);
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Navbar />
-      <DebugOverlay
-        enabled={debugEnabled}
-        onToggle={() => setDebugEnabled((v) => !v)}
-      />
       <HeroSection onViewDemo={() => setDemoOpen(true)} />
-      <LogoCloud />
       <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
       <Marquee text="MAILMIND AI · SMARTER EMAIL, AUTOMATED" />
 
@@ -215,6 +193,8 @@ const Index = () => {
       </section>
 
       <PropertyDemo />
+
+      <DashboardPreview />
 
       {/* Easings section */}
       <section className="py-32 px-4">

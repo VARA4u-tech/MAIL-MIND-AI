@@ -48,7 +48,7 @@ const UseCases: FC = () => {
         >
           INBOX, SORTED
         </h2>
-        <span className="font-mono text-[10px] text-primary/40 tracking-widest hidden md:inline">
+        <span className="font-mono text-xs text-primary/40 tracking-widest hidden md:inline">
           [03] USE CASES
         </span>
       </div>
@@ -61,35 +61,37 @@ const UseCases: FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-background p-6 md:p-8 flex flex-col gap-4 min-h-[320px]"
+            className="bg-background p-6 md:p-8 flex flex-col gap-4 min-h-[320px] relative group hover:bg-primary/[0.02] transition-colors duration-500 border border-transparent hover:border-primary/20"
           >
+            {/* Hover glow effect */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none bg-[radial-gradient(circle_at_50%_-20%,hsl(0,100%,50%,0.05),transparent_70%)]" />
             <div className="flex items-center justify-between">
               <span
-                className={`font-mono text-[10px] uppercase tracking-[0.25em] px-2.5 py-1 ${tagColor[c.tag]}`}
+                className={`font-mono text-xs uppercase tracking-[0.25em] px-2.5 py-1 ${tagColor[c.tag]}`}
               >
                 {c.tag}
               </span>
-              <span className="font-mono text-[9px] text-primary/30">
+              <span className="font-mono text-xs text-primary/30">
                 [{String(i + 1).padStart(2, "0")}]
               </span>
             </div>
 
             <div className="space-y-1">
-              <p className="font-mono text-[10px] text-primary/40 truncate">{c.sender}</p>
-              <p className="font-display text-primary text-xl md:text-2xl leading-tight uppercase tracking-tight">
+              <p className="font-mono text-xs text-primary/40 truncate">{c.sender}</p>
+              <p className="font-display text-primary text-xl md:text-2xl leading-tight uppercase tracking-tight group-hover:text-accent transition-colors">
                 {c.subject}
               </p>
             </div>
 
-            <p className="font-mono text-[11px] text-primary/50 leading-[1.7] flex-1">
+            <p className="font-mono text-sm text-primary/50 leading-[1.7] flex-1">
               {c.snippet}
             </p>
 
             <div className="border-t border-primary/15 pt-3 space-y-1.5">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-primary/30">
+              <p className="font-mono text-xs uppercase tracking-widest text-primary/30">
                 AI: {c.intent}
               </p>
-              <p className="font-mono text-[10px] text-primary/70 leading-relaxed">
+              <p className="font-mono text-xs text-primary/70 leading-relaxed">
                 → {c.suggestion}
               </p>
             </div>
