@@ -83,8 +83,8 @@ const Footer = () => (
   <footer className="py-20 border-t border-primary/20 bg-background">
     <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
       <div className="col-span-1 md:col-span-1">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-2 h-2 bg-primary" />
+        <div className="flex items-center gap-3 mb-4">
+          <img src="/favicon.png" alt="MailMind Logo" className="w-8 h-8 object-contain" />
           <span className="font-display tracking-widest text-primary text-xl uppercase">
             MailMind
           </span>

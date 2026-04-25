@@ -58,8 +58,12 @@ const Navbar: FC = () => {
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            <span className="w-2 h-2 bg-primary" />
+          <a href="#" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary group">
+            <img 
+              src="/favicon.png" 
+              alt="MailMind Logo" 
+              className="w-8 h-8 object-contain transition-transform group-hover:scale-110" 
+            />
             <span className="font-display tracking-widest text-primary text-xl uppercase">MailMind</span>
           </a>
 
