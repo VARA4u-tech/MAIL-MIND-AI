@@ -85,10 +85,13 @@ const Footer = () => (
       <div className="col-span-1 md:col-span-1">
         <div className="flex items-center gap-2 mb-4">
           <span className="w-2 h-2 bg-primary" />
-          <span className="font-display tracking-widest text-primary text-xl uppercase">MailMind</span>
+          <span className="font-display tracking-widest text-primary text-xl uppercase">
+            MailMind
+          </span>
         </div>
         <p className="font-mono text-xs text-primary/60 leading-relaxed mb-6 max-w-[280px]">
-          Designed and engineered as a student-driven initiative to strengthen real-world skills, innovation, and professional growth.
+          Designed and engineered as a student-driven initiative to strengthen
+          real-world skills, innovation, and professional growth.
         </p>
         <div className="flex flex-col gap-1">
           <a
@@ -106,39 +109,104 @@ const Footer = () => (
       </div>
 
       <div className="flex flex-col gap-3">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">Product</h3>
-        <a href="#features" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Features</a>
-        <a href="#use-cases" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Use Cases</a>
-        <a href="#demo" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Playground Demo</a>
-        <a href="#" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Pricing (Soon)</a>
+        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">
+          Product
+        </h3>
+        <a
+          href="#features"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Features
+        </a>
+        <a
+          href="#use-cases"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Use Cases
+        </a>
+        <a
+          href="#demo"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Playground Demo
+        </a>
+        <a
+          href="#"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Pricing (Soon)
+        </a>
       </div>
 
       <div className="flex flex-col gap-3">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">Company</h3>
-        <Link to="/about" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">About Us</Link>
-        <Link to="/careers" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Careers</Link>
-        <Link to="/contact" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Contact</Link>
+        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">
+          Company
+        </h3>
+        <Link
+          to="/about"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          About Us
+        </Link>
+        <Link
+          to="/careers"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Careers
+        </Link>
+        <Link
+          to="/contact"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Contact
+        </Link>
       </div>
 
       <div className="flex flex-col gap-3">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">Legal &amp; Social</h3>
-        <Link to="/privacy" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Privacy Policy</Link>
-        <Link to="/terms" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Terms of Service</Link>
-        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">Twitter / X</a>
-        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-primary/50 hover:text-primary transition-colors">LinkedIn</a>
+        <h3 className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-2">
+          Legal &amp; Social
+        </h3>
+        <Link
+          to="/privacy"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Privacy Policy
+        </Link>
+        <Link
+          to="/terms"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Terms of Service
+        </Link>
+        <a
+          href="https://twitter.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          Twitter / X
+        </a>
+        <a
+          href="https://linkedin.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-xs text-primary/50 hover:text-primary transition-colors"
+        >
+          LinkedIn
+        </a>
       </div>
     </div>
 
     <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-primary/10 text-center">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary/40">
         Cooked and served by{" "}
-        <a 
-          href="https://github.com/VARA4u-tech" 
-          target="_blank" 
+        <a
+          href="https://github.com/VARA4u-tech"
+          target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:text-primary/80 transition-colors font-bold"
+          className="text-primary hover:text-primary/80 transition-colors font-bold underline underline-offset-4 decoration-primary/40"
         >
-          VARA
+          🟥VARA
         </a>
       </p>
     </div>
