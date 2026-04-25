@@ -10,10 +10,10 @@ const HERO_CLIP_KEYFRAMES = {
   // scroll progress stops: start, end-of-reveal, start-of-close, full-close
   progress: [0, 0.08, 0.45, 0.9] as const,
   // inset % at each stop, in order: [reveal-start, reveal-end, hold-end, close]
-  top:    [8, 0, 0, 18] as number[],
-  right:  [6, 0, 0, 12] as number[],
-  bottom: [10, 0, 0, 22] as number[],
-  left:   [6, 0, 0, 12] as number[],
+  top:    [0, 0, 0, 18] as number[],
+  right:  [0, 0, 0, 12] as number[],
+  bottom: [0, 0, 0, 22] as number[],
+  left:   [0, 0, 0, 12] as number[],
 };
 
 interface HeroSectionProps {
