@@ -37,16 +37,26 @@ const SubtitleSection = () => {
           />
         );
       })}
-      <div className="mt-8 flex items-center justify-between w-full max-w-5xl px-4">
-        <div className="flex items-center gap-2">
+      <div className="mt-8 flex items-center justify-center md:justify-between w-full max-w-5xl px-4">
+        <div className="hidden md:flex items-center gap-2">
           <span className="w-3 h-3 bg-primary" />
           <span className="w-3 h-3 border border-primary" />
-          <span className="font-mono text-[10px] text-muted-foreground tracking-widest">
+          <span className="font-mono text-[10px] text-muted-foreground tracking-widest whitespace-nowrap">
             · SCROLL TO DISCOVER
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] text-muted-foreground tracking-widest">
+        
+        {/* Mobile-only centered indicator */}
+        <div className="flex md:hidden items-center gap-3">
+          <span className="w-2 h-2 bg-primary" />
+          <span className="font-mono text-[10px] text-muted-foreground tracking-widest whitespace-nowrap">
+            SCROLL TO DISCOVER
+          </span>
+          <span className="w-2 h-2 bg-primary" />
+        </div>
+
+        <div className="hidden md:flex items-center gap-2">
+          <span className="font-mono text-[10px] text-muted-foreground tracking-widest whitespace-nowrap">
             SCROLL TO DISCOVER ·
           </span>
           <span className="w-3 h-3 border border-primary" />
@@ -71,7 +81,7 @@ const SubtitleLine = ({
   return (
     <motion.div
       style={{ opacity, y }}
-      className="font-mono text-xs md:text-sm tracking-[0.5em] text-primary text-center uppercase"
+      className="font-mono text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.5em] text-primary text-center uppercase"
     >
       <div className="border-t border-primary/40 w-full mb-2" />
       {text}
