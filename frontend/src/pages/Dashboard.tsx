@@ -298,7 +298,7 @@ const Dashboard: FC = () => {
     } finally {
       setPendingAI(false);
     }
-  }, [selectedEmail, authToken, rawSchedule]);
+  }, [authToken, rawSchedule]);
 
   const handleBulkSummarize = async () => {
     if (selectedEmailIds.length === 0 || !authToken) return;
