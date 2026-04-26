@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/public/favicon.png" width="120" alt="MailMind AI Logo">
+  <img src="frontend/public/favicon.png" width="1120" alt="MailMind AI Logo">
 </p>
 
 <h1 align="center">MAILMIND AI</h1>
