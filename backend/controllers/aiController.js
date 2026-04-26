@@ -1,8 +1,11 @@
 import OpenAI from "openai";
 import Summary from "../models/Summary.js";
+import { google } from "googleapis";
+import { getClientForUser } from "./authController.js";
+import { extractBody } from "../utils/gmailUtils.js";
 
 // Initialize OpenAI client pointing to OpenRouter
-const getOpenRouterClient = () => {
+export const getOpenRouterClient = () => {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("OPENROUTER_API_KEY is missing");
 
@@ -22,7 +25,7 @@ const MODELS = [
 ];
 
 // Completion handler
-const getCompletion = async (
+export const getCompletion = async (
   openai,
   messages,
   temperature = 0.7,
@@ -200,5 +203,67 @@ export const getHistory = async (req, res) => {
     res.json({ history });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch history", details: error.message });
+  }
+};
+// Feature 5: Bulk Summarization
+export const summarizeBulk = async (req, res) => {
+  const { emailIds } = req.body;
+  const userEmail = req.user.email;
+
+  if (!emailIds || !Array.isArray(emailIds) || emailIds.length === 0) {
+    return res.status(400).json({ error: "At least one email ID is required" });
+  }
+
+  try {
+    const authClient = await getClientForUser(userEmail);
+    const gmail = google.gmail({ version: "v1", auth: authClient });
+
+    // Fetch all selected email bodies
+    const emailContents = await Promise.all(
+      emailIds.map(async (id) => {
+        const msg = await gmail.users.messages.get({ userId: "me", id, format: "full" });
+        const headers = msg.data.payload.headers;
+        const subject = headers.find(h => h.name.toLowerCase() === 'subject')?.value || 'No Subject';
+        const from = headers.find(h => h.name.toLowerCase() === 'from')?.value || 'Unknown';
+        const body = extractBody(msg.data.payload);
+        return `FROM: ${from}\nSUBJECT: ${subject}\nCONTENT: ${body}\n---`;
+      })
+    );
+
+    const openai = getOpenRouterClient();
+    const completion = await getCompletion(
+      openai,
+      [
+        {
+          role: "system",
+          content: `You are an executive assistant. Generate a single cohesive summary (a "Daily Brief") of all the provided emails. 
+          Group related topics together. Focus on action items, deadlines, and key decisions. 
+          Keep the total summary under 500 words. Use bullet points for clarity.`,
+        },
+        {
+          role: "user",
+          content: emailContents.join("\n\n"),
+        },
+      ],
+      0.5,
+    );
+
+    const bulkSummary = completion.choices[0].message.content.trim();
+
+    // Save to History as a bulk record
+    await Summary.create({
+      userEmail: userEmail,
+      emailId: "bulk_" + Date.now(),
+      subject: `Daily Brief: ${emailIds.length} Emails`,
+      from: "MailMind AI",
+      originalContent: `Summarized IDs: ${emailIds.join(", ")}`,
+      aiResult: bulkSummary,
+      type: "summary",
+    });
+
+    res.json({ summary: bulkSummary });
+  } catch (error) {
+    console.error("Bulk Summary Error:", error);
+    res.status(500).json({ error: "Failed to generate bulk summary", details: error.message });
   }
 };

@@ -1,34 +1,10 @@
 import { google } from 'googleapis';
 import { getClientForUser } from './authController.js';
-
-// Decode base64url encoded email body parts
-const decodeBase64 = (data) => {
-  return Buffer.from(data.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8');
-};
-
-// Extract plain text body from a Gmail message payload
-const extractBody = (payload) => {
-  if (!payload) return '';
-  if (payload.body?.data) return decodeBase64(payload.body.data);
-  if (payload.parts) {
-    for (const part of payload.parts) {
-      if (part.mimeType === 'text/plain' && part.body?.data) {
-        return decodeBase64(part.body.data);
-      }
-    }
-    // Fallback to HTML
-    for (const part of payload.parts) {
-      if (part.mimeType === 'text/html' && part.body?.data) {
-        return decodeBase64(part.body.data);
-      }
-    }
-  }
-  return '';
-};
+import { getOpenRouterClient, getCompletion } from './aiController.js';
+import { extractBody } from '../utils/gmailUtils.js';
 
 // GET /api/gmail/inbox
 export const getInbox = async (req, res) => {
-  // Use email from authenticated user (attached by protect middleware)
   const email = req.user.email;
 
   const authClient = await getClientForUser(email);
@@ -64,10 +40,108 @@ export const getInbox = async (req, res) => {
       })
     );
 
+    // AI Categorization Batch Call
+    try {
+      const openai = getOpenRouterClient();
+      const emailSummaries = emailDetails.map(e => `ID: ${e.id} | Subject: ${e.subject} | Snippet: ${e.snippet}`).join('\n');
+      
+      const completion = await getCompletion(openai, [
+        {
+          role: "system",
+          content: `Categorize these emails into exactly one of: "Action Required", "Meeting", "Social", "Promotions", "Updates". 
+          Return ONLY a valid JSON object mapping ID to category. Example: {"msg_id": "Action Required"}`
+        },
+        {
+          role: "user",
+          content: emailSummaries
+        }
+      ], 0);
+
+      let output = completion.choices[0].message.content.trim();
+      output = output.replace(/```json\n?|\n?```/g, "");
+      const categories = JSON.parse(output);
+
+      // Attach categories to email details
+      emailDetails.forEach(e => {
+        e.category = categories[e.id] || "Updates";
+      });
+    } catch (aiErr) {
+      console.error("AI Categorization failed, falling back to default:", aiErr.message);
+      emailDetails.forEach(e => e.category = "Updates");
+    }
+
     res.json({ emails: emailDetails });
   } catch (error) {
     console.error('Get inbox error:', error.message);
     res.status(500).json({ error: 'Failed to fetch inbox', details: error.message });
+  }
+};
+
+// GET /api/gmail/search?q=query
+export const searchEmailsAI = async (req, res) => {
+  const { q } = req.query;
+  const email = req.user.email;
+
+  if (!q) return res.status(400).json({ error: 'Search query required' });
+
+  const authClient = await getClientForUser(email);
+  if (!authClient) return res.status(401).json({ error: 'User not authenticated' });
+
+  try {
+    const gmail = google.gmail({ version: 'v1', auth: authClient });
+
+    // Fetch a larger batch of emails to search through (latest 30)
+    const listRes = await gmail.users.messages.list({
+      userId: 'me',
+      maxResults: 30,
+      labelIds: ['INBOX'],
+    });
+
+    const messages = listRes.data.messages || [];
+    if (messages.length === 0) return res.json({ emails: [] });
+
+    // Fetch snippets and details
+    const emailDetails = await Promise.all(
+      messages.map(async ({ id }) => {
+        const msgRes = await gmail.users.messages.get({ userId: 'me', id, format: 'metadata', metadataHeaders: ['Subject', 'From', 'Date'] });
+        const headers = msgRes.data.payload?.headers || [];
+        const get = (name) => headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+        return {
+          id,
+          subject: get('Subject'),
+          from: get('From'),
+          date: get('Date'),
+          snippet: msgRes.data.snippet,
+        };
+      })
+    );
+
+    // AI Semantic Filtering
+    const openai = getOpenRouterClient();
+    const emailData = emailDetails.map(e => `ID: ${e.id} | From: ${e.from} | Subject: ${e.subject} | Snippet: ${e.snippet}`).join('\n');
+    
+    const completion = await getCompletion(openai, [
+      {
+        role: "system",
+        content: `You are a semantic search engine. Filter the provided emails based on this user query: "${q}". 
+        Return ONLY a JSON array of the IDs that match the context. If no emails match, return [].`
+      },
+      {
+        role: "user",
+        content: emailData
+      }
+    ], 0);
+
+    let output = completion.choices[0].message.content.trim();
+    output = output.replace(/```json\n?|\n?```/g, "");
+    const matchingIds = JSON.parse(output);
+
+    const filteredEmails = emailDetails.filter(e => matchingIds.includes(e.id));
+
+    res.json({ emails: filteredEmails });
+  } catch (error) {
+    console.error('AI Search error:', error.message);
+    res.status(500).json({ error: 'Failed to perform AI search', details: error.message });
   }
 };
 

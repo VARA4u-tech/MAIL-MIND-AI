@@ -20,6 +20,7 @@ interface EmailMessage {
   date: string;
   snippet: string;
   body: string;
+  category?: string;
 }
 
 interface HistoryItem {
@@ -67,6 +68,10 @@ const Dashboard: FC = () => {
     endDate: string;
   }
   const [rawSchedule, setRawSchedule] = useState<RawSchedule | null>(null);
+  const [isAISearching, setIsAISearching] = useState(false);
+  const [aiSearchResults, setAiSearchResults] = useState<EmailMessage[] | null>(null);
+  const [selectedEmailIds, setSelectedEmailIds] = useState<string[]>([]);
+  const [isBulkSummarizing, setIsBulkSummarizing] = useState(false);
   
   // Sidebar/Responsive State
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1200);
@@ -289,16 +294,75 @@ const Dashboard: FC = () => {
       setTimeout(() => setScheduleSuccess(false), 3000);
     } catch (error) {
       console.error("Schedule Error:", error);
-      setAiError("Failed to save to Google Calendar");
+      setAiError("Failed to extract schedule");
     } finally {
-      setScheduling(false);
+      setPendingAI(false);
     }
-  }, [rawSchedule, authToken]);
+  }, [selectedEmail, authToken, rawSchedule]);
 
-  const filteredEmails = emails.filter(e => 
+  const handleBulkSummarize = async () => {
+    if (selectedEmailIds.length === 0 || !authToken) return;
+    setIsBulkSummarizing(true);
+    setGenerated(null);
+    setIsAiPanelOpen(true);
+    try {
+      const res = await fetch('/api/ai/summarize-bulk', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ emailIds: selectedEmailIds })
+      });
+      const data = await res.json();
+      if (data.summary) {
+        setGenerated(data.summary);
+      } else {
+        throw new Error(data.error || "Bulk summary failed");
+      }
+    } catch (error) {
+      console.error("Bulk Summary Error:", error);
+      setAiError("Failed to generate bulk summary");
+    } finally {
+      setIsBulkSummarizing(false);
+    }
+  };
+
+  const toggleEmailSelection = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEmailIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const filteredEmails = aiSearchResults || emails.filter(e => 
     e.subject.toLowerCase().includes(searchQuery.toLowerCase()) || 
     e.from.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleAISearch = useCallback(async () => {
+    if (!searchQuery.trim() || !authToken) return;
+    setIsAISearching(true);
+    setAiSearchResults(null);
+    try {
+      const res = await fetch(`/api/gmail/search?q=${encodeURIComponent(searchQuery)}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (!res.ok) throw new Error("AI Search failed");
+      const data = await res.json();
+      setAiSearchResults(data.emails || []);
+    } catch (error) {
+      console.error("AI Search Error:", error);
+      setAiError("AI Search failed to process query");
+    } finally {
+      setIsAISearching(false);
+    }
+  }, [searchQuery, authToken]);
+
+  const clearAISearch = () => {
+    setAiSearchResults(null);
+    setSearchQuery("");
+  };
 
   const handleEmailSelect = (email: EmailMessage) => {
     setSelectedEmail(email);
@@ -381,14 +445,56 @@ const Dashboard: FC = () => {
           >
             <div className="p-5 border-b border-primary/10 bg-primary/[0.01] flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary/30">Inbox Feed</h2>
-                <button onClick={() => fetchInbox(userEmail!)} className="p-1 hover:text-primary transition-colors">
-                  <RefreshCcw className={`w-3 h-3 ${loadingEmails ? 'animate-spin' : ''}`} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary/30">Inbox Feed</h2>
+                  {selectedEmailIds.length > 0 && (
+                    <span className="text-[9px] px-1.5 py-0.5 bg-primary text-background font-bold rounded-sm animate-pulse">
+                      {selectedEmailIds.length} SELECTED
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {selectedEmailIds.length > 1 && (
+                    <button 
+                      onClick={handleBulkSummarize}
+                      disabled={isBulkSummarizing}
+                      className="text-[9px] uppercase tracking-widest font-bold text-primary hover:text-primary/80 flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-sm border border-primary/20"
+                    >
+                      {isBulkSummarizing ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                      BULK AI
+                    </button>
+                  )}
+                  <button onClick={() => fetchInbox(userEmail!)} className="p-1 hover:text-primary transition-colors">
+                    <RefreshCcw className={`w-3 h-3 ${loadingEmails ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
               </div>
               <div className="relative group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary/20 group-focus-within:text-primary transition-colors" />
-                <input type="text" placeholder="SEARCH..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-primary/5 border border-primary/10 px-10 py-2.5 text-[9px] uppercase tracking-widest outline-none focus:border-primary/30 transition-all placeholder:opacity-20" />
+                <input 
+                  type="text" 
+                  placeholder={aiSearchResults ? "AI SEARCH ACTIVE..." : "SEARCH..."} 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                  onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
+                  className="w-full bg-primary/5 border border-primary/10 px-10 py-2.5 text-[9px] uppercase tracking-widest outline-none focus:border-primary/30 transition-all placeholder:opacity-20" 
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {aiSearchResults ? (
+                    <button onClick={clearAISearch} className="p-1 text-primary hover:scale-110 transition-transform">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={handleAISearch} 
+                      disabled={isAISearching || !searchQuery.trim()}
+                      className="p-1 text-primary/40 hover:text-primary hover:scale-110 transition-transform disabled:opacity-20"
+                      title="AI Semantic Search"
+                    >
+                      {isAISearching ? <RefreshCcw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -399,7 +505,8 @@ const Dashboard: FC = () => {
                   key={email.id} 
                   onClick={() => handleEmailSelect(email)} 
                   className={`p-5 border-b border-primary/5 cursor-pointer transition-all duration-500 relative group
-                    ${selectedEmail?.id === email.id ? "bg-primary/[0.08]" : "hover:bg-primary/[0.03]"}`}
+                    ${selectedEmail?.id === email.id ? "bg-primary/[0.08]" : "hover:bg-primary/[0.03]"}
+                    ${selectedEmailIds.includes(email.id) ? "bg-primary/[0.04]" : ""}`}
                 >
                   {selectedEmail?.id === email.id && (
                     <motion.div 
@@ -408,16 +515,37 @@ const Dashboard: FC = () => {
                     />
                   )}
                   <div className="flex justify-between items-start mb-2.5">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest truncate max-w-[60%] opacity-70 group-hover:opacity-100 transition-opacity">
-                      {email.from.split('<')[0].trim()}
-                    </span>
+                    <div className="flex items-center gap-3 max-w-[70%]">
+                      <div 
+                        onClick={(e) => toggleEmailSelection(email.id, e)}
+                        className={`w-4 h-4 border flex items-center justify-center transition-colors shrink-0
+                          ${selectedEmailIds.includes(email.id) ? 'bg-primary border-primary' : 'border-primary/20 group-hover:border-primary/40'}`}
+                      >
+                        {selectedEmailIds.includes(email.id) && <Check className="w-3 h-3 text-background" />}
+                      </div>
+                      <div className="flex flex-col gap-1.5 truncate">
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest truncate opacity-70 group-hover:opacity-100 transition-opacity">
+                          {email.from.split('<')[0].trim()}
+                        </span>
+                        {email.category && (
+                          <span className={`text-[7px] px-1.5 py-0.5 rounded-full border w-fit uppercase tracking-tighter font-bold
+                            ${email.category === 'Action Required' ? 'border-red-500 text-red-500 bg-red-500/5' : 
+                              email.category === 'Meeting' ? 'border-blue-400 text-blue-400 bg-blue-400/5' : 
+                              email.category === 'Social' ? 'border-green-400 text-green-400 bg-green-400/5' :
+                              email.category === 'Promotions' ? 'border-yellow-400 text-yellow-400 bg-yellow-400/5' :
+                              'border-primary/20 text-primary/40'}`}>
+                            {email.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <span className="text-[9px] opacity-30 font-bold">{email.date.split(',')[0]}</span>
                   </div>
-                  <h3 className={`text-xs mb-2 font-title font-bold truncate leading-tight tracking-tight
+                  <h3 className={`text-xs mb-2 font-title font-bold truncate leading-tight tracking-tight pl-7
                     ${selectedEmail?.id === email.id ? 'text-primary' : 'text-primary/70 group-hover:text-primary'}`}>
                     {email.subject || '(NO SUBJECT)'}
                   </h3>
-                  <p className="text-[10px] opacity-40 line-clamp-2 leading-[1.6] group-hover:opacity-60 transition-opacity">
+                  <p className="text-[10px] opacity-40 line-clamp-2 leading-[1.6] pl-7 group-hover:opacity-60 transition-opacity">
                     {email.snippet}
                   </p>
                 </div>
