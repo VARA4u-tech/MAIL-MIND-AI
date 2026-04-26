@@ -148,4 +148,6 @@ mail-mind-ai/
 
 ![Contribution](https://img.shields.io/badge/%F0%9F%A4%9D_Contribution-black?style=for-the-badge)
 
-COOKED & SERVED BY VARA.
+<h2 align="center" style="color:#ff1a1a; letter-spacing:2px;">
+  COOKED & SERVED BY VARA
+</h2>
