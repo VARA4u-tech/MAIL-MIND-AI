@@ -55,6 +55,18 @@ const Dashboard: FC = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleSuccess, setScheduleSuccess] = useState(false);
+
+  interface RawSchedule {
+    title: string;
+    description: string;
+    location?: string;
+    startDate: string;
+    endDate: string;
+  }
+  const [rawSchedule, setRawSchedule] = useState<RawSchedule | null>(null);
   
   // Sidebar/Responsive State
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1200);
@@ -87,13 +99,18 @@ const Dashboard: FC = () => {
 
   const handleLogout = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY + ':email');
+    window.localStorage.removeItem(STORAGE_KEY + ':token');
     navigate('/');
   }, [navigate]);
 
   const fetchInbox = useCallback(async (email: string) => {
     setLoadingEmails(true);
     try {
-      const res = await fetch(`/api/gmail/inbox?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`/api/gmail/inbox`, {
+        headers: {
+          'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+        }
+      });
       if (res.status === 401) {
         handleLogout();
         return;
@@ -114,10 +131,14 @@ const Dashboard: FC = () => {
     }
   }, [handleLogout, isMobile]);
 
-  const fetchHistory = useCallback(async (email: string) => {
+  const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      const res = await fetch(`/api/ai/history?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`/api/ai/history`, {
+        headers: {
+          'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+        }
+      });
       if (!res.ok) throw new Error("Failed to fetch history");
       const data = await res.json();
       setHistory(data.history || []);
@@ -131,24 +152,31 @@ const Dashboard: FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const emailParam = params.get('email');
-    if (emailParam) {
+    const tokenParam = params.get('token');
+    
+    if (emailParam && tokenParam) {
       setUserEmail(emailParam);
+      setAuthToken(tokenParam);
       window.localStorage.setItem(STORAGE_KEY + ':email', emailParam);
+      window.localStorage.setItem(STORAGE_KEY + ':token', tokenParam);
       window.history.replaceState({}, document.title, window.location.pathname);
     } else {
       const savedEmail = window.localStorage.getItem(STORAGE_KEY + ':email');
-      if (savedEmail) setUserEmail(savedEmail);
-      else navigate('/');
+      const savedToken = window.localStorage.getItem(STORAGE_KEY + ':token');
+      if (savedEmail && savedToken) {
+        setUserEmail(savedEmail);
+        setAuthToken(savedToken);
+      } else navigate('/');
     }
   }, [navigate]);
 
   useEffect(() => {
-    if (userEmail && !initialized.current) {
+    if (userEmail && authToken && !initialized.current) {
       initialized.current = true;
       fetchInbox(userEmail);
-      fetchHistory(userEmail);
+      fetchHistory();
     }
-  }, [userEmail, fetchInbox, fetchHistory]);
+  }, [userEmail, authToken, fetchInbox, fetchHistory]);
 
   const handleGenerate = useCallback(async () => {
     if (!selectedEmail) return;
@@ -164,7 +192,6 @@ const Dashboard: FC = () => {
         emailBody: string; 
         intent?: string; 
         metadata: { 
-          userEmail: string | null; 
           emailId: string; 
           subject: string; 
           from: string; 
@@ -172,7 +199,6 @@ const Dashboard: FC = () => {
       } = { 
         emailBody: selectedEmail.body || selectedEmail.snippet,
         metadata: {
-          userEmail,
           emailId: selectedEmail.id,
           subject: selectedEmail.subject,
           from: selectedEmail.from
@@ -185,7 +211,10 @@ const Dashboard: FC = () => {
 
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
         body: JSON.stringify(payload)
       });
       
@@ -197,6 +226,7 @@ const Dashboard: FC = () => {
       else if (mode === "schedule") {
         if (data.error) setGenerated("AI could not detect a meeting.");
         else {
+          setRawSchedule(data);
           setGenerated(`📅 Event: ${data.title}\n📍 Location: ${data.location || 'TBD'}\n📝 Note: ${data.description}`);
           setCalUrl(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(data.title)}&dates=${data.startDate}/${data.endDate}&details=${encodeURIComponent(data.description)}&location=${encodeURIComponent(data.location)}`);
         }
@@ -206,9 +236,9 @@ const Dashboard: FC = () => {
       setAiError(error instanceof Error ? error.message : "An unexpected AI error occurred");
     } finally {
       setPendingAI(false);
-      if (userEmail) fetchHistory(userEmail);
+      if (userEmail) fetchHistory();
     }
-  }, [selectedEmail, mode, draft, userEmail, fetchHistory]);
+  }, [selectedEmail, mode, draft, userEmail, authToken, fetchHistory]);
 
   const handleSendReply = useCallback(async () => {
     if (!selectedEmail || !generated || !userEmail) return;
@@ -219,8 +249,11 @@ const Dashboard: FC = () => {
       const subject = selectedEmail.subject.toLowerCase().startsWith('re:') ? selectedEmail.subject : `Re: ${selectedEmail.subject}`;
       const res = await fetch("/api/gmail/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, to: toEmail, subject, body: generated })
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ to: toEmail, subject, body: generated })
       });
       if (!res.ok) throw new Error("Failed to send");
       setSendSuccess(true);
@@ -230,7 +263,37 @@ const Dashboard: FC = () => {
     } finally {
       setSendingEmail(false);
     }
-  }, [selectedEmail, generated, userEmail]);
+  }, [selectedEmail, generated, userEmail, authToken]);
+
+  const handleScheduleToCalendar = useCallback(async () => {
+    if (!rawSchedule || !authToken) return;
+    setScheduling(true);
+    setScheduleSuccess(false);
+    try {
+      const res = await fetch("/api/calendar/create-event", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          title: rawSchedule.title,
+          description: rawSchedule.description,
+          location: rawSchedule.location,
+          startDate: rawSchedule.startDate,
+          endDate: rawSchedule.endDate
+        })
+      });
+      if (!res.ok) throw new Error("Failed to schedule");
+      setScheduleSuccess(true);
+      setTimeout(() => setScheduleSuccess(false), 3000);
+    } catch (error) {
+      console.error("Schedule Error:", error);
+      setAiError("Failed to save to Google Calendar");
+    } finally {
+      setScheduling(false);
+    }
+  }, [rawSchedule, authToken]);
 
   const filteredEmails = emails.filter(e => 
     e.subject.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -280,8 +343,12 @@ const Dashboard: FC = () => {
               { icon: <Archive className="w-4 h-4" />, label: "Archive" },
               { icon: <Trash2 className="w-4 h-4" />, label: "Trash" },
             ].map((item) => (
-              <button key={item.label} onClick={() => item.path && navigate(item.path)} className="w-full flex items-center gap-3 p-3 hover:bg-primary/5 transition-colors text-xs uppercase tracking-widest text-primary/60 hover:text-primary group">
-                <span className="text-primary/40 group-hover:text-primary">{item.icon}</span>
+              <button 
+                key={item.label} 
+                onClick={() => item.path && navigate(item.path)} 
+                className="w-full flex items-center gap-3 p-3 hover:bg-primary/10 transition-all duration-300 text-xs uppercase tracking-widest text-primary/60 hover:text-primary group border border-transparent hover:border-primary/20 rounded-sm"
+              >
+                <span className="text-primary/40 group-hover:text-primary group-hover:scale-110 transition-transform">{item.icon}</span>
                 {isSidebarOpen && <span className="flex-1 text-left">{item.label}</span>}
               </button>
             ))}
@@ -326,13 +393,33 @@ const Dashboard: FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {loadingEmails ? (
-                <div className="p-12 text-center opacity-20"><RefreshCcw className="w-8 h-8 animate-spin mx-auto mb-4" /><p className="text-[9px] uppercase tracking-widest">Decrypting...</p></div>
+                <div className="p-12 text-center opacity-20"><RefreshCcw className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" /><p className="text-[9px] uppercase tracking-widest animate-pulse">Decrypting Feed...</p></div>
               ) : filteredEmails.map((email) => (
-                <div key={email.id} onClick={() => handleEmailSelect(email)} className={`p-4 border-b border-primary/5 cursor-pointer transition-all relative ${selectedEmail?.id === email.id ? "bg-primary/[0.05]" : "hover:bg-primary/[0.02]"}`}>
-                  {selectedEmail?.id === email.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
-                  <div className="flex justify-between items-start mb-2"><span className="text-[9px] font-bold text-primary uppercase tracking-wider truncate max-w-[60%]">{email.from.split('<')[0].trim()}</span><span className="text-[8px] opacity-40">{email.date.split(',')[0]}</span></div>
-                  <h3 className={`text-[11px] mb-2 font-title font-semibold truncate leading-tight ${selectedEmail?.id === email.id ? 'text-primary' : 'text-primary/80'}`}>{email.subject || '(NO SUBJECT)'}</h3>
-                  <p className="text-[9px] opacity-40 line-clamp-2 leading-[1.6]">{email.snippet}</p>
+                <div 
+                  key={email.id} 
+                  onClick={() => handleEmailSelect(email)} 
+                  className={`p-5 border-b border-primary/5 cursor-pointer transition-all duration-500 relative group
+                    ${selectedEmail?.id === email.id ? "bg-primary/[0.08]" : "hover:bg-primary/[0.03]"}`}
+                >
+                  {selectedEmail?.id === email.id && (
+                    <motion.div 
+                      layoutId="active-indicator" 
+                      className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary shadow-[0_0_15px_rgba(255,0,0,0.5)]" 
+                    />
+                  )}
+                  <div className="flex justify-between items-start mb-2.5">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest truncate max-w-[60%] opacity-70 group-hover:opacity-100 transition-opacity">
+                      {email.from.split('<')[0].trim()}
+                    </span>
+                    <span className="text-[9px] opacity-30 font-bold">{email.date.split(',')[0]}</span>
+                  </div>
+                  <h3 className={`text-xs mb-2 font-title font-bold truncate leading-tight tracking-tight
+                    ${selectedEmail?.id === email.id ? 'text-primary' : 'text-primary/70 group-hover:text-primary'}`}>
+                    {email.subject || '(NO SUBJECT)'}
+                  </h3>
+                  <p className="text-[10px] opacity-40 line-clamp-2 leading-[1.6] group-hover:opacity-60 transition-opacity">
+                    {email.snippet}
+                  </p>
                 </div>
               ))}
             </div>
@@ -434,7 +521,14 @@ const Dashboard: FC = () => {
                             {mode === "reply" && (
                               <textarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="INSTRUCTIONS..." className="w-full bg-primary/[0.02] border border-primary/10 p-4 text-[10px] h-24 resize-none outline-none focus:border-primary/40 uppercase tracking-widest placeholder:opacity-10" />
                             )}
-                            <button onClick={handleGenerate} disabled={pendingAI} className="w-full py-4 bg-primary text-background text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-3 disabled:opacity-50">{pendingAI ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Command className="w-3 h-3" />}{pendingAI ? "Thinking..." : `Execute ${mode}`}</button>
+                            <button 
+                               onClick={handleGenerate} 
+                               disabled={pendingAI} 
+                               className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,0,0,0.2)] hover:shadow-[0_0_30px_rgba(255,0,0,0.4)]"
+                             >
+                               {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
+                               {pendingAI ? "PROCESSING..." : `EXECUTE ${mode}`}
+                             </button>
                             {generated && mode !== "history" && (
                               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                                 <div className="p-4 border border-primary/20 bg-primary/[0.05] backdrop-blur-md">
@@ -443,6 +537,14 @@ const Dashboard: FC = () => {
                                 </div>
                                 {mode === "reply" && (
                                   <button onClick={handleSendReply} disabled={sendingEmail || sendSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${sendSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>{sendingEmail ? 'Transmitting...' : sendSuccess ? 'Sent' : 'Send via Gmail'}</button>
+                                )}
+                                {mode === "schedule" && rawSchedule && (
+                                  <div className="flex gap-2">
+                                    <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className={`flex-1 py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${scheduleSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>
+                                      {scheduling ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Calendar className="w-3 h-3" />}
+                                      {scheduling ? 'Scheduling...' : scheduleSuccess ? 'Saved' : 'Save to Calendar'}
+                                    </button>
+                                  </div>
                                 )}
                               </motion.div>
                             )}

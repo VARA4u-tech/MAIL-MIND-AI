@@ -4,6 +4,7 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import gmailRoutes from './routes/gmailRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import calendarRoutes from './routes/calendarRoutes.js';
 import connectDB from './config/db.js';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/gmail', gmailRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {

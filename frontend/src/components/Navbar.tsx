@@ -177,7 +177,7 @@ const Navbar: FC = () => {
               ) : (
                 <button
                   onClick={() => { setMenuOpen(false); window.location.href = '/api/auth/google'; }}
-                  className="w-full font-mono text-xs uppercase tracking-[0.25em] bg-primary text-background px-4 py-3 hover:bg-primary/90 transition-colors"
+                  className="w-full font-mono text-[10px] uppercase tracking-[0.1em] bg-primary text-background px-4 py-4 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   Sign in with Google →
                 </button>

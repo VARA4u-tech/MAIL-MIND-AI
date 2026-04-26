@@ -50,6 +50,8 @@ const getCompletion = async (
 // Feature 1: Smart Reply Generation
 export const generateReply = async (req, res) => {
   const { emailBody, intent = "polite", metadata } = req.body;
+  const userEmail = req.user.email; // Use email from token
+
   if (!emailBody)
     return res.status(400).json({ error: "emailBody is required" });
 
@@ -69,9 +71,9 @@ export const generateReply = async (req, res) => {
     const result = completion.choices[0].message.content.trim();
 
     // Save to History if metadata is provided
-    if (metadata && metadata.userEmail && metadata.emailId) {
+    if (metadata && metadata.emailId) {
       await Summary.create({
-        userEmail: metadata.userEmail,
+        userEmail: userEmail, // Store authenticated email
         emailId: metadata.emailId,
         subject: metadata.subject,
         from: metadata.from,
@@ -90,6 +92,8 @@ export const generateReply = async (req, res) => {
 // Feature 2: Email Summarization
 export const summarizeEmail = async (req, res) => {
   const { emailBody, metadata } = req.body;
+  const userEmail = req.user.email;
+
   if (!emailBody)
     return res.status(400).json({ error: "emailBody is required" });
 
@@ -113,9 +117,9 @@ export const summarizeEmail = async (req, res) => {
     const result = completion.choices[0].message.content.trim();
 
     // Save to History if metadata is provided
-    if (metadata && metadata.userEmail && metadata.emailId) {
+    if (metadata && metadata.emailId) {
       await Summary.create({
-        userEmail: metadata.userEmail,
+        userEmail: userEmail,
         emailId: metadata.emailId,
         subject: metadata.subject,
         from: metadata.from,
@@ -134,6 +138,8 @@ export const summarizeEmail = async (req, res) => {
 // Feature 3: Schedule Extraction
 export const scheduleEvent = async (req, res) => {
   const { emailBody, metadata } = req.body;
+  const userEmail = req.user.email;
+
   if (!emailBody)
     return res.status(400).json({ error: "emailBody is required" });
 
@@ -163,9 +169,9 @@ export const scheduleEvent = async (req, res) => {
       const parsed = JSON.parse(output);
 
       // Save to History if metadata is provided
-      if (metadata && metadata.userEmail && metadata.emailId) {
+      if (metadata && metadata.emailId) {
         await Summary.create({
-          userEmail: metadata.userEmail,
+          userEmail: userEmail,
           emailId: metadata.emailId,
           subject: metadata.subject,
           from: metadata.from,
@@ -187,11 +193,10 @@ export const scheduleEvent = async (req, res) => {
 
 // Feature 4: Get AI History
 export const getHistory = async (req, res) => {
-  const { email } = req.query;
-  if (!email) return res.status(400).json({ error: "email query param is required" });
+  const userEmail = req.user.email;
 
   try {
-    const history = await Summary.find({ userEmail: email }).sort({ createdAt: -1 });
+    const history = await Summary.find({ userEmail }).sort({ createdAt: -1 });
     res.json({ history });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch history", details: error.message });

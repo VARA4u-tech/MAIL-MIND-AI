@@ -26,10 +26,10 @@ const extractBody = (payload) => {
   return '';
 };
 
-// GET /api/gmail/inbox?email=user@gmail.com
+// GET /api/gmail/inbox
 export const getInbox = async (req, res) => {
-  const { email } = req.query;
-  if (!email) return res.status(400).json({ error: 'Email query param required' });
+  // Use email from authenticated user (attached by protect middleware)
+  const email = req.user.email;
 
   const authClient = await getClientForUser(email);
   if (!authClient) return res.status(401).json({ error: 'User not authenticated. Please login first.' });
@@ -72,11 +72,13 @@ export const getInbox = async (req, res) => {
 };
 
 // POST /api/gmail/send
-// Body: { email, to, subject, body }
+// Body: { to, subject, body }
 export const sendEmail = async (req, res) => {
-  const { email, to, subject, body } = req.body;
-  if (!email || !to || !subject || !body) {
-    return res.status(400).json({ error: 'email, to, subject, and body are required' });
+  const { to, subject, body } = req.body;
+  const email = req.user.email;
+
+  if (!to || !subject || !body) {
+    return res.status(400).json({ error: 'to, subject, and body are required' });
   }
 
   const authClient = await getClientForUser(email);

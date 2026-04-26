@@ -43,7 +43,7 @@ const SubtitleSection = () => {
             · SCROLL TO DISCOVER
           </span>
         </div>
-        
+
         {/* Mobile-only centered indicator */}
         <div className="flex md:hidden items-center gap-3">
           <span className="w-2 h-2 bg-primary" />
@@ -79,7 +79,7 @@ const SubtitleLine = ({
   return (
     <motion.div
       style={{ opacity, y }}
-      className="font-mono text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.5em] text-primary text-center uppercase"
+      className="font-mono text-[9px] md:text-sm tracking-[0.1em] md:tracking-[0.5em] text-primary text-center uppercase px-4"
     >
       <div className="border-t border-primary/40 w-full mb-2" />
       {text}
@@ -92,7 +92,11 @@ const Footer = () => (
     <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
       <div className="col-span-1 md:col-span-1">
         <div className="flex items-center gap-3 mb-4">
-          <img src="/favicon.png" alt="MailMind Logo" className="w-8 h-8 object-contain" />
+          <img
+            src="/favicon.png"
+            alt="MailMind Logo"
+            className="w-8 h-8 object-contain"
+          />
           <span className="font-display tracking-widest text-primary text-xl uppercase">
             MailMind
           </span>
@@ -214,7 +218,7 @@ const Footer = () => (
           rel="noopener noreferrer"
           className="text-primary hover:text-primary/80 transition-colors font-bold underline underline-offset-4 decoration-primary/40"
         >
-          🟥VARA
+          VARA
         </a>
       </p>
     </div>
@@ -236,59 +240,59 @@ const Index = () => {
       {/* Use Cases section */}
       <div id="use-cases">
         <section className="py-32 px-4">
-        <ScrollRevealText
-          className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
-          words={[
-            { text: "GENERATE" },
-            { text: "SMART," },
-            { text: "CONTEXT-AWARE" },
-            { text: "REPLIES" },
-            { text: "IN" },
-            { text: "SECONDS." },
-          ]}
-        />
-      </section>
+          <ScrollRevealText
+            className="text-3xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
+            words={[
+              { text: "GENERATE" },
+              { text: "SMART," },
+              { text: "CONTEXT-AWARE" },
+              { text: "REPLIES" },
+              { text: "IN" },
+              { text: "SECONDS." },
+            ]}
+          />
+        </section>
 
-      {/* Mix section */}
-      <section className="py-32 px-4">
-        <ScrollRevealText
-          className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
-          words={[
-            { text: "TURN" },
-            { text: "LONG" },
-            { text: "threads,", className: "font-serif-italic normal-case" },
-            { text: "MEETINGS," },
-            { text: "AND" },
-            { text: "DECISIONS" },
-            { text: "INTO" },
-            { text: "CLEAR" },
-            { text: "SUMMARIES." },
-          ]}
-        />
-      </section>
+        {/* Mix section */}
+        <section className="py-32 px-4">
+          <ScrollRevealText
+            className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
+            words={[
+              { text: "TURN" },
+              { text: "LONG" },
+              { text: "threads,", className: "font-serif-italic normal-case" },
+              { text: "MEETINGS," },
+              { text: "AND" },
+              { text: "DECISIONS" },
+              { text: "INTO" },
+              { text: "CLEAR" },
+              { text: "SUMMARIES." },
+            ]}
+          />
+        </section>
 
-      {/* Split text section */}
-      <section className="py-32 px-4">
-        <ScrollRevealText
-          className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
-          words={[
-            { text: "DETECT" },
-            { text: "INTENT:" },
-            { text: "REPLY," },
-            { text: "SCHEDULE," },
-            { text: "IGNORE." },
-          ]}
-        />
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          viewport={{ once: false }}
-          className="font-mono text-xs md:text-sm text-muted-foreground text-center mt-8 tracking-wider max-w-2xl mx-auto"
-        >
-          your inbox sorts itself, so you focus only on what matters.
-        </motion.p>
-      </section>
+        {/* Split text section */}
+        <section className="py-32 px-4">
+          <ScrollRevealText
+            className="text-4xl md:text-7xl lg:text-8xl font-display uppercase max-w-6xl mx-auto"
+            words={[
+              { text: "DETECT" },
+              { text: "INTENT:" },
+              { text: "REPLY," },
+              { text: "SCHEDULE," },
+              { text: "IGNORE." },
+            ]}
+          />
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: false }}
+            className="font-mono text-xs md:text-sm text-muted-foreground text-center mt-8 tracking-wider max-w-2xl mx-auto"
+          >
+            your inbox sorts itself, so you focus only on what matters.
+          </motion.p>
+        </section>
       </div>
 
       <HowItWorks />

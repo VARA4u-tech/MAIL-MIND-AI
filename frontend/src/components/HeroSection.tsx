@@ -110,8 +110,8 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={mounted ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          className="font-display text-primary select-none leading-[0.9] tracking-tight w-full text-center"
-          style={{ fontSize: "clamp(40px, 16vw, 440px)" }}
+          className="font-display text-primary select-none leading-[0.95] tracking-tight w-full text-center"
+          style={{ fontSize: "clamp(32px, 13vw, 440px)" }}
         >
           MAILMIND
         </motion.h1>
@@ -121,7 +121,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={mounted ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
-          className="font-mono text-xs md:text-sm text-primary/60 uppercase tracking-[0.4em] mt-4 md:mt-6"
+          className="font-mono text-[9px] md:text-sm text-primary/60 uppercase tracking-[0.15em] md:tracking-[0.4em] mt-3 md:mt-6 px-4 text-center"
         >
           AI Email &amp; Calendar Assistant
         </motion.p>

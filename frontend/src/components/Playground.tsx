@@ -230,9 +230,10 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
           </p>
           <button
             onClick={handleLogin}
-            className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-6 py-3 hover:bg-primary/90 transition-colors flex items-center gap-2 cursor-pointer"
+            className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.1em] md:tracking-[0.25em] bg-primary text-background px-4 md:px-6 py-4 md:py-3.5 hover:bg-primary/90 transition-all flex items-center justify-center gap-3 cursor-pointer w-full max-w-[280px] sm:max-w-none"
           >
-            <LogIn className="w-4 h-4" /> Sign in with Google
+            <LogIn className="w-4 h-4 shrink-0" /> 
+            <span className="whitespace-nowrap">Sign in with Google</span>
           </button>
         </div>
       ) : (
