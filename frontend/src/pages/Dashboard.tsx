@@ -440,12 +440,24 @@ const Dashboard: FC = () => {
              ))}
           </nav>
           <div className="p-4 border-t border-primary/10 bg-primary/[0.01] flex-shrink-0">
+            <div className={`flex items-center gap-3 px-2 mb-3 ${!isSidebarOpen ? 'justify-center' : ''}`}>
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                <User className="w-4 h-4 text-primary/40" />
+              </div>
+              {isSidebarOpen && (
+                <div className="flex flex-col truncate">
+                  <span className="text-[10px] text-primary font-bold truncate uppercase tracking-widest">{userEmail?.split('@')[0]}</span>
+                  <span className="text-[8px] text-primary/40 truncate lowercase">{userEmail}</span>
+                </div>
+              )}
+            </div>
+            
             <button 
               onClick={handleLogout}
               className={`w-full flex items-center gap-3 p-3 transition-all duration-300 text-xs uppercase tracking-widest group border border-transparent rounded-sm hover:bg-primary/10 text-primary/60 hover:text-primary ${!isSidebarOpen ? 'justify-center' : ''}`}
               title="Logout"
             >
-              <LogOut className={`w-4 h-4 ${!isSidebarOpen ? 'text-primary/40' : 'text-primary/40'} group-hover:text-primary transition-colors`} />
+              <LogOut className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
               {isSidebarOpen && <span className="font-bold">Logout</span>}
             </button>
           </div>
