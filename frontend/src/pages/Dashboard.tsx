@@ -325,9 +325,10 @@ const Dashboard: FC = () => {
     } catch (error) {
       console.error("Bulk Summary Error:", error);
       setAiError("Failed to generate bulk summary");
-    } finally {
-      setIsBulkSummarizing(false);
-    }
+     } finally {
+       setIsBulkSummarizing(false);
+       if (userEmail) fetchHistory();
+     }
   };
 
   const toggleEmailSelection = (id: string, e: React.MouseEvent) => {

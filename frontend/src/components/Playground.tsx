@@ -117,8 +117,21 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
 
     try {
       let endpoint = "/api/ai/summarize";
-      const payload: Record<string, string> = { 
-        emailBody: selectedEmail.body || selectedEmail.snippet 
+      const payload: { 
+        emailBody: string; 
+        intent?: string; 
+        metadata: { 
+          emailId: string; 
+          subject: string; 
+          from: string; 
+        } 
+      } = { 
+        emailBody: selectedEmail.body || selectedEmail.snippet,
+        metadata: {
+          emailId: selectedEmail.id,
+          subject: selectedEmail.subject,
+          from: selectedEmail.from
+        }
       };
       
       if (mode === "reply") {
@@ -128,11 +141,14 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
         endpoint = "/api/ai/schedule";
       }
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+       const res = await fetch(endpoint, {
+         method: "POST",
+         headers: { 
+           "Content-Type": "application/json",
+           "Authorization": `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+         },
+         body: JSON.stringify(payload)
+       });
       
       if (!res.ok) {
         throw new Error(`Server returned status ${res.status}`);
