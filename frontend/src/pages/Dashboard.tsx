@@ -444,7 +444,10 @@ const Dashboard: FC = () => {
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {(isMobile || !isSidebarOpen) && (
           <header className={`h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 ${!isMobile ? "backdrop-blur-md" : ""} z-30`}>
-            <div className="flex items-center gap-3">
+            <div 
+              onClick={() => navigate("/")}
+              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <div className="flex items-center gap-2">
                 <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
                 <span className="font-display tracking-widest text-primary text-xs uppercase">MailMind</span>
@@ -452,7 +455,13 @@ const Dashboard: FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <button className="p-2 text-primary/60"><Bell className="w-4 h-4" /></button>
-              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20"><User className="w-3.5 h-3.5 text-primary/40" /></div>
+              <button 
+                onClick={handleLogout}
+                className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 hover:bg-primary/20 transition-colors"
+                title="Logout"
+              >
+                <User className="w-3.5 h-3.5 text-primary/40" />
+              </button>
             </div>
           </header>
         )}
