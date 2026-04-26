@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import Summary from "../models/Summary.js";
 
 // Initialize OpenAI client pointing to OpenRouter
 const getOpenRouterClient = () => {
@@ -25,7 +26,6 @@ const getCompletion = async (
   openai,
   messages,
   temperature = 0.7,
-  json = false, // We'll handle JSON manually for Gemma
 ) => {
   let lastError = null;
 
@@ -36,7 +36,6 @@ const getCompletion = async (
         model: model,
         messages,
         temperature,
-        // Gemma 2 27B doesn't always support native JSON mode on OpenRouter
       });
       return response;
     } catch (error) {
@@ -50,7 +49,7 @@ const getCompletion = async (
 
 // Feature 1: Smart Reply Generation
 export const generateReply = async (req, res) => {
-  const { emailBody, intent = "polite" } = req.body;
+  const { emailBody, intent = "polite", metadata } = req.body;
   if (!emailBody)
     return res.status(400).json({ error: "emailBody is required" });
 
@@ -67,7 +66,22 @@ export const generateReply = async (req, res) => {
       },
     ]);
 
-    res.json({ reply: completion.choices[0].message.content.trim() });
+    const result = completion.choices[0].message.content.trim();
+
+    // Save to History if metadata is provided
+    if (metadata && metadata.userEmail && metadata.emailId) {
+      await Summary.create({
+        userEmail: metadata.userEmail,
+        emailId: metadata.emailId,
+        subject: metadata.subject,
+        from: metadata.from,
+        originalContent: emailBody,
+        aiResult: result,
+        type: 'reply',
+      });
+    }
+
+    res.json({ reply: result });
   } catch (error) {
     res.status(500).json({ error: "AI Generation Failed", details: error.message });
   }
@@ -75,7 +89,7 @@ export const generateReply = async (req, res) => {
 
 // Feature 2: Email Summarization
 export const summarizeEmail = async (req, res) => {
-  const { emailBody } = req.body;
+  const { emailBody, metadata } = req.body;
   if (!emailBody)
     return res.status(400).json({ error: "emailBody is required" });
 
@@ -96,7 +110,22 @@ export const summarizeEmail = async (req, res) => {
       0.3,
     );
 
-    res.json({ summary: completion.choices[0].message.content.trim() });
+    const result = completion.choices[0].message.content.trim();
+
+    // Save to History if metadata is provided
+    if (metadata && metadata.userEmail && metadata.emailId) {
+      await Summary.create({
+        userEmail: metadata.userEmail,
+        emailId: metadata.emailId,
+        subject: metadata.subject,
+        from: metadata.from,
+        originalContent: emailBody,
+        aiResult: result,
+        type: 'summary',
+      });
+    }
+
+    res.json({ summary: result });
   } catch (error) {
     res.status(500).json({ error: "Failed to summarize", details: error.message });
   }
@@ -104,7 +133,7 @@ export const summarizeEmail = async (req, res) => {
 
 // Feature 3: Schedule Extraction
 export const scheduleEvent = async (req, res) => {
-  const { emailBody } = req.body;
+  const { emailBody, metadata } = req.body;
   if (!emailBody)
     return res.status(400).json({ error: "emailBody is required" });
 
@@ -128,17 +157,43 @@ export const scheduleEvent = async (req, res) => {
     );
 
     let output = completion.choices[0].message.content.trim();
-    // Clean potential markdown ticks
     output = output.replace(/```json\n?|\n?```/g, "");
     
     try {
       const parsed = JSON.parse(output);
+
+      // Save to History if metadata is provided
+      if (metadata && metadata.userEmail && metadata.emailId) {
+        await Summary.create({
+          userEmail: metadata.userEmail,
+          emailId: metadata.emailId,
+          subject: metadata.subject,
+          from: metadata.from,
+          originalContent: emailBody,
+          aiResult: output, // Store the raw JSON string
+          type: 'schedule',
+        });
+      }
+
       res.json(parsed);
     } catch (parseErr) {
-      console.error("Manual JSON Parse Error:", output);
+      console.error("Manual JSON Parse Error:", output, parseErr);
       res.status(500).json({ error: "AI returned invalid JSON format", details: output });
     }
   } catch (error) {
     res.status(500).json({ error: "Failed to extract schedule", details: error.message });
+  }
+};
+
+// Feature 4: Get AI History
+export const getHistory = async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: "email query param is required" });
+
+  try {
+    const history = await Summary.find({ userEmail: email }).sort({ createdAt: -1 });
+    res.json({ history });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch history", details: error.message });
   }
 };
