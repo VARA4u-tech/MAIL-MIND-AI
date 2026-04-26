@@ -24,7 +24,8 @@ const Navbar: FC = () => {
   useEffect(() => {
     // Check if user is logged in
     const email = window.localStorage.getItem('mailmind:playground:email');
-    if (email) setUserEmail(email);
+    const token = window.localStorage.getItem('mailmind:playground:token');
+    if (email && token) setUserEmail(email);
   }, []);
 
   useMotionValueEvent(scrollY, "change", (latest) => {

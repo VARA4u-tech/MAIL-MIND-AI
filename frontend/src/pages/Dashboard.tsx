@@ -81,6 +81,7 @@ const Dashboard: FC = () => {
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [activeTab, setActiveTab] = useState<MobileTab>("inbox");
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false); // Default closed on tablet/small screens
+  const [showUserMenu, setShowUserMenu] = useState(false);
   
   const initialized = useRef(false);
 
@@ -438,12 +439,22 @@ const Dashboard: FC = () => {
                </button>
              ))}
           </nav>
+          <div className="p-4 border-t border-primary/10 bg-primary/[0.01] flex-shrink-0">
+            <button 
+              onClick={handleLogout}
+              className={`w-full flex items-center gap-3 p-3 transition-all duration-300 text-xs uppercase tracking-widest group border border-transparent rounded-sm hover:bg-primary/10 text-primary/60 hover:text-primary ${!isSidebarOpen ? 'justify-center' : ''}`}
+              title="Logout"
+            >
+              <LogOut className={`w-4 h-4 ${!isSidebarOpen ? 'text-primary/40' : 'text-primary/40'} group-hover:text-primary transition-colors`} />
+              {isSidebarOpen && <span className="font-bold">Logout</span>}
+            </button>
+          </div>
         </motion.aside>
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {(isMobile || !isSidebarOpen) && (
-          <header className={`h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 ${!isMobile ? "backdrop-blur-md" : ""} z-30`}>
+        {isMobile && (
+          <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 z-30">
             <div 
               onClick={() => navigate("/")}
               className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
