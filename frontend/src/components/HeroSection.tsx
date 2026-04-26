@@ -116,15 +116,23 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
         className="relative w-full flex flex-col items-center justify-center px-[1vw] py-12"
       >
         {/* Main title with entrance animation */}
-        <motion.h1
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={mounted ? { opacity: 1, scale: 1, y: 0 } : {}}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          className="font-display text-primary select-none leading-[0.95] tracking-tight w-full text-center"
-          style={{ fontSize: "clamp(32px, 13vw, 440px)" }}
-        >
-          MAILMIND
-        </motion.h1>
+         <motion.h1
+           initial={{ opacity: 0, scale: 0.95, y: 20 }}
+           animate={mounted ? { 
+             opacity: 1, 
+             scale: 1, 
+             y: [0, -8, 0] // Gentle floating loop
+           } : {}}
+           transition={{ 
+             opacity: { duration: 1.2, delay: 0.2 },
+             scale: { duration: 1.2, delay: 0.2 },
+             y: { duration: 4, repeat: Infinity, ease: "easeInOut" } // Slow breathing
+           }}
+           className="font-display text-primary select-none leading-[0.95] tracking-tight w-full text-center"
+           style={{ fontSize: "clamp(32px, 13vw, 440px)" }}
+         >
+           MAILMIND
+         </motion.h1>
 
         {/* Subtitle below title */}
         <motion.p
@@ -143,22 +151,28 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
           transition={{ duration: 0.8, ease: "easeOut", delay: 1 }}
           className="flex flex-col sm:flex-row items-center gap-3 mt-8 md:mt-10"
         >
-          <button
-            onClick={() => {
-              document
-                .getElementById("playground")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-            className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-5 py-3 hover:bg-primary/90 transition-colors cursor-pointer"
-          >
-            Get Started →
-          </button>
-          <button
-            onClick={onViewDemo}
-            className="font-mono text-[11px] uppercase tracking-[0.25em] border border-primary/60 text-primary px-5 py-3 hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer"
-          >
-            View Demo
-          </button>
+           <motion.button
+             whileHover={{ scale: 1.02 }}
+             whileTap={{ scale: 0.98 }}
+             animate={isMobile ? { scale: [1, 1.02, 1] } : {}} // Subtle pulse for mobile
+             transition={isMobile ? { duration: 3, repeat: Infinity, ease: "easeInOut" } : {}}
+             onClick={() => {
+               document
+                 .getElementById("playground")
+                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
+             }}
+             className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-5 py-3 hover:bg-primary/90 transition-colors cursor-pointer"
+           >
+             Get Started →
+           </motion.button>
+           <motion.button
+             whileHover={{ scale: 1.02 }}
+             whileTap={{ scale: 0.98 }}
+             onClick={onViewDemo}
+             className="font-mono text-[11px] uppercase tracking-[0.25em] border border-primary/60 text-primary px-5 py-3 hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer"
+           >
+             View Demo
+           </motion.button>
         </motion.div>
       </motion.div>
 
