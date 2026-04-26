@@ -22,9 +22,10 @@ interface HeroSectionProps {
 
 const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [clipValue, setClipValue] = useState("inset(0% 0% 0% 0%)");
-  const { scrollYProgress } = useScroll({
+   const [mounted, setMounted] = useState(false);
+   const [isMobile, setIsMobile] = useState(false);
+   const [clipValue, setClipValue] = useState("inset(0% 0% 0% 0%)");
+   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
@@ -39,18 +40,23 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
   const clipBottom = useTransform(scrollYProgress, [...K.progress], K.bottom);
   const clipLeft   = useTransform(scrollYProgress, [...K.progress], K.left);
 
-  // Sync clip-path to a CSS string
-  useMotionValueEvent(clipTop, "change", () => {
-    const t = clipTop.get();
-    const r = clipRight.get();
-    const b = clipBottom.get();
-    const l = clipLeft.get();
-    setClipValue(`inset(${t}% ${r}% ${b}% ${l}%)`);
-  });
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+   useEffect(() => {
+     setMounted(true);
+     const checkMobile = () => setIsMobile(window.innerWidth < 768);
+     checkMobile();
+     window.addEventListener('resize', checkMobile);
+     return () => window.removeEventListener('resize', checkMobile);
+   }, []);
+ 
+   // Sync clip-path to a CSS string - DISABLED ON MOBILE FOR PERFORMANCE
+   useMotionValueEvent(clipTop, "change", () => {
+     if (window.innerWidth < 768) return; // Skip heavy math on mobile
+     const t = clipTop.get();
+     const r = clipRight.get();
+     const b = clipBottom.get();
+     const l = clipLeft.get();
+     setClipValue(`inset(${t}% ${r}% ${b}% ${l}%)`);
+   });
 
   return (
     <section
@@ -58,40 +64,44 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
       className="relative h-[100svh] flex items-center justify-center overflow-hidden"
       data-debug="hero"
     >
-      {/* Clip-path masked background layer */}
-      <div
-        className="absolute inset-0 pointer-events-none transition-[clip-path] duration-100"
-        style={{
-          clipPath: clipValue,
-          willChange: "clip-path",
-        }}
-      >
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.1]"
-          style={{
-            backgroundImage:
-              "linear-gradient(hsl(0 100% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 100% 50%) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-        {/* Red glow at center */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(0 100% 50% / 0.1) 0%, transparent 70%)",
-          }}
-        />
-      </div>
+       {/* Clip-path masked background layer - HIDDEN ON MOBILE TO PREVENT LAG */}
+       {!isMobile && (
+         <div
+           className="absolute inset-0 pointer-events-none transition-[clip-path] duration-100"
+           style={{
+             clipPath: clipValue,
+             willChange: "clip-path",
+           }}
+         >
+           {/* Grid pattern */}
+           <div
+             className="absolute inset-0 opacity-[0.1]"
+             style={{
+               backgroundImage:
+                 "linear-gradient(hsl(0 100% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 100% 50%) 1px, transparent 1px)",
+               backgroundSize: "60px 60px",
+             }}
+           />
+           {/* Red glow at center */}
+           <div
+             className="absolute inset-0"
+             style={{
+               background:
+                 "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(0 100% 50% / 0.1) 0%, transparent 70%)",
+             }}
+           />
+         </div>
+       )}
 
-      {/* Noise overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        }}
-      />
+       {/* Noise overlay - REMOVED ON MOBILE (GPU HEAVY) */}
+       {!isMobile && (
+         <div
+           className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay"
+           style={{
+             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+           }}
+         />
+       )}
 
       {/* Radial vignette — softened so edges don't go pitch black */}
       <div
