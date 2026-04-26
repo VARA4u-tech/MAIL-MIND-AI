@@ -446,7 +446,7 @@ const Dashboard: FC = () => {
             <div className="p-5 border-b border-primary/10 bg-primary/[0.01] flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary/30">Inbox Feed</h2>
+                  <h2 className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary/30">Inbox</h2>
                   {selectedEmailIds.length > 0 && (
                     <span className="text-[9px] px-1.5 py-0.5 bg-primary text-background font-bold rounded-sm animate-pulse">
                       {selectedEmailIds.length} SELECTED
@@ -499,7 +499,7 @@ const Dashboard: FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {loadingEmails ? (
-                <div className="p-12 text-center opacity-20"><RefreshCcw className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" /><p className="text-[9px] uppercase tracking-widest animate-pulse">Decrypting Feed...</p></div>
+                <div className="p-12 text-center opacity-20"><RefreshCcw className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" /><p className="text-[9px] uppercase tracking-widest animate-pulse">Syncing Inbox...</p></div>
               ) : filteredEmails.map((email) => (
                 <div 
                   key={email.id} 
@@ -626,7 +626,7 @@ const Dashboard: FC = () => {
                             ${isTablet ? "absolute inset-y-0 right-0 w-[320px]" : "relative w-[400px]"}`}
                         >
                           <div className="p-5 border-b border-primary/10 flex items-center justify-between flex-shrink-0">
-                            <div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-primary" /><span className="text-[10px] font-bold uppercase tracking-[0.4em]">Neural Core</span></div>
+                            <div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-primary" /><span className="text-[10px] font-bold uppercase tracking-[0.4em]">AI Assistant</span></div>
                             <button onClick={() => setIsAiPanelOpen(false)} className="p-1 hover:text-primary transition-colors"><PanelRightClose className="w-4 h-4" /></button>
                           </div>
                           <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
@@ -655,7 +655,7 @@ const Dashboard: FC = () => {
                                className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,0,0,0.2)] hover:shadow-[0_0_30px_rgba(255,0,0,0.4)]"
                              >
                                {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
-                               {pendingAI ? "PROCESSING..." : `EXECUTE ${mode}`}
+                               {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}
                              </button>
                             {generated && mode !== "history" && (
                               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -664,7 +664,7 @@ const Dashboard: FC = () => {
                                   <p className="text-[11px] leading-relaxed text-primary/90 whitespace-pre-wrap font-sans">{generated}</p>
                                 </div>
                                 {mode === "reply" && (
-                                  <button onClick={handleSendReply} disabled={sendingEmail || sendSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${sendSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>{sendingEmail ? 'Transmitting...' : sendSuccess ? 'Sent' : 'Send via Gmail'}</button>
+                                  <button onClick={handleSendReply} disabled={sendingEmail || sendSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${sendSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>{sendingEmail ? 'Sending...' : sendSuccess ? 'Sent' : 'Send via Gmail'}</button>
                                 )}
                                 {mode === "schedule" && rawSchedule && (
                                   <div className="flex gap-2">
@@ -680,7 +680,7 @@ const Dashboard: FC = () => {
                             {mode === "history" && (
                               <div className="space-y-4">
                                 {loadingHistory ? (
-                                  <div className="py-12 text-center opacity-20"><RefreshCcw className="w-6 h-6 animate-spin mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">Retrieving Neural Logs...</p></div>
+                                  <div className="py-12 text-center opacity-20"><RefreshCcw className="w-6 h-6 animate-spin mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">Retrieving AI History...</p></div>
                                 ) : history.length === 0 ? (
                                   <div className="py-12 text-center opacity-20"><Inbox className="w-6 h-6 mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">No Logs Found</p></div>
                                 ) : (
@@ -715,7 +715,7 @@ const Dashboard: FC = () => {
           <div className="fixed inset-0 top-14 bottom-16 bg-background z-40 flex flex-col p-6 animate-in slide-in-from-bottom duration-300">
             <div className="flex items-center gap-3 mb-6">
               <Sparkles className="w-5 h-5 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em]">Neural Core</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em]">AI Assistant</span>
             </div>
             <div className="flex-1 space-y-6">
               <div className="flex p-1 bg-primary/5 border border-primary/10">
@@ -734,7 +734,7 @@ const Dashboard: FC = () => {
           <nav className="h-16 flex-shrink-0 flex items-center justify-around bg-background/80 backdrop-blur-xl border-t border-primary/10 z-50">
             {[
               { id: "inbox", icon: <Inbox className="w-5 h-5" />, label: "Inbox" },
-              { id: "ai", icon: <Sparkles className="w-5 h-5" />, label: "AI Core" },
+              { id: "ai", icon: <Sparkles className="w-5 h-5" />, label: "AI Assistant" },
               { id: "settings", icon: <Settings className="w-5 h-5" />, label: "Tools" }
             ].map((tab) => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id as MobileTab); if (tab.id === "inbox") setMobileView("list"); }} className={`flex flex-col items-center gap-1 transition-all duration-300 relative ${activeTab === tab.id ? "text-primary" : "text-primary/30"}`}>

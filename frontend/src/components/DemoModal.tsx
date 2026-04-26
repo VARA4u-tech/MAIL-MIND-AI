@@ -63,7 +63,7 @@ const DemoModal: FC<DemoModalProps> = ({ open, onClose }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-primary/15 border border-primary/15 mb-6">
               {[
-                { k: "01", t: "INGEST", d: "Email arrives — full thread parsed in milliseconds." },
+                { k: "01", t: "FETCH", d: "Email arrives — full thread parsed in milliseconds." },
                 { k: "02", t: "ANALYZE", d: "Intent + entities + tone classified by the model." },
                 { k: "03", t: "SUGGEST", d: "Reply, summary, and calendar action ready to ship." },
               ].map((s) => (

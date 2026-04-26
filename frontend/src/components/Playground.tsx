@@ -363,7 +363,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
                   disabled={pendingAI}
                   className="font-mono text-[10px] uppercase tracking-[0.25em] bg-primary text-background px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer w-fit mb-6"
                 >
-                  {pendingAI ? "Thinking..." : `Generate ${mode}`}
+                  {pendingAI ? "Processing..." : `Generate ${mode}`}
                 </button>
 
                 <div className="flex-1 border border-primary/15 bg-primary/[0.02] p-4 min-h-[250px] flex flex-col relative overflow-y-auto custom-scrollbar">
@@ -428,7 +428,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
                       >
                         <span className="flex items-center gap-2">
                           <span className="w-1 h-3 bg-primary animate-ping" />
-                          Processing {mode} request...
+                          Synthesizing {mode}...
                         </span>
                       </motion.p>
                     ) : generated ? (
