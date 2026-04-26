@@ -11,13 +11,14 @@ export const getInbox = async (req, res) => {
   if (!authClient) return res.status(401).json({ error: 'User not authenticated. Please login first.' });
 
   try {
+    const { label = 'INBOX' } = req.query;
     const gmail = google.gmail({ version: 'v1', auth: authClient });
 
-    // Fetch list of latest 10 messages
+    // Fetch list of latest 10 messages for specific label
     const listRes = await gmail.users.messages.list({
       userId: 'me',
       maxResults: 10,
-      labelIds: ['INBOX'],
+      labelIds: [label.toUpperCase()],
     });
 
     const messages = listRes.data.messages || [];

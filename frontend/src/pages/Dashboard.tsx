@@ -57,8 +57,9 @@ const Dashboard: FC = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [scheduling, setScheduling] = useState(false);
-  const [scheduleSuccess, setScheduleSuccess] = useState(false);
+   const [scheduling, setScheduling] = useState(false);
+   const [scheduleSuccess, setScheduleSuccess] = useState(false);
+   const [activeFolder, setActiveFolder] = useState("INBOX");
 
   interface RawSchedule {
     title: string;
@@ -108,28 +109,29 @@ const Dashboard: FC = () => {
     navigate('/');
   }, [navigate]);
 
-  const fetchInbox = useCallback(async (email: string) => {
-    setLoadingEmails(true);
-    try {
-      const res = await fetch(`/api/gmail/inbox`, {
-        headers: {
-          'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
-        }
-      });
-      if (res.status === 401) {
-        handleLogout();
-        return;
-      }
-      if (!res.ok) throw new Error(`Server returned status ${res.status}`);
-      const text = await res.text();
-      const data = JSON.parse(text);
-      if (data.emails) {
-        setEmails(data.emails);
-        if (!isMobile) {
-          setSelectedEmail(prev => prev || (data.emails.length > 0 ? data.emails[0] : null));
-        }
-      }
-    } catch (error) {
+   const fetchInbox = useCallback(async (email: string, label: string = 'INBOX') => {
+     setLoadingEmails(true);
+     setSelectedEmailIds([]); // Clear selections when folder changes
+     try {
+       const res = await fetch(`/api/gmail/inbox?label=${label}`, {
+         headers: {
+           'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+         }
+       });
+       if (res.status === 401) {
+         handleLogout();
+         return;
+       }
+       if (!res.ok) throw new Error(`Server returned status ${res.status}`);
+       const text = await res.text();
+       const data = JSON.parse(text);
+       if (data.emails) {
+         setEmails(data.emails);
+         if (!isMobile) {
+           setSelectedEmail(data.emails.length > 0 ? data.emails[0] : null);
+         }
+       }
+     } catch (error) {
       console.error("Failed to fetch inbox:", error);
     } finally {
       setLoadingEmails(false);
@@ -175,13 +177,13 @@ const Dashboard: FC = () => {
     }
   }, [navigate]);
 
-  useEffect(() => {
-    if (userEmail && authToken && !initialized.current) {
-      initialized.current = true;
-      fetchInbox(userEmail);
-      fetchHistory();
-    }
-  }, [userEmail, authToken, fetchInbox, fetchHistory]);
+   useEffect(() => {
+     if (userEmail && authToken && !initialized.current) {
+       initialized.current = true;
+       fetchInbox(userEmail, activeFolder);
+       fetchHistory();
+     }
+   }, [userEmail, authToken, fetchInbox, fetchHistory, activeFolder]);
 
   const handleGenerate = useCallback(async () => {
     if (!selectedEmail) return;
@@ -399,23 +401,35 @@ const Dashboard: FC = () => {
             {isSidebarOpen && <span className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap">MailMind</span>}
           </div>
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-            {[
-              { icon: <LayoutDashboard className="w-4 h-4" />, label: "Home", path: "/" },
-              { icon: <Inbox className="w-4 h-4" />, label: "Inbox", count: emails.length },
-              { icon: <Star className="w-4 h-4" />, label: "Starred" },
-              { icon: <Send className="w-4 h-4" />, label: "Sent" },
-              { icon: <Archive className="w-4 h-4" />, label: "Archive" },
-              { icon: <Trash2 className="w-4 h-4" />, label: "Trash" },
-            ].map((item) => (
-              <button 
-                key={item.label} 
-                onClick={() => item.path && navigate(item.path)} 
-                className="w-full flex items-center gap-3 p-3 hover:bg-primary/10 transition-all duration-300 text-xs uppercase tracking-widest text-primary/60 hover:text-primary group border border-transparent hover:border-primary/20 rounded-sm"
-              >
-                <span className="text-primary/40 group-hover:text-primary group-hover:scale-110 transition-transform">{item.icon}</span>
-                {isSidebarOpen && <span className="flex-1 text-left">{item.label}</span>}
-              </button>
-            ))}
+             {[
+               { icon: <LayoutDashboard className="w-4 h-4" />, label: "Home", id: "HOME" },
+               { icon: <Inbox className="w-4 h-4" />, label: "Inbox", id: "INBOX", count: activeFolder === "INBOX" ? emails.length : undefined },
+               { icon: <Star className="w-4 h-4" />, label: "Starred", id: "STARRED", count: activeFolder === "STARRED" ? emails.length : undefined },
+               { icon: <Send className="w-4 h-4" />, label: "Sent", id: "SENT", count: activeFolder === "SENT" ? emails.length : undefined },
+               { icon: <Archive className="w-4 h-4" />, label: "Archive", id: "ARCHIVE" },
+               { icon: <Trash2 className="w-4 h-4" />, label: "Trash", id: "TRASH", count: activeFolder === "TRASH" ? emails.length : undefined },
+             ].map((item) => (
+               <button 
+                 key={item.label} 
+                 onClick={() => {
+                   if (item.id === "HOME") {
+                     setSelectedEmail(null);
+                     setGenerated(null);
+                   } else if (item.id === "ARCHIVE") {
+                     // Archive logic (search for not in inbox)
+                   } else {
+                     setActiveFolder(item.id);
+                     fetchInbox(userEmail!, item.id);
+                   }
+                 }} 
+                 className={`w-full flex items-center gap-3 p-3 transition-all duration-300 text-xs uppercase tracking-widest group border rounded-sm
+                   ${activeFolder === item.id ? "bg-primary/20 text-primary border-primary/20" : "hover:bg-primary/10 text-primary/60 hover:text-primary border-transparent"}`}
+               >
+                 <span className={`${activeFolder === item.id ? "text-primary" : "text-primary/40 group-hover:text-primary"} group-hover:scale-110 transition-transform`}>{item.icon}</span>
+                 {isSidebarOpen && <span className="flex-1 text-left font-bold">{item.label}</span>}
+                 {isSidebarOpen && item.count !== undefined && <span className="text-[8px] opacity-40 tabular-nums">{item.count}</span>}
+               </button>
+             ))}
           </nav>
         </motion.aside>
       )}
