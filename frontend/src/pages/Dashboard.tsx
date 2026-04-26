@@ -466,13 +466,54 @@ const Dashboard: FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <button className="p-2 text-primary/60"><Bell className="w-4 h-4" /></button>
-              <button 
-                onClick={handleLogout}
-                className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 hover:bg-primary/20 transition-colors"
-                title="Logout"
-              >
-                <User className="w-3.5 h-3.5 text-primary/40" />
-              </button>
+              
+              <div className="relative">
+                <button 
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 hover:bg-primary/20 transition-colors"
+                  title="User Menu"
+                >
+                  <User className="w-3.5 h-3.5 text-primary/40" />
+                </button>
+
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <>
+                      {/* Invisible backdrop to close menu on outside tap */}
+                      <div className="fixed inset-0 z-[60]" onClick={() => setShowUserMenu(false)} />
+                      
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute right-0 mt-3 w-44 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,0,0,0.2)] z-[70] overflow-hidden"
+                      >
+                        <div className="p-3 border-b border-primary/10 bg-primary/5">
+                          <p className="text-[8px] uppercase tracking-widest text-primary/40 mb-1">User Account</p>
+                          <p className="text-[10px] text-primary truncate font-bold">{userEmail}</p>
+                        </div>
+                        
+                        <button 
+                          onClick={() => { setShowUserMenu(false); handleLogout(); }}
+                          className="w-full flex items-center gap-3 p-3.5 text-left hover:bg-primary/5 transition-colors group"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5 text-primary/40 group-hover:text-primary transition-colors" />
+                          <span className="text-[10px] uppercase tracking-widest text-primary/80 group-hover:text-primary">Clear Session</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => { setShowUserMenu(false); handleLogout(); }}
+                          className="w-full flex items-center gap-3 p-3.5 text-left hover:bg-primary/5 transition-colors group border-t border-primary/10"
+                        >
+                          <LogOut className="w-3.5 h-3.5 text-primary/40 group-hover:text-primary transition-colors" />
+                          <span className="text-[10px] uppercase tracking-widest text-primary/80 group-hover:text-primary">Logout</span>
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </header>
         )}
