@@ -1,23 +1,6 @@
 import { getAuthUrl, getTokensFromCode, createAuthenticatedClient } from '../config/googleAuth.js';
 import { google } from 'googleapis';
-import fs from 'fs';
-import path from 'path';
-
-// Simple file-based token store to survive backend restarts
-const STORE_PATH = path.resolve('./tokens.json');
-
-const loadTokens = () => {
-  if (fs.existsSync(STORE_PATH)) {
-    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8'));
-  }
-  return {};
-};
-
-const saveTokens = (store) => {
-  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
-};
-
-let tokenStore = loadTokens();
+import User from '../models/User.js';
 
 // Step 1: Redirect user to Google consent screen
 export const startAuth = (req, res) => {
@@ -41,9 +24,17 @@ export const handleCallback = async (req, res) => {
     const oauth2 = google.oauth2({ version: 'v2', auth: authClient });
     const { data: userInfo } = await oauth2.userinfo.get();
 
-    // Store tokens mapped to user's email
-    tokenStore[userInfo.email] = tokens;
-    saveTokens(tokenStore);
+    // Store tokens in MongoDB mapped to user's email
+    await User.findOneAndUpdate(
+      { email: userInfo.email },
+      {
+        email: userInfo.email,
+        name: userInfo.name,
+        picture: userInfo.picture,
+        tokens: tokens,
+      },
+      { upsert: true, new: true }
+    );
 
     // Redirect back to frontend with email in query string
     res.redirect(`http://localhost:8080/dashboard?email=${encodeURIComponent(userInfo.email)}`);
@@ -54,8 +45,8 @@ export const handleCallback = async (req, res) => {
 };
 
 // Helper: get authenticated client for a user
-export const getClientForUser = (email) => {
-  const tokens = tokenStore[email];
-  if (!tokens) return null;
-  return createAuthenticatedClient(tokens);
+export const getClientForUser = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user || !user.tokens) return null;
+  return createAuthenticatedClient(user.tokens);
 };

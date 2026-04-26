@@ -31,7 +31,7 @@ export const getInbox = async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).json({ error: 'Email query param required' });
 
-  const authClient = getClientForUser(email);
+  const authClient = await getClientForUser(email);
   if (!authClient) return res.status(401).json({ error: 'User not authenticated. Please login first.' });
 
   try {
@@ -79,7 +79,7 @@ export const sendEmail = async (req, res) => {
     return res.status(400).json({ error: 'email, to, subject, and body are required' });
   }
 
-  const authClient = getClientForUser(email);
+  const authClient = await getClientForUser(email);
   if (!authClient) return res.status(401).json({ error: 'User not authenticated. Please login first.' });
 
   try {

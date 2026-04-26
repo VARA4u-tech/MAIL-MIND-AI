@@ -4,8 +4,12 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import gmailRoutes from './routes/gmailRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import connectDB from './config/db.js';
 
 dotenv.config();
+
+// Connect to Database
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
