@@ -380,7 +380,7 @@ const Dashboard: FC = () => {
 
   return (
     <div className="flex h-screen bg-background text-primary font-mono overflow-hidden selection:bg-primary/20 selection:text-primary relative">
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[100] mix-blend-overlay noise-overlay" />
+      {!isMobile && <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[100] mix-blend-overlay noise-overlay" />}
 
       {/* Adaptive Sidebar */}
       {!isMobile && (
@@ -523,18 +523,17 @@ const Dashboard: FC = () => {
                 <div className="p-12 text-center opacity-20"><RefreshCcw className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" /><p className="text-[9px] uppercase tracking-widest animate-pulse">Syncing Inbox...</p></div>
               ) : filteredEmails.map((email) => (
                 <div 
-                  key={email.id} 
-                  onClick={() => handleEmailSelect(email)} 
-                  className={`p-5 border-b border-primary/5 cursor-pointer transition-all duration-500 relative group
-                    ${selectedEmail?.id === email.id ? "bg-primary/[0.08]" : "hover:bg-primary/[0.03]"}
-                    ${selectedEmailIds.includes(email.id) ? "bg-primary/[0.04]" : ""}`}
-                >
-                  {selectedEmail?.id === email.id && (
-                    <motion.div 
-                      layoutId="active-indicator" 
-                      className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary shadow-[0_0_15px_rgba(255,0,0,0.5)]" 
-                    />
-                  )}
+                   key={email.id} 
+                   onClick={() => handleEmailSelect(email)} 
+                   className={`p-5 border-b border-primary/5 cursor-pointer transition-all duration-200 relative group
+                     ${selectedEmail?.id === email.id ? "bg-primary/[0.08]" : "hover:bg-primary/[0.03]"}
+                     ${selectedEmailIds.includes(email.id) ? "bg-primary/[0.04]" : ""}`}
+                 >
+                   {selectedEmail?.id === email.id && (
+                     <div 
+                       className={`absolute left-0 top-0 bottom-0 w-1.5 bg-primary ${!isMobile ? "shadow-[0_0_15px_rgba(255,0,0,0.5)]" : ""}`} 
+                     />
+                   )}
                   <div className="flex justify-between items-start mb-2.5">
                     <div className="flex items-center gap-3 max-w-[70%]">
                       <div 
@@ -578,7 +577,8 @@ const Dashboard: FC = () => {
           <motion.div 
             animate={{ x: isMobile && mobileView === "list" ? "100%" : "0%", opacity: isMobile && mobileView === "list" ? 0 : 1 }}
             className={`flex-1 flex flex-col bg-background relative overflow-hidden z-20 transition-all duration-300
-              ${isMobile ? "fixed inset-x-0 top-14 bottom-16" : ""}`}
+              ${isMobile ? "fixed inset-x-0 top-14 bottom-16 transform-gpu" : ""}`}
+            style={{ transform: 'translateZ(0)' }}
           >
             <nav className="p-4 border-b border-primary/10 flex items-center justify-between bg-primary/[0.02] flex-shrink-0">
               <div className="flex items-center gap-4">
@@ -752,14 +752,14 @@ const Dashboard: FC = () => {
 
         {/* Mobile Bottom Navigation */}
         {isMobile && (
-          <nav className="h-16 flex-shrink-0 flex items-center justify-around bg-background/80 backdrop-blur-xl border-t border-primary/10 z-50">
+          <nav className="h-16 flex-shrink-0 flex items-center justify-around bg-background border-t border-primary/10 z-50">
             {[
               { id: "inbox", icon: <Inbox className="w-5 h-5" />, label: "Inbox" },
               { id: "ai", icon: <Sparkles className="w-5 h-5" />, label: "AI Assistant" },
               { id: "settings", icon: <Settings className="w-5 h-5" />, label: "Tools" }
             ].map((tab) => (
-              <button key={tab.id} onClick={() => { setActiveTab(tab.id as MobileTab); if (tab.id === "inbox") setMobileView("list"); }} className={`flex flex-col items-center gap-1 transition-all duration-300 relative ${activeTab === tab.id ? "text-primary" : "text-primary/30"}`}>
-                {activeTab === tab.id && <motion.div layoutId="mobile-tab-pill" className="absolute -top-3 w-8 h-0.5 bg-primary" />}
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id as MobileTab); if (tab.id === "inbox") setMobileView("list"); }} className={`flex flex-col items-center gap-1 transition-all duration-200 relative ${activeTab === tab.id ? "text-primary" : "text-primary/30"}`}>
+                {activeTab === tab.id && <div className="absolute -top-3 w-8 h-0.5 bg-primary" />}
                 {tab.icon}
                 <span className="text-[8px] uppercase tracking-[0.15em] font-bold">{tab.label}</span>
               </button>

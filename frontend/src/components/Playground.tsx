@@ -2,6 +2,7 @@ import { FC, useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Mail, MessageSquare, Calendar, Check, LogIn, RefreshCcw, LogOut, Inbox, Sparkles, Command } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import AuthNoticeModal from "./AuthNoticeModal";
 import LetterReveal from "./LetterReveal";
 
 type Mode = "reply" | "summary" | "schedule";
@@ -37,6 +38,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
   const [loadingEmails, setLoadingEmails] = useState(false);
+  const [showAuthNotice, setShowAuthNotice] = useState(false);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -96,6 +98,10 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
   };
 
   const handleLogin = () => {
+    setShowAuthNotice(true);
+  };
+
+  const handleProceedAuth = () => {
     window.location.href = '/api/auth/google';
   };
 
@@ -227,6 +233,11 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
 
   return (
     <section id="playground" className="py-32 px-4 max-w-6xl mx-auto scroll-mt-20">
+      <AuthNoticeModal 
+        open={showAuthNotice} 
+        onClose={() => setShowAuthNotice(false)} 
+        onProceed={handleProceedAuth} 
+      />
       <span id="demo" className="block -mt-20 pt-20" aria-hidden="true" />
       
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
