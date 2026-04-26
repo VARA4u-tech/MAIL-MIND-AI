@@ -45,7 +45,8 @@ export const handleCallback = async (req, res) => {
     );
 
     // Redirect back to frontend with email and token in query string
-    res.redirect(`http://localhost:8080/dashboard?email=${encodeURIComponent(userInfo.email)}&token=${token}`);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+    res.redirect(`${frontendUrl}/dashboard?email=${encodeURIComponent(userInfo.email)}&token=${token}`);
   } catch (error) {
     console.error('Auth callback error:', error.message);
     res.status(500).json({ error: 'Failed to exchange code for tokens' });
