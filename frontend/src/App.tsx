@@ -11,6 +11,7 @@ import CareersPage from "./pages/Careers.tsx";
 import ContactPage from "./pages/Contact.tsx";
 import PrivacyPage from "./pages/Privacy.tsx";
 import TermsPage from "./pages/Terms.tsx";
+import ScrollToTop from "./components/ScrollToTop.tsx";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <div className="noise-overlay" />
         <Routes>
           <Route path="/" element={<Index />} />
