@@ -399,7 +399,14 @@ const Dashboard: FC = () => {
                 {isSidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
               </div>
             </div>
-            {isSidebarOpen && <span className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap">MailMind</span>}
+            {isSidebarOpen && (
+              <span 
+                onClick={(e) => { e.stopPropagation(); navigate("/"); }} 
+                className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap hover:opacity-70 transition-opacity"
+              >
+                MailMind
+              </span>
+            )}
           </div>
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
              {[
@@ -414,8 +421,7 @@ const Dashboard: FC = () => {
                  key={item.label} 
                  onClick={() => {
                    if (item.id === "HOME") {
-                     setSelectedEmail(null);
-                     setGenerated(null);
+                     navigate("/");
                    } else if (item.id === "ARCHIVE") {
                      // Archive logic (search for not in inbox)
                    } else {
