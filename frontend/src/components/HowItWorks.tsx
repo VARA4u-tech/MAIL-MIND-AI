@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Inbox, Brain, Zap } from "lucide-react";
 import LetterReveal from "./LetterReveal";
@@ -31,6 +31,15 @@ const STEPS = [
 ];
 
 const HowItWorks: FC = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <section id="how-it-works" className="py-32 px-4 max-w-6xl mx-auto">
       <div className="mb-16 flex items-baseline justify-between border-b border-primary/20 pb-6">
@@ -49,10 +58,14 @@ const HowItWorks: FC = () => {
           return (
             <motion.div
               key={step.number}
-              initial={{ opacity: 0, y: 32 }}
+              initial={{ opacity: 0, y: isMobile ? 10 : 32 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, margin: "-60px" }}
-              transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: isMobile, margin: "-60px" }}
+              transition={{ 
+                duration: isMobile ? 0.4 : 0.7, 
+                delay: isMobile ? 0 : i * 0.12, 
+                ease: [0.16, 1, 0.3, 1] 
+              }}
               className="bg-background p-8 md:p-10 flex flex-col gap-6 group relative overflow-hidden"
             >
               {/* Step number watermark */}

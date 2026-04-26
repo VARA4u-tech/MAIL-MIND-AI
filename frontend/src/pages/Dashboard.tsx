@@ -443,7 +443,7 @@ const Dashboard: FC = () => {
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {(isMobile || !isSidebarOpen) && (
-          <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/50 backdrop-blur-md z-30">
+          <header className={`h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 ${!isMobile ? "backdrop-blur-md" : ""} z-30`}>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
@@ -643,7 +643,7 @@ const Dashboard: FC = () => {
                           animate={{ x: 0 }}
                           exit={{ x: "100%" }}
                           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                          className={`border-l border-primary/10 bg-background/95 backdrop-blur-xl flex flex-col shrink-0 z-40 shadow-2xl
+                          className={`border-l border-primary/10 bg-background/98 ${!isMobile ? "backdrop-blur-xl" : ""} flex flex-col shrink-0 z-40 shadow-2xl
                             ${isTablet ? "absolute inset-y-0 right-0 w-[320px]" : "relative w-[400px]"}`}
                         >
                           <div className="p-5 border-b border-primary/10 flex items-center justify-between flex-shrink-0">

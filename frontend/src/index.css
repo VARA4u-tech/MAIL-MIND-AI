@@ -104,6 +104,13 @@
   mix-blend-mode: overlay;
 }
 
+/* Hide heavy noise on mobile/tablets for performance */
+@media (max-width: 1024px) {
+  .noise-overlay {
+    display: none;
+  }
+}
+
 @keyframes noise {
   0% { transform: translate(0,0) }
   10% { transform: translate(-5%,-5%) }

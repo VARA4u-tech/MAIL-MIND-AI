@@ -39,7 +39,14 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [showAuthNotice, setShowAuthNotice] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const initialized = useRef(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // 1. Check URL for email (after Google redirect)
@@ -334,9 +341,9 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
           {/* AI Action Panel */}
           <div className="bg-background p-6 md:p-8 flex flex-col border-l border-primary/20 relative overflow-hidden">
             {previewOnly && userEmail && (
-              <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center">
+              <div className={`absolute inset-0 z-10 bg-background/80 flex flex-col items-center justify-center p-8 text-center ${!isMobile ? "backdrop-blur-[2px]" : ""}`}>
                 <div className="mb-6 p-4 border border-primary/20 bg-background/90 space-y-4 max-w-xs">
-                  <Sparkles className="w-8 h-8 text-primary mx-auto animate-pulse" />
+                  <Sparkles className={`w-8 h-8 text-primary mx-auto ${!isMobile ? "animate-pulse" : ""}`} />
                   <h4 className="font-display text-xl uppercase text-primary">Full AI Access</h4>
                   <p className="font-mono text-[10px] text-primary/60 tracking-widest leading-relaxed">
                     REPLYING, SUMMARIZING, AND SCHEDULING ARE AVAILABLE IN THE DEDICATED DASHBOARD.
@@ -344,7 +351,8 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
                 </div>
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="font-mono text-[10px] uppercase tracking-[0.3em] bg-primary text-background px-8 py-4 hover:bg-primary/90 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-3 shadow-[0_0_30px_rgba(255,0,0,0.2)]"
+                  className={`font-mono text-[10px] uppercase tracking-[0.3em] bg-primary text-background px-8 py-4 hover:bg-primary/90 transition-all flex items-center gap-3 
+                    ${!isMobile ? "transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,0,0,0.2)]" : ""}`}
                 >
                   <Command className="w-4 h-4" /> Open Dashboard
                 </button>

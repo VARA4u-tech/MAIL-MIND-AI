@@ -1,28 +1,11 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Shared timing configuration ───
-// Single source of truth for all accordion transitions
 const ACCORDION_EASING: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const ACCORDION_DURATION = 0.5;
 const DETAIL_STAGGER = 0.04;
 const DETAIL_DURATION = 0.28;
-
-const heightTransition = {
-  duration: ACCORDION_DURATION,
-  ease: ACCORDION_EASING,
-};
-
-const opacityTransition = {
-  duration: ACCORDION_DURATION * 0.7,
-  ease: ACCORDION_EASING,
-  delay: 0.03,
-};
-
-const iconTransition = {
-  duration: ACCORDION_DURATION * 0.8,
-  ease: ACCORDION_EASING,
-};
 
 interface Feature {
   number: string;
@@ -86,6 +69,30 @@ const features: Feature[] = [
 
 const FeatureAccordion: FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const heightTransition = {
+    duration: isMobile ? 0.25 : ACCORDION_DURATION,
+    ease: ACCORDION_EASING,
+  };
+
+  const opacityTransition = {
+    duration: isMobile ? 0.2 : ACCORDION_DURATION * 0.7,
+    ease: ACCORDION_EASING,
+    delay: isMobile ? 0 : 0.03,
+  };
+
+  const iconTransition = {
+    duration: isMobile ? 0.25 : ACCORDION_DURATION * 0.8,
+    ease: ACCORDION_EASING,
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto" data-debug="accordion">
@@ -132,8 +139,8 @@ const FeatureAccordion: FC = () => {
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
-                          duration: DETAIL_DURATION,
-                          delay: j * DETAIL_STAGGER,
+                          duration: isMobile ? 0.2 : DETAIL_DURATION,
+                          delay: isMobile ? 0 : j * DETAIL_STAGGER,
                           ease: ACCORDION_EASING,
                         }}
                         className="font-mono text-xs md:text-sm text-primary/40 leading-[1.8] tracking-wide"
