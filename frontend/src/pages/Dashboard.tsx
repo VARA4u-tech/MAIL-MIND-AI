@@ -77,7 +77,7 @@ const Dashboard: FC = () => {
   // Sidebar/Responsive State
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1200);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1100);
+  const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1200);
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [activeTab, setActiveTab] = useState<MobileTab>("inbox");
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false); // Default closed on tablet/small screens
@@ -90,15 +90,19 @@ const Dashboard: FC = () => {
     const handleResize = () => {
       const width = window.innerWidth;
       const mobile = width < 768;
-      const tablet = width >= 768 && width < 1100;
+      const tablet = width >= 768 && width < 1200;
       setIsMobile(mobile);
       setIsTablet(tablet);
-      if (width > 1200) setIsSidebarOpen(true);
-      else if (tablet || mobile) setIsSidebarOpen(false);
+      
+      if (width > 1200) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
       
       // Auto-open AI panel only on large desktops
       if (width > 1400) setIsAiPanelOpen(true);
-      else if (width < 1300) setIsAiPanelOpen(false);
+      else setIsAiPanelOpen(false);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -385,95 +389,130 @@ const Dashboard: FC = () => {
 
       {/* Adaptive Sidebar */}
       {!isMobile && (
-        <motion.aside 
-          initial={false}
-          animate={{ width: isSidebarOpen ? 260 : 80 }}
-          className="h-full border-r border-primary/10 bg-primary/[0.02] flex flex-col z-50 overflow-hidden shrink-0"
-        >
-          <div 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`p-6 flex items-center gap-3 border-b border-primary/10 cursor-pointer hover:bg-primary/5 transition-all duration-300 group relative ${!isSidebarOpen ? 'justify-center' : ''}`}
-          >
-            <div className="relative w-8 h-8 flex items-center justify-center">
-              <img src="/favicon.png" alt="Logo" className="w-8 h-8 object-contain transition-all duration-300 group-hover:opacity-0 group-hover:scale-75" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-primary">
-                {isSidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-              </div>
-            </div>
-            {isSidebarOpen && (
-              <span 
-                onClick={(e) => { e.stopPropagation(); navigate("/"); }} 
-                className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap hover:opacity-70 transition-opacity"
-              >
-                MailMind
-              </span>
+        <>
+          {/* Tablet Sidebar Backdrop */}
+          <AnimatePresence>
+            {isTablet && isSidebarOpen && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsSidebarOpen(false)}
+                className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[45]"
+              />
             )}
-          </div>
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-             {[
-               { icon: <LayoutDashboard className="w-4 h-4" />, label: "Home", id: "HOME" },
-               { icon: <Inbox className="w-4 h-4" />, label: "Inbox", id: "INBOX", count: activeFolder === "INBOX" ? emails.length : undefined },
-               { icon: <Star className="w-4 h-4" />, label: "Starred", id: "STARRED", count: activeFolder === "STARRED" ? emails.length : undefined },
-               { icon: <Send className="w-4 h-4" />, label: "Sent", id: "SENT", count: activeFolder === "SENT" ? emails.length : undefined },
-               { icon: <Archive className="w-4 h-4" />, label: "Archive", id: "ARCHIVE" },
-               { icon: <Trash2 className="w-4 h-4" />, label: "Trash", id: "TRASH", count: activeFolder === "TRASH" ? emails.length : undefined },
-             ].map((item) => (
-               <button 
-                 key={item.label} 
-                 onClick={() => {
-                   if (item.id === "HOME") {
-                     navigate("/");
-                   } else if (item.id === "ARCHIVE") {
-                     // Archive logic (search for not in inbox)
-                   } else {
-                     setActiveFolder(item.id);
-                     fetchInbox(userEmail!, item.id);
-                   }
-                 }} 
-                 className={`w-full flex items-center gap-3 p-3 transition-all duration-300 text-xs uppercase tracking-widest group border rounded-sm
-                   ${activeFolder === item.id ? "bg-primary/20 text-primary border-primary/20" : "hover:bg-primary/10 text-primary/60 hover:text-primary border-transparent"}`}
-               >
-                 <span className={`${activeFolder === item.id ? "text-primary" : "text-primary/40 group-hover:text-primary"} group-hover:scale-110 transition-transform`}>{item.icon}</span>
-                 {isSidebarOpen && <span className="flex-1 text-left font-bold">{item.label}</span>}
-                 {isSidebarOpen && item.count !== undefined && <span className="text-[8px] opacity-40 tabular-nums">{item.count}</span>}
-               </button>
-             ))}
-          </nav>
-          <div className="p-4 border-t border-primary/10 bg-primary/[0.01] flex-shrink-0">
-            <div className={`flex items-center gap-3 px-2 mb-3 ${!isSidebarOpen ? 'justify-center' : ''}`}>
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                <User className="w-4 h-4 text-primary/40" />
+          </AnimatePresence>
+
+          <motion.aside 
+            initial={false}
+            animate={{ 
+              width: isSidebarOpen ? 260 : (isTablet ? 0 : 80),
+              x: (isTablet && !isSidebarOpen) ? -260 : 0
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className={`h-full border-r border-primary/10 bg-background flex flex-col z-50 overflow-hidden shrink-0 
+              ${isTablet ? 'fixed inset-y-0 left-0 shadow-2xl border-r-primary/20' : 'relative'}`}
+          >
+            <div 
+              onClick={() => !isTablet && setIsSidebarOpen(!isSidebarOpen)}
+              className={`p-6 flex items-center gap-3 border-b border-primary/10 transition-all duration-300 group relative 
+                ${!isSidebarOpen && !isTablet ? 'justify-center' : ''} ${!isTablet ? 'cursor-pointer hover:bg-primary/5' : ''}`}
+            >
+              <div className="relative w-8 h-8 flex items-center justify-center">
+                <img src="/favicon.png" alt="Logo" className="w-8 h-8 object-contain transition-all duration-300 group-hover:opacity-0 group-hover:scale-75" />
+                {!isTablet && (
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-primary">
+                    {isSidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+                  </div>
+                )}
               </div>
-              {isSidebarOpen && (
-                <div className="flex flex-col truncate">
-                  <span className="text-[10px] text-primary font-bold truncate uppercase tracking-widest">{userEmail?.split('@')[0]}</span>
-                  <span className="text-[8px] text-primary/40 truncate lowercase">{userEmail}</span>
-                </div>
+              {(isSidebarOpen || isTablet) && (
+                <span 
+                  onClick={(e) => { e.stopPropagation(); navigate("/"); }} 
+                  className="font-display tracking-widest text-primary text-xl uppercase whitespace-nowrap hover:opacity-70 transition-opacity cursor-pointer"
+                >
+                  MailMind
+                </span>
               )}
             </div>
-            
-            <button 
-              onClick={handleLogout}
-              className={`w-full flex items-center gap-3 p-3 transition-all duration-300 text-xs uppercase tracking-widest group border border-transparent rounded-sm hover:bg-primary/10 text-primary/60 hover:text-primary ${!isSidebarOpen ? 'justify-center' : ''}`}
-              title="Logout"
-            >
-              <LogOut className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
-              {isSidebarOpen && <span className="font-bold">Logout</span>}
-            </button>
-          </div>
-        </motion.aside>
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+               {[
+                 { icon: <LayoutDashboard className="w-4 h-4" />, label: "Home", id: "HOME" },
+                 { icon: <Inbox className="w-4 h-4" />, label: "Inbox", id: "INBOX", count: activeFolder === "INBOX" ? emails.length : undefined },
+                 { icon: <Star className="w-4 h-4" />, label: "Starred", id: "STARRED", count: activeFolder === "STARRED" ? emails.length : undefined },
+                 { icon: <Send className="w-4 h-4" />, label: "Sent", id: "SENT", count: activeFolder === "SENT" ? emails.length : undefined },
+                 { icon: <Archive className="w-4 h-4" />, label: "Archive", id: "ARCHIVE" },
+                 { icon: <Trash2 className="w-4 h-4" />, label: "Trash", id: "TRASH", count: activeFolder === "TRASH" ? emails.length : undefined },
+               ].map((item) => (
+                 <button 
+                   key={item.label} 
+                   onClick={() => {
+                     if (item.id === "HOME") {
+                       navigate("/");
+                     } else if (item.id === "ARCHIVE") {
+                       // Archive logic
+                     } else {
+                       setActiveFolder(item.id);
+                       fetchInbox(userEmail!, item.id);
+                       if (isTablet) setIsSidebarOpen(false); // Auto-close drawer on tablet selection
+                     }
+                   }} 
+                   className={`w-full flex items-center gap-3 p-3 transition-all duration-300 text-xs uppercase tracking-widest group border rounded-sm
+                     ${activeFolder === item.id ? "bg-primary/20 text-primary border-primary/20" : "hover:bg-primary/10 text-primary/60 hover:text-primary border-transparent"}
+                     ${!isSidebarOpen && !isTablet ? 'justify-center' : ''}`}
+                 >
+                   <span className={`${activeFolder === item.id ? "text-primary" : "text-primary/40 group-hover:text-primary"} group-hover:scale-110 transition-transform`}>{item.icon}</span>
+                   {(isSidebarOpen || isTablet) && <span className="flex-1 text-left font-bold">{item.label}</span>}
+                   {(isSidebarOpen || isTablet) && item.count !== undefined && <span className="text-[8px] opacity-40 tabular-nums">{item.count}</span>}
+                 </button>
+               ))}
+            </nav>
+            <div className="p-4 border-t border-primary/10 bg-primary/[0.01] flex-shrink-0">
+              <div className={`flex items-center gap-3 px-2 mb-3 ${!isSidebarOpen && !isTablet ? 'justify-center' : ''}`}>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                  <User className="w-4 h-4 text-primary/40" />
+                </div>
+                {(isSidebarOpen || isTablet) && (
+                  <div className="flex flex-col truncate">
+                    <span className="text-[10px] text-primary font-bold truncate uppercase tracking-widest">{userEmail?.split('@')[0]}</span>
+                    <span className="text-[8px] text-primary/40 truncate lowercase">{userEmail}</span>
+                  </div>
+                )}
+              </div>
+              
+              <button 
+                onClick={handleLogout}
+                className={`w-full flex items-center gap-3 p-3 transition-all duration-300 text-xs uppercase tracking-widest group border border-transparent rounded-sm hover:bg-primary/10 text-primary/60 hover:text-primary ${!isSidebarOpen && !isTablet ? 'justify-center' : ''}`}
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                {(isSidebarOpen || isTablet) && <span className="font-bold">Logout</span>}
+              </button>
+            </div>
+          </motion.aside>
+        </>
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {isMobile && (
+        {(isMobile || isTablet) && (
           <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 z-30">
-            <div 
-              onClick={() => navigate("/")}
-              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              <div className="flex items-center gap-2">
-                <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
-                <span className="font-display tracking-widest text-primary text-xs uppercase">MailMind</span>
+            <div className="flex items-center gap-4">
+              {isTablet && (
+                <button 
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="p-2 -ml-2 text-primary/60 hover:text-primary transition-colors"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              )}
+              <div 
+                onClick={() => navigate("/")}
+                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <div className="flex items-center gap-2">
+                  <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
+                  <span className="font-display tracking-widest text-primary text-xs uppercase">MailMind</span>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
