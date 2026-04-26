@@ -3,6 +3,8 @@ import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-
 import { useNavigate } from "react-router-dom";
 import Magnetic from "./Magnetic";
 
+import AuthNoticeModal from "./AuthNoticeModal";
+
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Use Cases", href: "#use-cases" },
@@ -16,6 +18,7 @@ const Navbar: FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showAuthNotice, setShowAuthNotice] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,8 +66,22 @@ const Navbar: FC = () => {
     }
   };
 
+  const handleSignIn = () => {
+    setShowAuthNotice(true);
+  };
+
+  const handleProceedAuth = () => {
+    window.location.href = '/api/auth/google';
+  };
+
   return (
     <>
+      <AuthNoticeModal 
+        open={showAuthNotice} 
+        onClose={() => setShowAuthNotice(false)} 
+        onProceed={handleProceedAuth} 
+      />
+
       <motion.header
         variants={{ visible: { y: 0 }, hidden: { y: "-100%" } }}
         animate={hidden ? "hidden" : "visible"}
@@ -115,7 +132,7 @@ const Navbar: FC = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => window.location.href = '/api/auth/google'}
+                  onClick={handleSignIn}
                   className="hidden md:block font-mono text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30 px-4 py-2 hover:bg-primary hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   Sign in with Google
@@ -176,7 +193,7 @@ const Navbar: FC = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => { setMenuOpen(false); window.location.href = '/api/auth/google'; }}
+                  onClick={() => { setMenuOpen(false); handleSignIn(); }}
                   className="w-full font-mono text-[10px] uppercase tracking-[0.1em] bg-primary text-background px-4 py-4 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   Sign in with Google →
