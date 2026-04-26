@@ -82,6 +82,7 @@ const Dashboard: FC = () => {
   const [activeTab, setActiveTab] = useState<MobileTab>("inbox");
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false); // Default closed on tablet/small screens
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   
   const initialized = useRef(false);
 
@@ -377,6 +378,15 @@ const Dashboard: FC = () => {
     if (isMobile) setMobileView("detail");
   };
 
+  // Background Polling for new emails
+  useEffect(() => {
+    if (!userEmail) return;
+    const interval = setInterval(() => {
+      fetchInbox(userEmail, activeFolder);
+    }, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [userEmail, activeFolder, fetchInbox]);
+
   const cleanEmailBody = (html: string) => {
     if (!html) return "";
     // Basic cleanup of raw HTML if it's being displayed as text
@@ -516,7 +526,65 @@ const Dashboard: FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button className="p-2 text-primary/60"><Bell className="w-4 h-4" /></button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className={`p-2 transition-colors relative ${showNotifications ? 'text-primary' : 'text-primary/60 hover:text-primary'}`}
+                >
+                  <Bell className="w-4 h-4" />
+                  {history.length > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-background shadow-sm animate-pulse" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <>
+                      <div className="fixed inset-0 z-[60]" onClick={() => setShowNotifications(false)} />
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="absolute right-0 mt-3 w-72 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,0,0,0.2)] z-[70] overflow-hidden"
+                      >
+                        <div className="p-3 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
+                          <p className="text-[8px] uppercase tracking-widest text-primary/40">Recent Activity</p>
+                          <button onClick={() => fetchHistory()} className="text-[8px] text-primary hover:underline transition-all">Refresh</button>
+                        </div>
+                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                          {history.length === 0 ? (
+                            <div className="p-8 text-center opacity-30">
+                              <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                              <p className="text-[8px] uppercase tracking-widest">No new updates</p>
+                            </div>
+                          ) : (
+                            history.slice(0, 5).map((item) => (
+                              <div key={item._id} className="p-4 border-b border-primary/5 hover:bg-primary/5 transition-colors cursor-pointer group">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className={`text-[6px] px-1.5 py-0.5 rounded-full border border-primary/20 uppercase tracking-tighter ${item.type === 'summary' ? 'text-blue-400' : 'text-green-400'}`}>
+                                    {item.type}
+                                  </span>
+                                  <span className="text-[6px] opacity-30">{new Date(item.createdAt).toLocaleTimeString()}</span>
+                                </div>
+                                <p className="text-[9px] font-bold text-primary/80 truncate">{item.subject}</p>
+                                <p className="text-[8px] text-primary/40 line-clamp-1 italic">{item.aiResult}</p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        {history.length > 0 && (
+                          <button 
+                            onClick={() => { setShowNotifications(false); setMode("history"); setIsAiPanelOpen(true); }}
+                            className="w-full p-3 text-center bg-primary/5 hover:bg-primary/10 text-[8px] uppercase tracking-[0.2em] font-bold transition-colors border-t border-primary/10"
+                          >
+                            View Full History →
+                          </button>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
               
               <div className="relative">
                 <button 
