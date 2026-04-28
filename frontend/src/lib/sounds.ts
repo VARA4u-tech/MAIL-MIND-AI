@@ -29,7 +29,7 @@ class SoundEngine {
     osc.frequency.setValueAtTime(1200, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
 
-    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
 
     osc.connect(gain);
@@ -54,7 +54,7 @@ class SoundEngine {
       osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
       
       gain.gain.setValueAtTime(0, ctx.currentTime + delay);
-      gain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + delay + 0.05);
+      gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + delay + 0.05);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.4);
 
       osc.connect(gain);
@@ -83,7 +83,7 @@ class SoundEngine {
     osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.2);
 
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.02, ctx.currentTime + 0.1);
+    gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.1);
     gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
 
     osc.connect(gain);
