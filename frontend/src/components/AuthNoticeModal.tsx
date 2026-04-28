@@ -39,7 +39,7 @@ const AuthNoticeModal: FC<AuthNoticeModalProps> = ({ open, onClose, onProceed })
             exit={{ scale: 0.97, opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto border border-primary/30 bg-background p-6 sm:p-10 md:p-12 shadow-[0_0_50px_-12px_rgba(255,0,0,0.2)] custom-scrollbar"
+            className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto border border-primary/30 bg-background p-6 sm:p-10 md:p-12 shadow-[0_0_50px_-12px_rgba(255,255,255,0.05)] custom-scrollbar"
           >
             <button
               onClick={onClose}
@@ -83,7 +83,7 @@ const AuthNoticeModal: FC<AuthNoticeModalProps> = ({ open, onClose, onProceed })
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 onClick={onProceed}
-                className="flex-1 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.2em] bg-primary text-background px-4 py-3 sm:px-6 sm:py-4 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                className="flex-1 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.2em] border border-primary text-primary px-4 py-3 sm:px-6 sm:py-4 hover:bg-primary hover:text-background transition-all flex items-center justify-center gap-2 group cursor-pointer"
               >
                 Accept & Proceed
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

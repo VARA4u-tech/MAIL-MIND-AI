@@ -175,7 +175,7 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
                 .getElementById("playground")
                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
-            className="font-mono text-[11px] uppercase tracking-[0.25em] bg-primary text-background px-5 py-3 hover:bg-primary/90 transition-colors cursor-pointer"
+            className="font-mono text-[11px] uppercase tracking-[0.25em] border border-primary text-primary px-5 py-3 hover:bg-primary hover:text-background transition-colors cursor-pointer"
           >
             Get Started →
           </motion.button>

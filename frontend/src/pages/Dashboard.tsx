@@ -853,7 +853,7 @@ const Dashboard: FC = () => {
                             <button 
                                onClick={handleGenerate} 
                                disabled={pendingAI} 
-                               className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                               className="w-full py-5 border border-primary text-primary text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary hover:text-background transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
                              >
                                {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
                                {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}
