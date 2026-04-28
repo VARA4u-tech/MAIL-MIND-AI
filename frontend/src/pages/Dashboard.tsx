@@ -303,12 +303,15 @@ const Dashboard: FC = () => {
           endDate: rawSchedule.endDate
         })
       });
-      if (!res.ok) throw new Error("Failed to schedule");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to schedule");
+      }
       setScheduleSuccess(true);
       setTimeout(() => setScheduleSuccess(false), 3000);
     } catch (error) {
       console.error("Schedule Error:", error);
-      setAiError("Failed to extract schedule");
+      setAiError(error instanceof Error ? error.message : "Failed to create calendar event");
     } finally {
       setPendingAI(false);
     }
