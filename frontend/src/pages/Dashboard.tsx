@@ -533,7 +533,7 @@ const Dashboard: FC = () => {
                 >
                   <Bell className="w-4 h-4" />
                   {history.length > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-background shadow-sm animate-pulse" />
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full border border-background shadow-sm animate-pulse" />
                   )}
                 </button>
 
@@ -545,7 +545,7 @@ const Dashboard: FC = () => {
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="absolute right-0 mt-3 w-72 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,0,0,0.2)] z-[70] overflow-hidden"
+                        className="absolute right-0 mt-3 w-72 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,255,255,0.1)] z-[70] overflow-hidden"
                       >
                         <div className="p-3 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
                           <p className="text-[8px] uppercase tracking-widest text-primary/40">Recent Activity</p>
@@ -606,7 +606,7 @@ const Dashboard: FC = () => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-0 mt-3 w-44 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,0,0,0.2)] z-[70] overflow-hidden"
+                        className="absolute right-0 mt-3 w-44 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,255,255,0.1)] z-[70] overflow-hidden"
                       >
                         <div className="p-3 border-b border-primary/10 bg-primary/5">
                           <p className="text-[8px] uppercase tracking-widest text-primary/40 mb-1">User Account</p>
@@ -711,7 +711,7 @@ const Dashboard: FC = () => {
                  >
                    {selectedEmail?.id === email.id && (
                      <div 
-                       className={`absolute left-0 top-0 bottom-0 w-1.5 bg-primary ${!isMobile ? "shadow-[0_0_15px_rgba(255,0,0,0.5)]" : ""}`} 
+                       className={`absolute left-0 top-0 bottom-0 w-1.5 bg-primary ${!isMobile ? "shadow-[0_0_15px_rgba(255,255,255,0.3)]" : ""}`} 
                      />
                    )}
                   <div className="flex justify-between items-start mb-2.5">
@@ -729,7 +729,7 @@ const Dashboard: FC = () => {
                         </span>
                         {email.category && (
                           <span className={`text-[7px] px-1.5 py-0.5 rounded-full border w-fit uppercase tracking-tighter font-bold
-                            ${email.category === 'Action Required' ? 'border-red-500 text-red-500 bg-red-500/5' : 
+                            ${email.category === 'Action Required' ? 'border-primary text-primary bg-primary/10' : 
                               email.category === 'Meeting' ? 'border-blue-400 text-blue-400 bg-blue-400/5' : 
                               email.category === 'Social' ? 'border-green-400 text-green-400 bg-green-400/5' :
                               email.category === 'Promotions' ? 'border-yellow-400 text-yellow-400 bg-yellow-400/5' :
@@ -853,7 +853,7 @@ const Dashboard: FC = () => {
                             <button 
                                onClick={handleGenerate} 
                                disabled={pendingAI} 
-                               className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,0,0,0.2)] hover:shadow-[0_0_30px_rgba(255,0,0,0.4)]"
+                               className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                              >
                                {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
                                {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}

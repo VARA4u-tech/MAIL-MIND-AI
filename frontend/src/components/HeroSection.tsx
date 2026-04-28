@@ -83,16 +83,16 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
             className="absolute inset-0 opacity-[0.1]"
             style={{
               backgroundImage:
-                "linear-gradient(hsl(0 100% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 100% 50%) 1px, transparent 1px)",
+                "linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)",
               backgroundSize: "60px 60px",
             }}
           />
-          {/* Red glow at center */}
+          {/* White glow at center */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(0 100% 50% / 0.1) 0%, transparent 70%)",
+                "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(var(--primary) / 0.1) 0%, transparent 70%)",
             }}
           />
         </div>

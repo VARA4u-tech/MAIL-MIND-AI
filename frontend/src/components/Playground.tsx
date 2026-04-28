@@ -294,7 +294,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
                 <span className="font-mono text-[9px] text-primary/30 hidden sm:inline">{userEmail}</span>
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-1 text-[9px] font-mono text-primary/40 hover:text-red-500 transition-colors uppercase tracking-widest"
+                  className="flex items-center gap-1 text-[9px] font-mono text-primary/40 hover:text-primary transition-colors uppercase tracking-widest"
                   title="Sign Out"
                 >
                   <LogOut className="w-3 h-3" />
@@ -361,7 +361,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
                 <button
                   onClick={() => navigate('/dashboard')}
                   className={`font-mono text-[10px] uppercase tracking-[0.3em] bg-primary text-background px-8 py-4 hover:bg-primary/90 transition-all flex items-center gap-3 
-                    ${!isMobile ? "transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,0,0,0.2)]" : ""}`}
+                    ${!isMobile ? "transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.1)]" : ""}`}
                 >
                   <Command className="w-4 h-4" /> Open Dashboard
                 </button>
