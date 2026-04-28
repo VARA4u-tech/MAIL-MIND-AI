@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Mail, MessageSquare, Calendar, Check, LogIn, RefreshCcw, LogOut, Inbox, Sparkles, Command } from "lucide-react";
+import { Copy, Mail, MessageSquare, Calendar, Check, LogIn, RefreshCcw, LogOut, Inbox, Sparkles, Command, ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthNoticeModal from "./AuthNoticeModal";
 import LetterReveal from "./LetterReveal";
@@ -40,6 +40,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [showAuthNotice, setShowAuthNotice] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -118,7 +119,11 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
   };
 
   const handleProceedAuth = () => {
-    window.location.href = '/api/auth/google';
+    setIsRedirecting(true);
+    // Give it 2 seconds of beautiful animation to wake up the backend before redirecting
+    setTimeout(() => {
+      window.location.href = '/api/auth/google';
+    }, 2000);
   };
 
   const handleLogout = () => {
@@ -508,6 +513,58 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
           </div>
         </div>
       )}
+      {/* --- REDIRECTING OVERLAY --- */}
+      <AnimatePresence>
+        {isRedirecting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center p-8 text-center"
+          >
+            <div className="noise-overlay" />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="max-w-md w-full space-y-8"
+            >
+              <div className="relative w-24 h-24 mx-auto">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border-t-2 border-primary rounded-full"
+                />
+                <motion.div 
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-4 border-b-2 border-primary/30 rounded-full"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ShieldAlert className="w-8 h-8 text-primary animate-pulse" />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h2 className="font-display text-2xl sm:text-3xl uppercase tracking-widest text-primary">Establishing Connection</h2>
+                <div className="space-y-2">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/60">Waking up secure neural environment...</p>
+                  <div className="w-full h-[2px] bg-primary/10 overflow-hidden relative">
+                    <motion.div 
+                      initial={{ left: "-100%" }}
+                      animate={{ left: "100%" }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute top-0 bottom-0 w-1/2 bg-primary"
+                    />
+                  </div>
+                </div>
+                <p className="font-mono text-[9px] text-primary/30 max-w-xs mx-auto leading-relaxed">
+                  PLEASE WAIT WHILE WE SYNCHRONIZE WITH GOOGLE OAUTH SERVICES. THIS MAY TAKE A MOMENT.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
