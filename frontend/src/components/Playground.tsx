@@ -4,6 +4,7 @@ import { Copy, Mail, MessageSquare, Calendar, Check, LogIn, RefreshCcw, LogOut, 
 import { useNavigate } from "react-router-dom";
 import AuthNoticeModal from "./AuthNoticeModal";
 import LetterReveal from "./LetterReveal";
+import { sounds } from "@/lib/sounds";
 
 type Mode = "reply" | "summary" | "schedule";
 
@@ -115,10 +116,12 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
   };
 
   const handleLogin = () => {
+    sounds.playTick();
     setShowAuthNotice(true);
   };
 
   const handleProceedAuth = () => {
+    sounds.playSweep();
     setIsRedirecting(true);
     // Give it 2 seconds of beautiful animation to wake up the backend before redirecting
     setTimeout(() => {
@@ -187,8 +190,10 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
       const data = JSON.parse(text);
       if (mode === "reply") {
         setGenerated(data.reply);
+        sounds.playSuccess();
       } else if (mode === "summary") {
         setGenerated(data.summary);
+        sounds.playSuccess();
       } else if (mode === "schedule") {
         if (data.error) {
           setGenerated("AI could not detect a meeting in this email.");
@@ -196,6 +201,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
           setGenerated(`📅 Event: ${data.title}\n📍 Location: ${data.location || 'TBD'}\n📝 Note: ${data.description}`);
           const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(data.title)}&dates=${data.startDate}/${data.endDate}&details=${encodeURIComponent(data.description)}&location=${encodeURIComponent(data.location)}`;
           setCalUrl(url);
+          sounds.playSuccess();
         }
       }
     } catch (error) {

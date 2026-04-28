@@ -9,6 +9,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { sounds } from "@/lib/sounds";
 
 type Mode = "reply" | "summary" | "schedule" | "history";
 type MobileTab = "inbox" | "ai" | "settings";
@@ -234,14 +235,19 @@ const Dashboard: FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.details || data.error || `Server Error ${res.status}`);
 
-      if (mode === "reply") setGenerated(data.reply);
-      else if (mode === "summary") setGenerated(data.summary);
-      else if (mode === "schedule") {
+      if (mode === "reply") {
+        setGenerated(data.reply);
+        sounds.playSuccess();
+      } else if (mode === "summary") {
+        setGenerated(data.summary);
+        sounds.playSuccess();
+      } else if (mode === "schedule") {
         if (data.error) setGenerated("AI could not detect a meeting.");
         else {
           setRawSchedule(data);
           setGenerated(`📅 Event: ${data.title}\n📍 Location: ${data.location || 'TBD'}\n📝 Note: ${data.description}`);
           setCalUrl(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(data.title)}&dates=${data.startDate}/${data.endDate}&details=${encodeURIComponent(data.description)}&location=${encodeURIComponent(data.location)}`);
+          sounds.playSuccess();
         }
       }
     } catch (error) {
@@ -457,6 +463,7 @@ const Dashboard: FC = () => {
                  <button 
                    key={item.label} 
                    onClick={() => {
+                     sounds.playTick();
                      if (item.id === "HOME") {
                        navigate("/");
                      } else if (item.id === "ARCHIVE") {
