@@ -685,11 +685,13 @@ const Dashboard: FC = () => {
                   <div className="relative">
                     <button 
                       onClick={() => setShowFolderSwitcher(!showFolderSwitcher)}
-                      className={`flex items-center gap-2 text-[10px] uppercase tracking-[0.4em] font-bold transition-colors
-                        ${showFolderSwitcher ? 'text-primary' : 'text-primary/30 hover:text-primary'}`}
+                      className={`flex items-center gap-2 px-2.5 py-1.5 border border-primary/10 rounded-sm transition-all duration-200
+                        ${showFolderSwitcher ? 'bg-primary text-background border-primary' : 'bg-primary/5 text-primary/40 hover:text-primary hover:bg-primary/10'}`}
                     >
-                      {activeFolder}
-                      <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showFolderSwitcher ? 'rotate-90' : ''}`} />
+                      <span className="text-[9px] uppercase tracking-[0.3em] font-black">
+                        {activeFolder}
+                      </span>
+                      <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${showFolderSwitcher ? 'rotate-90' : ''}`} />
                     </button>
 
                     <AnimatePresence>
