@@ -677,7 +677,7 @@ const Dashboard: FC = () => {
           <motion.div 
             animate={{ x: isMobile && mobileView === "detail" ? "-100%" : "0%", opacity: isMobile && mobileView === "detail" ? 0 : 1 }}
             className={`flex flex-col bg-background border-r border-primary/10 z-10 transition-all duration-300 shrink-0
-              ${isMobile ? "fixed inset-x-0 top-14 bottom-16" : isTablet ? "w-[260px]" : "w-[360px] lg:w-[400px]"}`}
+              ${isMobile ? "fixed inset-x-0 top-14 bottom-16" : isTablet ? (isAiPanelOpen ? "w-0 opacity-0 overflow-hidden" : "w-[260px]") : "w-[360px] lg:w-[400px]"}`}
           >
             <div className="p-5 border-b border-primary/10 bg-primary/[0.01] flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
@@ -930,7 +930,7 @@ const Dashboard: FC = () => {
                           exit={{ x: "100%" }}
                           transition={{ type: "spring", damping: 25, stiffness: 200 }}
                           className={`border-l border-primary/10 bg-background/98 ${!isMobile ? "backdrop-blur-xl" : ""} flex flex-col shrink-0 z-40 shadow-2xl
-                            ${isTablet ? "absolute inset-y-0 right-0 w-[320px]" : "relative w-[400px]"}`}
+                            ${isTablet ? "relative w-[300px]" : "relative w-[400px]"}`}
                         >
                           <div className="p-5 border-b border-primary/10 flex items-center justify-between flex-shrink-0">
                             <div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-primary" /><span className="text-[10px] font-bold uppercase tracking-[0.4em]">AI Assistant</span></div>
