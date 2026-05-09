@@ -815,8 +815,11 @@ const Dashboard: FC = () => {
                   <div className="flex-1 flex overflow-hidden relative">
                     <div className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 custom-scrollbar bg-primary/[0.005]">
                       {selectedEmail.body && /<[a-z][\s\S]*>/i.test(selectedEmail.body) ? (
-                        <div className="max-w-3xl font-sans text-[13px] text-primary/90 leading-relaxed overflow-hidden bg-white/5 p-6 border border-primary/10 rounded-sm">
-                          <div dangerouslySetInnerHTML={{ __html: selectedEmail.body }} />
+                        <div className="max-w-3xl font-sans text-[13px] text-black leading-relaxed overflow-hidden bg-white p-6 md:p-10 border border-primary/10 rounded-sm shadow-xl">
+                          <div 
+                            className="email-content-wrapper"
+                            dangerouslySetInnerHTML={{ __html: selectedEmail.body }} 
+                          />
                         </div>
                       ) : (
                         <div className="max-w-3xl font-mono text-[11px] md:text-[12px] lg:text-[13px] text-primary/80 leading-[1.8] whitespace-pre-wrap">

@@ -158,3 +158,32 @@
 .animate-marquee-reverse {
   animation: marquee-reverse 30s linear infinite;
 }
+
+/* Email Content Styles */
+.email-content-wrapper {
+  color: #000;
+  background-color: #fff;
+  width: 100%;
+}
+
+.email-content-wrapper img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+  margin: 1rem 0;
+}
+
+.email-content-wrapper table {
+  width: 100% !important;
+  max-width: 100% !important;
+  border-collapse: collapse;
+}
+
+.email-content-wrapper a {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.email-content-wrapper p, .email-content-wrapper div {
+  margin-bottom: 0.5rem;
+}
