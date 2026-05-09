@@ -539,7 +539,7 @@ const Dashboard: FC = () => {
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {(isMobile || isTablet) && (
-          <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 z-30">
+          <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 z-50">
             <div className="flex items-center gap-4">
               {isTablet && (
                 <button 
