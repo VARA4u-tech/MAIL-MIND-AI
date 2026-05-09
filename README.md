@@ -42,7 +42,7 @@ graph TD
     Frontend -->|JWT Auth| Gateway[Express API Gateway]
     Gateway -->|OAuth 2.0| GmailAPI[Google Gmail API]
     Gateway -->|Calendar Scopes| CalAPI[Google Calendar API]
-    Gateway -->|Inference| AI[AI Engine - Gemma 2 via OpenRouter]
+    Gateway -->|Inference| AI[AI Engine - Gemma 2 via OpenAIs]
     Gateway -->|Persistence| DB[(MongoDB Atlas)]
 
     subgraph "Intelligent Processing"
