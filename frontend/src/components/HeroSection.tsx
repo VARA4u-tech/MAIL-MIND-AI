@@ -69,6 +69,29 @@ const HeroSection: FC<HeroSectionProps> = ({ onViewDemo }) => {
       className="relative h-[100svh] flex items-center justify-center overflow-hidden"
       data-debug="hero"
     >
+      {/* Mobile-optimized background (Static & Lightweight) */}
+      {isMobile && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Subtle static grid for mobile */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage:
+                "linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+          {/* Static radial glow at top for mobile */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 50% -10%, hsl(var(--primary) / 0.12) 0%, transparent 60%)",
+            }}
+          />
+        </div>
+      )}
+
       {/* Clip-path masked background layer - HIDDEN ON MOBILE TO PREVENT LAG */}
       {!isMobile && (
         <div
