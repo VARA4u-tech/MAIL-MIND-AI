@@ -946,19 +946,87 @@ const Dashboard: FC = () => {
 
         {/* Mobile AI Overlay */}
         {isMobile && activeTab === "ai" && (
-          <div className="fixed inset-0 top-14 bottom-16 bg-background z-40 flex flex-col p-6 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center gap-3 mb-6">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em]">AI Assistant</span>
+          <div className="fixed inset-0 top-14 bottom-16 bg-background z-40 flex flex-col p-6 animate-in slide-in-from-bottom duration-300 overflow-y-auto custom-scrollbar">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em]">AI Assistant</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => fetchHistory()} className="p-2 text-primary/40 hover:text-primary"><RefreshCcw className="w-3.5 h-3.5" /></button>
+              </div>
             </div>
-            <div className="flex-1 space-y-6">
-              <div className="flex p-1 bg-primary/5 border border-primary/10">
-                {(["reply", "summary", "schedule"] as Mode[]).map((m) => (
-                  <button key={m} onClick={() => setMode(m)} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] ${mode === m ? 'bg-primary text-background' : 'text-primary/40'}`}>{m}</button>
+
+            <div className="space-y-6">
+              <div className="flex p-1 bg-primary/5 border border-primary/10 rounded-sm">
+                {(["reply", "summary", "schedule", "history"] as Mode[]).map((m) => (
+                  <button key={m} onClick={() => { setMode(m); setGenerated(null); }} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
                 ))}
               </div>
-              <button onClick={handleGenerate} className="w-full py-4 bg-primary text-background text-[10px] font-bold uppercase tracking-[0.4em]">Generate</button>
-              {generated && <div className="p-4 border border-primary/20 text-[11px] whitespace-pre-wrap">{generated}</div>}
+
+              {aiError && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 flex items-start gap-3 rounded-sm">
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-[9px] text-red-500/70 leading-relaxed">{aiError}</p>
+                </div>
+              )}
+
+              {mode === "reply" && (
+                <textarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="INSTRUCTIONS..." className="w-full bg-primary/[0.02] border border-primary/10 p-4 text-[10px] h-24 resize-none outline-none focus:border-primary/40 uppercase tracking-widest placeholder:opacity-10" />
+              )}
+
+              <button 
+                onClick={handleGenerate} 
+                disabled={pendingAI} 
+                className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+              >
+                {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
+                {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}
+              </button>
+
+              {generated && mode !== "history" && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top duration-300">
+                  <div className="p-4 border border-primary/20 bg-primary/[0.05]">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[7px] uppercase tracking-widest opacity-40">AI Output</span>
+                      <button onClick={() => { navigator.clipboard.writeText(generated!); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="text-[7px] uppercase tracking-widest opacity-40">{copied ? 'COPIED' : 'COPY'}</button>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-primary/90 whitespace-pre-wrap font-sans">{generated}</p>
+                  </div>
+                  
+                  {mode === "reply" && (
+                    <button onClick={handleSendReply} disabled={sendingEmail || sendSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] flex items-center justify-center gap-3 ${sendSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-primary text-background'}`}>{sendingEmail ? 'Sending...' : sendSuccess ? 'Sent' : 'Send via Gmail'}</button>
+                  )}
+
+                  {mode === "schedule" && rawSchedule && (
+                    <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] flex items-center justify-center gap-3 ${scheduleSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-primary text-background'}`}>
+                      {scheduling ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Calendar className="w-3 h-3" />}
+                      {scheduling ? 'Scheduling...' : scheduleSuccess ? 'Saved' : 'Save to Calendar'}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {mode === "history" && (
+                <div className="space-y-4">
+                  {loadingHistory ? (
+                    <div className="py-12 text-center opacity-20"><RefreshCcw className="w-6 h-6 animate-spin mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">Loading...</p></div>
+                  ) : history.length === 0 ? (
+                    <div className="py-12 text-center opacity-20"><Inbox className="w-6 h-6 mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">No Logs</p></div>
+                  ) : (
+                    history.map((item) => (
+                      <div key={item._id} className="p-3 border border-primary/10 bg-primary/[0.02]">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[7px] uppercase tracking-widest text-primary/40">{item.type}</span>
+                          <span className="text-[7px] opacity-30">{new Date(item.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-[9px] font-bold truncate opacity-80">{item.subject}</p>
+                        <p className="text-[10px] leading-relaxed opacity-60 line-clamp-2 font-sans italic">"{item.aiResult}"</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
