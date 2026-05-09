@@ -880,25 +880,25 @@ const Dashboard: FC = () => {
                           <h1 className="text-xl md:text-3xl font-title font-extrabold mb-6 tracking-tight leading-tight text-primary uppercase">
                             {selectedEmail.subject || '(NO SUBJECT)'}
                           </h1>
-                          <div className="flex flex-col md:flex-row md:items-center gap-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-primary/10 flex items-center justify-center text-primary font-black border-2 border-primary/20 text-xl shadow-[4px_4px_0px_rgba(var(--primary-rgb),0.1)]">
+                          <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 flex-shrink-0 flex items-center justify-center text-primary font-black border-2 border-primary/20 text-lg md:text-xl shadow-[4px_4px_0px_rgba(var(--primary-rgb),0.1)]">
                                 {selectedEmail.from.charAt(0).toUpperCase()}
                               </div>
-                              <div className="flex flex-col">
-                                <span className="text-[8px] uppercase tracking-[0.3em] text-primary/40 mb-0.5">Sender</span>
-                                <span className="text-primary font-black tracking-widest uppercase text-xs md:text-sm">
-                                  {selectedEmail.from.includes('<') ? selectedEmail.from.split('<')[0].trim() : 'System/Service'}
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[7px] uppercase tracking-[0.3em] text-primary/40 mb-0.5">Sender</span>
+                                <span className="text-primary font-black tracking-widest uppercase text-[11px] md:text-sm truncate">
+                                  {selectedEmail.from.includes('<') ? selectedEmail.from.split('<')[0].replace(/"/g, '').trim() : 'System/Service'}
                                 </span>
-                                <span className="text-primary/60 lowercase tracking-tight text-[10px] font-medium opacity-80">
+                                <span className="text-primary/60 lowercase tracking-tight text-[9px] md:text-[10px] font-medium opacity-80 truncate">
                                   {selectedEmail.from.match(/<([^>]+)>/)?.[1] || selectedEmail.from}
                                 </span>
                               </div>
                             </div>
                             
-                            <div className="md:ml-auto flex flex-col md:items-end">
-                              <span className="text-[8px] uppercase tracking-[0.3em] text-primary/40 mb-0.5">Received At</span>
-                              <span className="text-primary/60 uppercase tracking-[0.15em] text-[9px] font-bold">
+                            <div className="lg:ml-auto flex flex-col lg:items-end">
+                              <span className="text-[7px] uppercase tracking-[0.3em] text-primary/40 mb-0.5">Received At</span>
+                              <span className="text-primary/60 uppercase tracking-[0.15em] text-[8px] md:text-[9px] font-bold">
                                 {selectedEmail.date}
                               </span>
                             </div>
