@@ -799,33 +799,53 @@ const Dashboard: FC = () => {
             <AnimatePresence mode="wait">
               {selectedEmail ? (
                 <motion.div key={selectedEmail.id} className="flex flex-col h-full overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <div className="p-6 md:p-8 lg:p-10 border-b border-primary/10 bg-primary/[0.01] flex-shrink-0">
-                    <h1 className="text-xl md:text-2xl lg:text-3xl font-title font-extrabold mb-4 tracking-tight leading-[1.2] text-primary max-w-4xl break-words uppercase">
-                      {selectedEmail.subject || '(NO SUBJECT)'}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-4 text-[9px] md:text-[10px]">
-                      <div className="w-8 h-8 bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20">{selectedEmail.from[0].toUpperCase()}</div>
-                      <div className="flex flex-col">
-                        <span className="text-primary font-bold tracking-widest uppercase">{selectedEmail.from.split('<')[0].trim()}</span>
-                        <span className="text-primary/40 lowercase tracking-tighter truncate max-w-[200px]">{selectedEmail.from.match(/<([^>]+)>/)?.[1] || selectedEmail.from}</span>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="flex-1 flex overflow-hidden relative">
-                    <div className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 custom-scrollbar bg-primary/[0.005]">
-                      {selectedEmail.body && /<[a-z][\s\S]*>/i.test(selectedEmail.body) ? (
-                        <div className="max-w-3xl font-sans text-[13px] text-black leading-relaxed overflow-hidden bg-white p-6 md:p-10 border border-primary/10 rounded-sm shadow-xl">
-                          <div 
-                            className="email-content-wrapper"
-                            dangerouslySetInnerHTML={{ __html: selectedEmail.body }} 
-                          />
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 custom-scrollbar bg-primary/[0.02] flex flex-col items-center">
+                      <div className="w-full max-w-4xl space-y-6">
+                        {/* Email Header Card */}
+                        <div className="p-6 bg-background border border-primary/10 rounded-sm">
+                          <h1 className="text-xl md:text-3xl font-title font-extrabold mb-6 tracking-tight leading-tight text-primary uppercase">
+                            {selectedEmail.subject || '(NO SUBJECT)'}
+                          </h1>
+                          <div className="flex flex-col md:flex-row md:items-center gap-6">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-primary/10 flex items-center justify-center text-primary font-black border-2 border-primary/20 text-xl shadow-[4px_4px_0px_rgba(var(--primary-rgb),0.1)]">
+                                {selectedEmail.from.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[8px] uppercase tracking-[0.3em] text-primary/40 mb-0.5">Sender</span>
+                                <span className="text-primary font-black tracking-widest uppercase text-xs md:text-sm">
+                                  {selectedEmail.from.includes('<') ? selectedEmail.from.split('<')[0].trim() : 'System/Service'}
+                                </span>
+                                <span className="text-primary/60 lowercase tracking-tight text-[10px] font-medium opacity-80">
+                                  {selectedEmail.from.match(/<([^>]+)>/)?.[1] || selectedEmail.from}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="md:ml-auto flex flex-col md:items-end">
+                              <span className="text-[8px] uppercase tracking-[0.3em] text-primary/40 mb-0.5">Received At</span>
+                              <span className="text-primary/60 uppercase tracking-[0.15em] text-[9px] font-bold">
+                                {selectedEmail.date}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="max-w-3xl font-mono text-[11px] md:text-[12px] lg:text-[13px] text-primary/80 leading-[1.8] whitespace-pre-wrap">
-                          {selectedEmail.body || selectedEmail.snippet}
+
+                        {/* Email Content Card */}
+                        <div className="w-full font-sans text-black leading-relaxed overflow-x-auto bg-white border border-primary/10 rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.3)] custom-scrollbar">
+                          {selectedEmail.body && /<[a-z][\s\S]*>/i.test(selectedEmail.body) ? (
+                            <div 
+                              className="email-content-wrapper p-4 md:p-12"
+                              dangerouslySetInnerHTML={{ __html: selectedEmail.body }} 
+                            />
+                          ) : (
+                            <div className="p-8 md:p-12 font-mono text-[12px] md:text-[14px] text-black leading-loose whitespace-pre-wrap">
+                              {selectedEmail.body || selectedEmail.snippet}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* AI Sidebar - Improved Overlay for Tablet */}
@@ -916,8 +936,8 @@ const Dashboard: FC = () => {
                       )}
                     </AnimatePresence>
                   </div>
-                </motion.div>
-              ) : (
+                  </motion.div>
+                ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-10"><LayoutDashboard className="w-20 h-20 mb-4" /><p className="text-[10px] uppercase tracking-[0.6em]">System Standby</p></div>
               )}
             </AnimatePresence>

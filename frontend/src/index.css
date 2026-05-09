@@ -169,14 +169,10 @@
 .email-content-wrapper img {
   max-width: 100% !important;
   height: auto !important;
-  display: block;
-  margin: 1rem 0;
 }
 
 .email-content-wrapper table {
-  width: 100% !important;
   max-width: 100% !important;
-  border-collapse: collapse;
 }
 
 .email-content-wrapper a {
@@ -186,4 +182,8 @@
 
 .email-content-wrapper p, .email-content-wrapper div {
   margin-bottom: 0.5rem;
+}
+
+.email-content-wrapper * {
+  box-sizing: border-box !important;
 }
