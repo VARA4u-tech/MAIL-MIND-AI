@@ -937,9 +937,9 @@ const Dashboard: FC = () => {
                             <button onClick={() => setIsAiPanelOpen(false)} className="p-1 hover:text-primary transition-colors"><PanelRightClose className="w-4 h-4" /></button>
                           </div>
                           <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                            <div className="flex p-1 bg-primary/5 border border-primary/10 rounded-sm">
+                            <div className="flex flex-wrap p-1 bg-primary/5 border border-primary/10 rounded-sm gap-1">
                               {(["reply", "summary", "schedule", "history"] as Mode[]).map((m) => (
-                                <button key={m} onClick={() => { setMode(m); setAiError(null); }} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
+                                <button key={m} onClick={() => { setMode(m); setAiError(null); }} className={`flex-1 py-2 px-1 text-[7px] min-w-fit uppercase tracking-[0.15em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
                               ))}
                             </div>
                             
