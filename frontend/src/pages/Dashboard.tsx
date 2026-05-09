@@ -1058,6 +1058,51 @@ const Dashboard: FC = () => {
           </div>
         )}
 
+        {/* Mobile Tools Overlay */}
+        {isMobile && activeTab === "settings" && (
+          <div className="fixed inset-0 top-14 bottom-16 bg-background z-40 flex flex-col p-6 animate-in slide-in-from-right duration-300 overflow-y-auto custom-scrollbar">
+            <div className="flex items-center gap-3 mb-8">
+              <Settings className="w-5 h-5 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em]">System Tools</span>
+            </div>
+            
+            <div className="space-y-8">
+              <div className="p-6 border border-primary/10 bg-primary/[0.02]">
+                <p className="text-[8px] uppercase tracking-[0.3em] text-primary/40 mb-4 font-bold">Account Profile</p>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                    <User className="w-6 h-6 text-primary/40" />
+                  </div>
+                  <div className="flex flex-col truncate">
+                    <span className="text-xs text-primary font-black truncate uppercase tracking-widest">{userEmail?.split('@')[0]}</span>
+                    <span className="text-[10px] text-primary/40 truncate lowercase">{userEmail}</span>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-red-500/20 transition-all rounded-sm"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout System
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-[8px] uppercase tracking-[0.3em] text-primary/40 font-bold">Quick Actions</p>
+                <button onClick={() => { setActiveTab("inbox"); fetchInbox(userEmail!, activeFolder); }} className="w-full p-4 border border-primary/10 text-left flex items-center justify-between group">
+                  <span className="text-[9px] uppercase tracking-widest">Force Sync Inbox</span>
+                  <RefreshCcw className="w-3.5 h-3.5 text-primary/20 group-active:animate-spin" />
+                </button>
+                <button onClick={() => { setActiveTab("ai"); setMode("history"); }} className="w-full p-4 border border-primary/10 text-left flex items-center justify-between">
+                  <span className="text-[9px] uppercase tracking-widest">View AI Logs</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-primary/20" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Bottom Navigation */}
         {isMobile && (
           <nav className="h-16 flex-shrink-0 flex items-center justify-around bg-background border-t border-primary/10 z-50">
