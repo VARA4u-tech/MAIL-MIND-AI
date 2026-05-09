@@ -121,37 +121,41 @@ const Dashboard: FC = () => {
     navigate('/');
   }, [navigate]);
 
-   const fetchInbox = useCallback(async (email: string, label: string = 'INBOX') => {
-     setLoadingEmails(true);
-     setSelectedEmailIds([]); // Clear selections when folder changes
-     try {
-       const res = await fetch(`/api/gmail/inbox?label=${label}`, {
-         headers: {
-           'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
-         }
-       });
-       if (res.status === 401) {
-         handleLogout();
-         return;
-       }
-       if (!res.ok) throw new Error(`Server returned status ${res.status}`);
-       const text = await res.text();
-       const data = JSON.parse(text);
-       if (data.emails) {
-         setEmails(data.emails);
-         if (!isMobile) {
-           setSelectedEmail(prev => {
-             if (prev && data.emails.find((e: EmailMessage) => e.id === prev.id)) {
-               return data.emails.find((e: EmailMessage) => e.id === prev.id);
-             }
-             return data.emails.length > 0 ? data.emails[0] : null;
-           });
-         }
-       }
-     } catch (error) {
+  const fetchInbox = useCallback(async (email: string, label: string = 'INBOX', isBackgroundPoll: boolean = false) => {
+    if (!isBackgroundPoll) {
+      setLoadingEmails(true);
+      setSelectedEmailIds([]); // Clear selections when folder changes
+    }
+    try {
+      const res = await fetch(`/api/gmail/inbox?label=${label}`, {
+        headers: {
+          'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+        }
+      });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      if (!res.ok) throw new Error(`Server returned status ${res.status}`);
+      const text = await res.text();
+      const data = JSON.parse(text);
+      if (data.emails) {
+        setEmails(data.emails);
+        // Only update selected email on manual fetch, not background poll
+        // Background polling updating selectedEmail causes Framer Motion removeChild crash
+        if (!isBackgroundPoll && !isMobile) {
+          setSelectedEmail(prev => {
+            if (prev && data.emails.find((e: EmailMessage) => e.id === prev.id)) {
+              return data.emails.find((e: EmailMessage) => e.id === prev.id);
+            }
+            return data.emails.length > 0 ? data.emails[0] : null;
+          });
+        }
+      }
+    } catch (error) {
       console.error("Failed to fetch inbox:", error);
     } finally {
-      setLoadingEmails(false);
+      if (!isBackgroundPoll) setLoadingEmails(false);
     }
   }, [handleLogout, isMobile]);
 
@@ -407,11 +411,11 @@ const Dashboard: FC = () => {
     if (isMobile) setMobileView("detail");
   };
 
-  // Background Polling for new emails
+  // Background Polling for new emails — isBackgroundPoll=true prevents selectedEmail state updates
   useEffect(() => {
     if (!userEmail) return;
     const interval = setInterval(() => {
-      fetchInbox(userEmail, activeFolder);
+      fetchInbox(userEmail, activeFolder, true);
     }, 60000); // Check every minute
     return () => clearInterval(interval);
   }, [userEmail, activeFolder, fetchInbox]);
