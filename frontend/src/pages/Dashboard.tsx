@@ -89,6 +89,7 @@ const Dashboard: FC = () => {
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false); // Default closed on tablet/small screens
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showFolderSwitcher, setShowFolderSwitcher] = useState(false);
   
   const initialized = useRef(false);
 
@@ -681,7 +682,52 @@ const Dashboard: FC = () => {
             <div className="p-5 border-b border-primary/10 bg-primary/[0.01] flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary/30">Inbox</h2>
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowFolderSwitcher(!showFolderSwitcher)}
+                      className={`flex items-center gap-2 text-[10px] uppercase tracking-[0.4em] font-bold transition-colors
+                        ${showFolderSwitcher ? 'text-primary' : 'text-primary/30 hover:text-primary'}`}
+                    >
+                      {activeFolder}
+                      <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showFolderSwitcher ? 'rotate-90' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showFolderSwitcher && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowFolderSwitcher(false)} />
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute left-0 mt-3 w-48 bg-background border border-primary/20 shadow-2xl z-50 p-1"
+                          >
+                            {[
+                              { id: 'INBOX', label: 'Inbox', icon: <Inbox className="w-3.5 h-3.5" /> },
+                              { id: 'STARRED', label: 'Starred', icon: <Star className="w-3.5 h-3.5" /> },
+                              { id: 'SENT', label: 'Sent', icon: <Send className="w-3.5 h-3.5" /> },
+                              { id: 'TRASH', label: 'Trash', icon: <Trash2 className="w-3.5 h-3.5" /> },
+                            ].map((f) => (
+                              <button
+                                key={f.id}
+                                onClick={() => {
+                                  setActiveFolder(f.id);
+                                  fetchInbox(userEmail!, f.id);
+                                  setShowFolderSwitcher(false);
+                                  sounds.playTick();
+                                }}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-[9px] uppercase tracking-widest transition-colors
+                                  ${activeFolder === f.id ? 'bg-primary text-background font-bold' : 'hover:bg-primary/5 text-primary/60'}`}
+                              >
+                                {f.icon}
+                                {f.label}
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   {selectedEmailIds.length > 0 && (
                     <span className="text-[9px] px-1.5 py-0.5 bg-primary text-background font-bold rounded-sm animate-pulse">
                       {selectedEmailIds.length} SELECTED
