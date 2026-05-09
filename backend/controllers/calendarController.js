@@ -19,8 +19,8 @@ export const createEvent = async (req, res) => {
 
     const event = {
       summary: title,
-      location: location,
-      description: description,
+      location: location || '',
+      description: description || '',
       start: {
         dateTime: formatToISO(startDate),
         timeZone: 'UTC',
@@ -31,6 +31,8 @@ export const createEvent = async (req, res) => {
       },
     };
 
+    console.log('Attempting to create calendar event:', JSON.stringify(event, null, 2));
+
     const response = await calendar.events.insert({
       calendarId: 'primary',
       resource: event,
@@ -39,21 +41,37 @@ export const createEvent = async (req, res) => {
     res.json({ success: true, event: response.data });
   } catch (error) {
     console.error('Create calendar event error:', error.message);
-    res.status(500).json({ error: 'Failed to create calendar event', details: error.message });
+    if (error.response && error.response.data) {
+      console.error('Google API Error Details:', JSON.stringify(error.response.data, null, 2));
+    }
+    res.status(500).json({ 
+      error: 'Failed to create calendar event', 
+      details: error.message,
+      googleError: error.response?.data?.error?.message || null 
+    });
   }
 };
 
-// Helper to handle both YYYYMMDDTHHMMSSZ and standard ISO strings
 const formatToISO = (dateStr) => {
-  if (dateStr.includes('-')) return dateStr; // Already ISO-ish
+  if (!dateStr || typeof dateStr !== 'string') return new Date().toISOString();
+  if (dateStr.includes('-') && dateStr.includes(':')) return dateStr; 
   
-  // Convert YYYYMMDDTHHMMSSZ to YYYY-MM-DDTHH:MM:SSZ
-  const year = dateStr.slice(0, 4);
-  const month = dateStr.slice(4, 6);
-  const day = dateStr.slice(6, 8);
-  const hour = dateStr.slice(9, 11);
-  const minute = dateStr.slice(11, 13);
-  const second = dateStr.slice(13, 15);
-  
-  return `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
+  try {
+    // Try to parse YYYYMMDDTHHMMSSZ
+    if (dateStr.length >= 15 && dateStr.includes('T')) {
+      const year = dateStr.slice(0, 4);
+      const month = dateStr.slice(4, 6);
+      const day = dateStr.slice(6, 8);
+      const hour = dateStr.slice(9, 11);
+      const minute = dateStr.slice(11, 13);
+      const second = dateStr.slice(13, 15);
+      return `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
+    }
+    // Fallback: try native Date parser
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return d.toISOString();
+    return new Date().toISOString(); // Last resort
+  } catch {
+    return new Date().toISOString();
+  }
 };

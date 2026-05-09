@@ -165,6 +165,7 @@ export const scheduleEvent = async (req, res) => {
   try {
     const openai = getOpenRouterClient();
     const cleanBody = stripHtml(emailBody);
+    const now = new Date().toISOString();
 
     const completion = await getCompletion(
       openai,
@@ -172,7 +173,12 @@ export const scheduleEvent = async (req, res) => {
         {
           role: "system",
           content: `Extract meeting details from the email and return ONLY a valid JSON object. 
+          Current Time: ${now}
           Structure: {"title": "...", "description": "...", "location": "...", "startDate": "YYYYMMDDTHHMMSSZ", "endDate": "YYYYMMDDTHHMMSSZ"}.
+          For "location", look for meeting links (Zoom, Google Meet, Teams) or physical addresses. If found, use the link/address.
+          If you cannot find a clear title, use "Meeting from MailMind". 
+          If you cannot find dates, use the current date provided above.
+          Ensure startDate and endDate are ALWAYS provided.
           Do not include any other text or markdown formatting.`,
         },
         {

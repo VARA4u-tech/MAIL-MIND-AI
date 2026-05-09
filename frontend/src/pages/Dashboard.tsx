@@ -402,6 +402,8 @@ const Dashboard: FC = () => {
     setSelectedEmail(email);
     setGenerated(null);
     setGeneratedOutputs({ reply: null, summary: null, schedule: null });
+    setRawSchedule(null);
+    setAiError(null);
     if (isMobile) setMobileView("detail");
   };
 
