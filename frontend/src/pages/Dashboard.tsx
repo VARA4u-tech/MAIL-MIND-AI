@@ -42,6 +42,11 @@ const Dashboard: FC = () => {
   const [mode, setMode] = useState<Mode>("reply");
   const [draft, setDraft] = useState("");
   const [generated, setGenerated] = useState<string | null>(null);
+  const [generatedOutputs, setGeneratedOutputs] = useState<Record<string, string | null>>({
+    reply: null,
+    summary: null,
+    schedule: null
+  });
   const [aiError, setAiError] = useState<string | null>(null);
   const [calUrl, setCalUrl] = useState<string | null>(null);
   const [pendingAI, setPendingAI] = useState(false);
@@ -135,7 +140,12 @@ const Dashboard: FC = () => {
        if (data.emails) {
          setEmails(data.emails);
          if (!isMobile) {
-           setSelectedEmail(data.emails.length > 0 ? data.emails[0] : null);
+           setSelectedEmail(prev => {
+             if (prev && data.emails.find((e: EmailMessage) => e.id === prev.id)) {
+               return data.emails.find((e: EmailMessage) => e.id === prev.id);
+             }
+             return data.emails.length > 0 ? data.emails[0] : null;
+           });
          }
        }
      } catch (error) {
@@ -236,16 +246,22 @@ const Dashboard: FC = () => {
       if (!res.ok) throw new Error(data.details || data.error || `Server Error ${res.status}`);
 
       if (mode === "reply") {
-        setGenerated(data.reply);
+        const result = data.reply;
+        setGenerated(result);
+        setGeneratedOutputs(prev => ({ ...prev, reply: result }));
         sounds.playSuccess();
       } else if (mode === "summary") {
-        setGenerated(data.summary);
+        const result = data.summary;
+        setGenerated(result);
+        setGeneratedOutputs(prev => ({ ...prev, summary: result }));
         sounds.playSuccess();
       } else if (mode === "schedule") {
         if (data.error) setGenerated("AI could not detect a meeting.");
         else {
           setRawSchedule(data);
-          setGenerated(`📅 Event: ${data.title}\n📍 Location: ${data.location || 'TBD'}\n📝 Note: ${data.description}`);
+          const result = `📅 Event: ${data.title}\n📍 Location: ${data.location || 'TBD'}\n📝 Note: ${data.description}`;
+          setGenerated(result);
+          setGeneratedOutputs(prev => ({ ...prev, schedule: result }));
           setCalUrl(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(data.title)}&dates=${data.startDate}/${data.endDate}&details=${encodeURIComponent(data.description)}&location=${encodeURIComponent(data.location)}`);
           sounds.playSuccess();
         }
@@ -384,6 +400,8 @@ const Dashboard: FC = () => {
 
   const handleEmailSelect = (email: EmailMessage) => {
     setSelectedEmail(email);
+    setGenerated(null);
+    setGeneratedOutputs({ reply: null, summary: null, schedule: null });
     if (isMobile) setMobileView("detail");
   };
 
@@ -798,7 +816,7 @@ const Dashboard: FC = () => {
 
             <AnimatePresence mode="wait">
               {selectedEmail ? (
-                <motion.div key={selectedEmail.id} className="flex flex-col h-full overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div key={selectedEmail.id} className="flex flex-col h-full overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <div className="flex-1 flex overflow-hidden relative">
                     <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 custom-scrollbar bg-primary/[0.02] flex flex-col items-center">
                       <div className="w-full max-w-4xl space-y-6">
@@ -866,7 +884,7 @@ const Dashboard: FC = () => {
                           <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                             <div className="flex p-1 bg-primary/5 border border-primary/10 rounded-sm">
                               {(["reply", "summary", "schedule", "history"] as Mode[]).map((m) => (
-                                <button key={m} onClick={() => { setMode(m); setGenerated(null); setAiError(null); }} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
+                                <button key={m} onClick={() => { setMode(m); setAiError(null); }} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
                               ))}
                             </div>
                             
@@ -891,11 +909,11 @@ const Dashboard: FC = () => {
                                {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
                                {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}
                              </button>
-                            {generated && mode !== "history" && (
+                            {(generatedOutputs[mode] || (mode === "history" && generated)) && (
                               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                                 <div className="p-4 border border-primary/20 bg-primary/[0.05] backdrop-blur-md">
-                                  <div className="flex justify-between items-center mb-2"><span className="text-[7px] uppercase tracking-widest opacity-40">Output</span><button onClick={() => { navigator.clipboard.writeText(generated!); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="text-[7px] uppercase tracking-widest opacity-40 hover:opacity-100">{copied ? 'COPIED' : 'COPY'}</button></div>
-                                  <p className="text-[11px] leading-relaxed text-primary/90 whitespace-pre-wrap font-sans">{generated}</p>
+                                  <div className="flex justify-between items-center mb-2"><span className="text-[7px] uppercase tracking-widest opacity-40">Output</span><button onClick={() => { navigator.clipboard.writeText(generatedOutputs[mode] || generated!); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="text-[7px] uppercase tracking-widest opacity-40 hover:opacity-100">{copied ? 'COPIED' : 'COPY'}</button></div>
+                                  <p className="text-[11px] leading-relaxed text-primary/90 whitespace-pre-wrap font-sans">{generatedOutputs[mode] || generated}</p>
                                 </div>
                                 {mode === "reply" && (
                                   <button onClick={handleSendReply} disabled={sendingEmail || sendSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${sendSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>{sendingEmail ? 'Sending...' : sendSuccess ? 'Sent' : 'Send via Gmail'}</button>
@@ -936,9 +954,12 @@ const Dashboard: FC = () => {
                       )}
                     </AnimatePresence>
                   </div>
-                  </motion.div>
-                ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-10"><LayoutDashboard className="w-20 h-20 mb-4" /><p className="text-[10px] uppercase tracking-[0.6em]">System Standby</p></div>
+                </motion.div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-10">
+                  <LayoutDashboard className="w-20 h-20 mb-4" />
+                  <p className="text-[10px] uppercase tracking-[0.6em]">System Standby</p>
+                </div>
               )}
             </AnimatePresence>
           </motion.div>
@@ -960,7 +981,7 @@ const Dashboard: FC = () => {
             <div className="space-y-6">
               <div className="flex p-1 bg-primary/5 border border-primary/10 rounded-sm">
                 {(["reply", "summary", "schedule", "history"] as Mode[]).map((m) => (
-                  <button key={m} onClick={() => { setMode(m); setGenerated(null); }} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
+                  <button key={m} onClick={() => { setMode(m); }} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
                 ))}
               </div>
 
@@ -984,14 +1005,14 @@ const Dashboard: FC = () => {
                 {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}
               </button>
 
-              {generated && mode !== "history" && (
+              {(generatedOutputs[mode] || (mode === "history" && generated)) && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top duration-300">
                   <div className="p-4 border border-primary/20 bg-primary/[0.05]">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-[7px] uppercase tracking-widest opacity-40">AI Output</span>
-                      <button onClick={() => { navigator.clipboard.writeText(generated!); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="text-[7px] uppercase tracking-widest opacity-40">{copied ? 'COPIED' : 'COPY'}</button>
+                      <button onClick={() => { navigator.clipboard.writeText(generatedOutputs[mode] || generated!); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="text-[7px] uppercase tracking-widest opacity-40">{copied ? 'COPIED' : 'COPY'}</button>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-primary/90 whitespace-pre-wrap font-sans">{generated}</p>
+                    <p className="text-[11px] leading-relaxed text-primary/90 whitespace-pre-wrap font-sans">{generatedOutputs[mode] || generated}</p>
                   </div>
                   
                   {mode === "reply" && (

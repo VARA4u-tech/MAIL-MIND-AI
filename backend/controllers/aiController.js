@@ -4,6 +4,18 @@ import { google } from "googleapis";
 import { getClientForUser } from "./authController.js";
 import { extractBody } from "../utils/gmailUtils.js";
 
+// Utility to strip HTML tags for AI consumption
+const stripHtml = (html) => {
+  if (!html) return "";
+  // Remove script and style elements entirely
+  let clean = html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, "");
+  clean = clean.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gim, "");
+  // Strip all other tags
+  clean = clean.replace(/<[^>]*>?/gm, " ");
+  // Consolidate whitespace
+  return clean.replace(/\s+/g, " ").trim();
+};
+
 // Initialize OpenAI client pointing to OpenRouter
 export const getOpenRouterClient = () => {
   const key = process.env.OPENROUTER_API_KEY;
@@ -60,6 +72,8 @@ export const generateReply = async (req, res) => {
 
   try {
     const openai = getOpenRouterClient();
+    const cleanBody = stripHtml(emailBody);
+    
     const completion = await getCompletion(openai, [
       {
         role: "system",
@@ -67,7 +81,7 @@ export const generateReply = async (req, res) => {
       },
       {
         role: "user",
-        content: emailBody,
+        content: cleanBody,
       },
     ]);
 
@@ -102,6 +116,8 @@ export const summarizeEmail = async (req, res) => {
 
   try {
     const openai = getOpenRouterClient();
+    const cleanBody = stripHtml(emailBody);
+
     const completion = await getCompletion(
       openai,
       [
@@ -111,7 +127,7 @@ export const summarizeEmail = async (req, res) => {
         },
         {
           role: "user",
-          content: emailBody,
+          content: cleanBody,
         },
       ],
       0.3,
@@ -148,6 +164,8 @@ export const scheduleEvent = async (req, res) => {
 
   try {
     const openai = getOpenRouterClient();
+    const cleanBody = stripHtml(emailBody);
+
     const completion = await getCompletion(
       openai,
       [
@@ -159,7 +177,7 @@ export const scheduleEvent = async (req, res) => {
         },
         {
           role: "user",
-          content: emailBody,
+          content: cleanBody,
         },
       ],
       0,
@@ -226,7 +244,8 @@ export const summarizeBulk = async (req, res) => {
         const subject = headers.find(h => h.name.toLowerCase() === 'subject')?.value || 'No Subject';
         const from = headers.find(h => h.name.toLowerCase() === 'from')?.value || 'Unknown';
         const body = extractBody(msg.data.payload);
-        return `FROM: ${from}\nSUBJECT: ${subject}\nCONTENT: ${body}\n---`;
+        const cleanBody = stripHtml(body);
+        return `FROM: ${from}\nSUBJECT: ${subject}\nCONTENT: ${cleanBody}\n---`;
       })
     );
 
