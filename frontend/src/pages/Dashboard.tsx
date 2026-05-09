@@ -572,16 +572,18 @@ const Dashboard: FC = () => {
                   )}
                 </button>
 
+                {showNotifications && (
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowNotifications(false)} />
+                )}
                 <AnimatePresence>
                   {showNotifications && (
-                    <>
-                      <div className="fixed inset-0 z-[60]" onClick={() => setShowNotifications(false)} />
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="absolute right-0 mt-3 w-72 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,255,255,0.1)] z-[70] overflow-hidden"
-                      >
+                    <motion.div 
+                      key="notifications"
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="absolute right-0 mt-3 w-72 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,255,255,0.1)] z-[70] overflow-hidden"
+                    >
                         <div className="p-3 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
                           <p className="text-[8px] uppercase tracking-widest text-primary/40">Recent Activity</p>
                           <button onClick={() => fetchHistory()} className="text-[8px] text-primary hover:underline transition-all">Refresh</button>
@@ -616,7 +618,6 @@ const Dashboard: FC = () => {
                           </button>
                         )}
                       </motion.div>
-                    </>
                   )}
                 </AnimatePresence>
               </div>
@@ -630,19 +631,19 @@ const Dashboard: FC = () => {
                   <User className="w-3.5 h-3.5 text-primary/40" />
                 </button>
 
+                {showUserMenu && (
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowUserMenu(false)} />
+                )}
                 <AnimatePresence>
                   {showUserMenu && (
-                    <>
-                      {/* Invisible backdrop to close menu on outside tap */}
-                      <div className="fixed inset-0 z-[60]" onClick={() => setShowUserMenu(false)} />
-                      
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-0 mt-3 w-44 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,255,255,0.1)] z-[70] overflow-hidden"
-                      >
+                    <motion.div 
+                      key="user-menu"
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute right-0 mt-3 w-44 bg-background border border-primary/20 shadow-[0_10px_40px_rgba(255,255,255,0.1)] z-[70] overflow-hidden"
+                    >
                         <div className="p-3 border-b border-primary/10 bg-primary/5">
                           <p className="text-[8px] uppercase tracking-widest text-primary/40 mb-1">User Account</p>
                           <p className="text-[10px] text-primary truncate font-bold">{userEmail}</p>
@@ -664,7 +665,6 @@ const Dashboard: FC = () => {
                           <span className="text-[10px] uppercase tracking-widest text-primary/80 group-hover:text-primary">Logout</span>
                         </button>
                       </motion.div>
-                    </>
                   )}
                 </AnimatePresence>
               </div>
@@ -694,16 +694,18 @@ const Dashboard: FC = () => {
                       <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${showFolderSwitcher ? 'rotate-90' : ''}`} />
                     </button>
 
+                    {showFolderSwitcher && (
+                      <div className="fixed inset-0 z-40" onClick={() => setShowFolderSwitcher(false)} />
+                    )}
                     <AnimatePresence>
                       {showFolderSwitcher && (
-                        <>
-                          <div className="fixed inset-0 z-40" onClick={() => setShowFolderSwitcher(false)} />
-                          <motion.div 
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute left-0 mt-3 w-48 bg-background border border-primary/20 shadow-2xl z-50 p-1"
-                          >
+                        <motion.div 
+                          key="folder-switcher"
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute left-0 mt-3 w-48 bg-background border border-primary/20 shadow-2xl z-50 p-1"
+                        >
                             {[
                               { id: 'INBOX', label: 'Inbox', icon: <Inbox className="w-3.5 h-3.5" /> },
                               { id: 'STARRED', label: 'Starred', icon: <Star className="w-3.5 h-3.5" /> },
@@ -726,7 +728,6 @@ const Dashboard: FC = () => {
                               </button>
                             ))}
                           </motion.div>
-                        </>
                       )}
                     </AnimatePresence>
                   </div>
