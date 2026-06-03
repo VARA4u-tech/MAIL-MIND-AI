@@ -62,13 +62,12 @@ const properties: PropertyConfig[] = [
     name: "COLOR",
     label: "color",
     preview: {
-      initial: { color: "hsl(0, 100%, 50%)" },
+      initial: { color: "#ffffff" },
       animate: {
         color: [
-          "hsl(0, 100%, 50%)",
-          "hsl(0, 100%, 25%)",
-          "hsl(0, 80%, 70%)",
-          "hsl(0, 100%, 50%)",
+          "#ffffff",
+          "hsla(0, 100%, 100%, 0.5)",
+          "#ffffff",
         ],
       },
       transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
@@ -79,14 +78,14 @@ const properties: PropertyConfig[] = [
     label: "stroke",
     preview: {
       initial: {
-        webkitTextStroke: "2px hsl(0, 100%, 50%)",
+        webkitTextStroke: "2px #ffffff",
         color: "transparent",
       },
       animate: {
         webkitTextStroke: [
-          "2px hsl(0, 100%, 50%)",
-          "1px hsl(0, 100%, 30%)",
-          "3px hsl(0, 100%, 50%)",
+          "2px #ffffff",
+          "1px rgba(255,255,255,0.5)",
+          "2px #ffffff",
         ],
         color: "transparent",
       },
