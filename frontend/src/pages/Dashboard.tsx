@@ -264,7 +264,7 @@ const Dashboard: FC = () => {
         if (data.error) setGenerated("AI could not detect a meeting.");
         else {
           setRawSchedule(data);
-          const result = `📅 Event: ${data.title}\n📍 Location: ${data.location || 'To be confirmed'}\n📝 Note: ${data.description || 'No notes extracted'}`;​
+          const result = `📅 Event: ${data.title}\n📍 Location: ${data.location || 'To be confirmed'}\n📝 Note: ${data.description || 'No notes extracted'}`;
           setGenerated(result);
           setGeneratedOutputs(prev => ({ ...prev, schedule: result }));
           setCalUrl(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(data.title)}&dates=${data.startDate}/${data.endDate}&details=${encodeURIComponent(data.description)}&location=${encodeURIComponent(data.location)}`);
