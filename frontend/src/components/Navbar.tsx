@@ -29,12 +29,7 @@ const Navbar: FC = () => {
   }, []);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = scrollY.getPrevious() ?? 0;
-    if (latest > previous && latest > 150 && !menuOpen) {
-      setHidden(true);
-    } else {
-      setHidden(false);
-    }
+    setHidden(false); // Fix: Navbar always stays visible on scroll
     setScrolled(latest > 50);
   });
 
