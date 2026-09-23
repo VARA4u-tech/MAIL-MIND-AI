@@ -16,6 +16,15 @@ const stripHtml = (html) => {
   return clean.replace(/\s+/g, " ").trim();
 };
 
+// Truncate text to save input tokens (keeps costs low)
+const truncateText = (text, maxChars = 1500) => {
+  if (!text || text.length <= maxChars) return text;
+  return text.slice(0, maxChars) + "... [truncated for brevity]";
+};
+
+// Max output tokens — stay under free-tier credit limit
+const MAX_TOKENS = 600;
+
 // Initialize OpenAI client pointing to OpenRouter
 export const getOpenRouterClient = () => {
   const key = process.env.OPENROUTER_API_KEY;
@@ -52,6 +61,7 @@ export const getCompletion = async (
         model: model,
         messages,
         temperature,
+        max_tokens: MAX_TOKENS,
       });
       return response;
     } catch (error) {
@@ -73,12 +83,12 @@ export const generateReply = async (req, res) => {
 
   try {
     const openai = getOpenRouterClient();
-    const cleanBody = stripHtml(emailBody);
+    const cleanBody = truncateText(stripHtml(emailBody));
     
     const completion = await getCompletion(openai, [
       {
         role: "system",
-        content: `You are MailMind AI. Generate a professional email reply based on this intent: "${intent}". Output ONLY the email body.`,
+        content: `You are MailMind AI. Generate a concise professional email reply based on this intent: "${intent}". Output ONLY the email body. Be brief.`,
       },
       {
         role: "user",
@@ -117,14 +127,14 @@ export const summarizeEmail = async (req, res) => {
 
   try {
     const openai = getOpenRouterClient();
-    const cleanBody = stripHtml(emailBody);
+    const cleanBody = truncateText(stripHtml(emailBody));
 
     const completion = await getCompletion(
       openai,
       [
         {
           role: "system",
-          content: "Summarize this email in 3 short bullet points.",
+          content: "Summarize this email in 3 short bullet points. Be concise.",
         },
         {
           role: "user",
@@ -165,7 +175,7 @@ export const scheduleEvent = async (req, res) => {
 
   try {
     const openai = getOpenRouterClient();
-    const cleanBody = stripHtml(emailBody);
+    const cleanBody = truncateText(stripHtml(emailBody));
     const now = new Date().toISOString();
 
     const completion = await getCompletion(
@@ -261,7 +271,7 @@ export const summarizeBulk = async (req, res) => {
         const subject = headers.find(h => h.name.toLowerCase() === 'subject')?.value || 'No Subject';
         const from = headers.find(h => h.name.toLowerCase() === 'from')?.value || 'Unknown';
         const body = extractBody(msg.data.payload);
-        const cleanBody = stripHtml(body);
+        const cleanBody = truncateText(stripHtml(body), 800); // tighter limit per email in bulk mode
         return `FROM: ${from}\nSUBJECT: ${subject}\nCONTENT: ${cleanBody}\n---`;
       })
     );
