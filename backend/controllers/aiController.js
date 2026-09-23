@@ -33,6 +33,7 @@ export const getOpenRouterClient = () => {
 
 // Locked to your specified Gemma model only
 const MODELS = [
+  "cohere/north-mini-code:free",
   "google/gemma-2-27b-it", 
 ];
 
