@@ -198,7 +198,7 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
         if (data.error) {
           setGenerated("AI could not detect a meeting in this email.");
         } else {
-          setGenerated(`📅 Event: ${data.title}\n📍 Location: ${data.location || 'TBD'}\n📝 Note: ${data.description}`);
+          setGenerated(`📅 Event: ${data.title}\n📍 Location: ${data.location || 'To be confirmed'}\n📝 Note: ${data.description || 'No notes extracted'}`);
           const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(data.title)}&dates=${data.startDate}/${data.endDate}&details=${encodeURIComponent(data.description)}&location=${encodeURIComponent(data.location)}`;
           setCalUrl(url);
           sounds.playSuccess();

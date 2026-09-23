@@ -173,14 +173,24 @@ export const scheduleEvent = async (req, res) => {
       [
         {
           role: "system",
-          content: `Extract meeting details from the email and return ONLY a valid JSON object. 
+          content: `You are a calendar assistant. Extract meeting details from the email below and return ONLY a raw valid JSON object with NO markdown, NO code fences, NO extra text.
           Current Time: ${now}
-          Structure: {"title": "...", "description": "...", "location": "...", "startDate": "YYYYMMDDTHHMMSSZ", "endDate": "YYYYMMDDTHHMMSSZ"}.
-          For "location", look for meeting links (Zoom, Google Meet, Teams) or physical addresses. If found, use the link/address.
-          If you cannot find a clear title, use "Meeting from MailMind". 
-          If you cannot find dates, use the current date provided above.
-          Ensure startDate and endDate are ALWAYS provided.
-          Do not include any other text or markdown formatting.`,
+          
+          JSON Structure (all fields are required):
+          {
+            "title": "Meeting title (use subject if unclear)",
+            "description": "A brief 1-2 sentence note summarizing the purpose of the meeting or key context from the email",
+            "location": "Physical address OR Zoom/Google Meet/Teams link. If not found, write 'To be confirmed'",
+            "startDate": "YYYYMMDDTHHMMSSZ",
+            "endDate": "YYYYMMDDTHHMMSSZ"
+          }
+          
+          Rules:
+          - ALWAYS extract or infer a meaningful description/note from the email body.
+          - For location, thoroughly scan for Zoom links, Google Meet links, Microsoft Teams links, or any physical address.
+          - If no location is found, write exactly: "To be confirmed"
+          - If no date is found, use the current time above.
+          - Return ONLY the JSON object. No other text.`,
         },
         {
           role: "user",
