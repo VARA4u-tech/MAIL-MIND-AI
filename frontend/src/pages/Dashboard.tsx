@@ -92,6 +92,7 @@ const Dashboard: FC = () => {
   const [showFolderSwitcher, setShowFolderSwitcher] = useState(false);
   
   const initialized = useRef(false);
+  const currentEmailIdRef = useRef<string | null>(null);
 
   // Handle Resize
   useEffect(() => {
@@ -206,6 +207,57 @@ const Dashboard: FC = () => {
        fetchHistory();
      }
    }, [userEmail, authToken, fetchInbox, fetchHistory, activeFolder]);
+
+  useEffect(() => {
+    if (selectedEmail?.id !== currentEmailIdRef.current) {
+      currentEmailIdRef.current = selectedEmail?.id || null;
+      if (selectedEmail) {
+        const cachedDataStr = window.localStorage.getItem(`${STORAGE_KEY}:ai_cache:${selectedEmail.id}`);
+        if (cachedDataStr) {
+          try {
+            const cachedData = JSON.parse(cachedDataStr);
+            const savedOutputs = cachedData.generatedOutputs || { reply: null, summary: null, schedule: null };
+            setGeneratedOutputs(savedOutputs);
+            setGenerated(savedOutputs[mode] || null);
+            setRawSchedule(cachedData.rawSchedule || null);
+            setCalUrl(cachedData.calUrl || null);
+          } catch (e) {
+            setGenerated(null);
+            setGeneratedOutputs({ reply: null, summary: null, schedule: null });
+            setRawSchedule(null);
+            setCalUrl(null);
+          }
+        } else {
+          setGenerated(null);
+          setGeneratedOutputs({ reply: null, summary: null, schedule: null });
+          setRawSchedule(null);
+          setCalUrl(null);
+        }
+      } else {
+        setGenerated(null);
+        setGeneratedOutputs({ reply: null, summary: null, schedule: null });
+        setRawSchedule(null);
+        setCalUrl(null);
+      }
+    } else if (selectedEmail) {
+      if (generatedOutputs.reply || generatedOutputs.summary || generatedOutputs.schedule) {
+        const dataToSave = {
+          generatedOutputs,
+          rawSchedule,
+          calUrl
+        };
+        window.localStorage.setItem(`${STORAGE_KEY}:ai_cache:${selectedEmail.id}`, JSON.stringify(dataToSave));
+      }
+    }
+  }, [selectedEmail?.id, generatedOutputs, rawSchedule, calUrl, mode]);
+
+  const handleModeChange = (m: Mode) => {
+    setMode(m);
+    setAiError(null);
+    if (m !== 'history') {
+      setGenerated(generatedOutputs[m] || null);
+    }
+  };
 
   const handleGenerate = useCallback(async () => {
     if (!selectedEmail) return;
@@ -405,9 +457,6 @@ const Dashboard: FC = () => {
 
   const handleEmailSelect = (email: EmailMessage) => {
     setSelectedEmail(email);
-    setGenerated(null);
-    setGeneratedOutputs({ reply: null, summary: null, schedule: null });
-    setRawSchedule(null);
     setAiError(null);
     if (isMobile) setMobileView("detail");
   };
@@ -939,7 +988,7 @@ const Dashboard: FC = () => {
                           <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                             <div className="flex flex-wrap p-1 bg-primary/5 border border-primary/10 rounded-sm gap-1">
                               {(["reply", "summary", "schedule", "history"] as Mode[]).map((m) => (
-                                <button key={m} onClick={() => { setMode(m); setAiError(null); }} className={`flex-1 py-2 px-1 text-[7px] min-w-fit uppercase tracking-[0.15em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
+                                <button key={m} onClick={() => handleModeChange(m)} className={`flex-1 py-2 px-1 text-[7px] min-w-fit uppercase tracking-[0.15em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
                               ))}
                             </div>
                             
@@ -1036,7 +1085,7 @@ const Dashboard: FC = () => {
             <div className="space-y-6">
               <div className="flex p-1 bg-primary/5 border border-primary/10 rounded-sm">
                 {(["reply", "summary", "schedule", "history"] as Mode[]).map((m) => (
-                  <button key={m} onClick={() => { setMode(m); }} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
+                  <button key={m} onClick={() => handleModeChange(m)} className={`flex-1 py-2 text-[8px] uppercase tracking-[0.2em] rounded-sm transition-all ${mode === m ? 'bg-primary text-background font-bold' : 'text-primary/40 hover:text-primary/60'}`}>{m}</button>
                 ))}
               </div>
 
