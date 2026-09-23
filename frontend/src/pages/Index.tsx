@@ -93,7 +93,7 @@ const Footer = () => (
       <div className="col-span-1 md:col-span-1">
         <div className="flex items-center gap-3 mb-4">
           <img
-            src="/favicon.png"
+            src="/logo.png"
             alt="MailMind Logo"
             className="w-8 h-8 object-contain"
           />

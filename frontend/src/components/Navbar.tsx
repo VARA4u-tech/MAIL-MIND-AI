@@ -90,7 +90,7 @@ const Navbar: FC = () => {
           {/* Logo */}
           <a href="/" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary group">
             <img 
-              src="/favicon.png" 
+              src="/logo.png" 
               alt="MailMind Logo" 
               className="w-8 h-8 object-contain transition-transform group-hover:scale-110" 
             />
