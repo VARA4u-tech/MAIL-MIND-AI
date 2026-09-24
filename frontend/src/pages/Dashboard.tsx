@@ -6,7 +6,7 @@ import {
   ChevronRight, ChevronLeft, RefreshCcw, Sparkles, User, 
   Menu, X, Command, Inbox, LayoutDashboard, ArrowLeft,
   Settings, Bell, MoreVertical, Paperclip, PanelRightOpen, PanelRightClose,
-  AlertCircle, Pencil, Tag, Clock
+  AlertCircle, Pencil, Tag, Clock, FileEdit, AlertOctagon, Bookmark, Users
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { sounds } from "@/lib/sounds";
@@ -253,8 +253,9 @@ const Dashboard: FC = () => {
    }, [userEmail, authToken, fetchInbox, fetchHistory, fetchCredits, activeFolder]);
 
   useEffect(() => {
-    if (selectedEmail?.id !== currentEmailIdRef.current) {
-      currentEmailIdRef.current = selectedEmail?.id || null;
+    const currentId = selectedEmail?.id || null;
+    if (currentId !== currentEmailIdRef.current) {
+      currentEmailIdRef.current = currentId;
       if (selectedEmail) {
         const cachedDataStr = window.localStorage.getItem(`${STORAGE_KEY}:ai_cache:${selectedEmail.id}`);
         if (cachedDataStr) {
@@ -641,8 +642,14 @@ const Dashboard: FC = () => {
                  { icon: <Inbox className="w-4 h-4" />, label: "Inbox", id: "INBOX", count: activeFolder === "INBOX" ? emails.length : undefined },
                  { icon: <Star className="w-4 h-4" />, label: "Starred", id: "STARRED", count: activeFolder === "STARRED" ? emails.length : undefined },
                  { icon: <Send className="w-4 h-4" />, label: "Sent", id: "SENT", count: activeFolder === "SENT" ? emails.length : undefined },
+                 { icon: <FileEdit className="w-4 h-4" />, label: "Drafts", id: "DRAFT", count: activeFolder === "DRAFT" ? emails.length : undefined },
+                 { icon: <Bookmark className="w-4 h-4" />, label: "Important", id: "IMPORTANT", count: activeFolder === "IMPORTANT" ? emails.length : undefined },
+                 { icon: <AlertOctagon className="w-4 h-4" />, label: "Spam", id: "SPAM", count: activeFolder === "SPAM" ? emails.length : undefined },
                  { icon: <Archive className="w-4 h-4" />, label: "Archive", id: "ARCHIVE" },
                  { icon: <Trash2 className="w-4 h-4" />, label: "Trash", id: "TRASH", count: activeFolder === "TRASH" ? emails.length : undefined },
+                 { icon: <Bell className="w-4 h-4" />, label: "Updates", id: "CATEGORY_UPDATES", count: activeFolder === "CATEGORY_UPDATES" ? emails.length : undefined },
+                 { icon: <Tag className="w-4 h-4" />, label: "Promotions", id: "CATEGORY_PROMOTIONS", count: activeFolder === "CATEGORY_PROMOTIONS" ? emails.length : undefined },
+                 { icon: <Users className="w-4 h-4" />, label: "Social", id: "CATEGORY_SOCIAL", count: activeFolder === "CATEGORY_SOCIAL" ? emails.length : undefined },
                ].map((item) => (
                  <button 
                    key={item.label} 
