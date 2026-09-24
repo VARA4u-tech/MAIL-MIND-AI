@@ -73,16 +73,56 @@ export const getOpenRouterClient = () => {
 };
 
 // All available free models — spread load across all of them
-const MODELS = [
-  "liquid/lfm-2.5-2.6b:free",
-  "poolside/laguna-xs-2.1:free",
-  "thinkingmachines/inkling-small:free",
-  "inclusionai/ling-3.0-flash-sante:free",
+const OPENROUTER_MODELS = [
   "cohere/north-mini-code:free",
 ];
 
+// Groq free models — 14,400 requests/day each (much better limits)
+const GROQ_MODELS = [
+  "canopylabs/orpheus-arabic-saudi",
+  "canopylabs/orpheus-v1-english",
+  "meta-llama/llama-prompt-guard-2-86m",
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-safeguard-20b",
+  "qwen/qwen3.8-27b",
+];
+// Groq client — primary if GROQ_API_KEY is set
+export const getGroqClient = () => {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return null;
+  return new OpenAI({
+    baseURL: "https://api.groq.com/openai/v1",
+    apiKey: key,
+  });
+};
+
+// ─── Response Cache (in-memory, 30-min TTL) ───────────────────────────────────
+// Prevents duplicate API calls for the same email + mode combination
+const responseCache = new Map();
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+export const getCachedResponse = (key) => {
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL) {
+    responseCache.delete(key);
+    return null;
+  }
+  return entry.value;
+};
+
+export const setCachedResponse = (key, value) => {
+  responseCache.set(key, { value, timestamp: Date.now() });
+  // Keep cache size bounded
+  if (responseCache.size > 200) {
+    const oldest = responseCache.keys().next().value;
+    responseCache.delete(oldest);
+  }
+};
+
 // Round-robin index — distributes requests equally across all models
 let rrIndex = 0;
+let groqRrIndex = 0;
 
 // ─── Per-User Rate Limiter (in-memory) ───────────────────────────────────────
 // Tracks: { count: number, windowStart: Date, blockedUntil: Date | null }
@@ -128,29 +168,53 @@ export const checkUserRateLimit = (userEmail) => {
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Completion handler — Round-Robin across all models, fallback on failure
+// Completion handler — Tries Groq first (high limits), falls back to OpenRouter
 export const getCompletion = async (
-  openai,
+  openai, // kept for signature compatibility, may be null
   messages,
   temperature = 0.7,
 ) => {
-  let lastError = null;
-  const startIndex = rrIndex % MODELS.length;
+  // 1. Try Groq first if API key is available (14,400 req/day free)
+  const groqClient = getGroqClient();
+  if (groqClient) {
+    const startIndex = groqRrIndex % GROQ_MODELS.length;
+    for (let i = 0; i < GROQ_MODELS.length; i++) {
+      const idx = (startIndex + i) % GROQ_MODELS.length;
+      const model = GROQ_MODELS[idx];
+      try {
+        console.log(`AI Strategy: Trying Groq ${model}...`);
+        const response = await groqClient.chat.completions.create({
+          model,
+          messages,
+          temperature,
+          max_tokens: MAX_TOKENS,
+        });
+        groqRrIndex = (idx + 1) % GROQ_MODELS.length;
+        console.log(`AI Strategy: Groq ${model} succeeded ✓`);
+        return response;
+      } catch (error) {
+        console.error(`AI Strategy: Groq ${model} failed - ${error.message}`);
+      }
+    }
+  }
 
-  // Try all models starting from round-robin position
-  for (let i = 0; i < MODELS.length; i++) {
-    const idx = (startIndex + i) % MODELS.length;
-    const model = MODELS[idx];
+  // 2. Fallback to OpenRouter free models
+  const orClient = openai || getOpenRouterClient();
+  let lastError = null;
+  const startIndex = rrIndex % OPENROUTER_MODELS.length;
+
+  for (let i = 0; i < OPENROUTER_MODELS.length; i++) {
+    const idx = (startIndex + i) % OPENROUTER_MODELS.length;
+    const model = OPENROUTER_MODELS[idx];
     try {
-      console.log(`AI Strategy: Executing with ${model} (slot ${idx + 1}/${MODELS.length})...`);
-      const response = await openai.chat.completions.create({
+      console.log(`AI Strategy: Trying OpenRouter ${model} (slot ${idx + 1}/${OPENROUTER_MODELS.length})...`);
+      const response = await orClient.chat.completions.create({
         model,
         messages,
         temperature,
         max_tokens: MAX_TOKENS,
       });
-      // Advance round-robin ONLY on success
-      rrIndex = (idx + 1) % MODELS.length;
+      rrIndex = (idx + 1) % OPENROUTER_MODELS.length;
       return response;
     } catch (error) {
       console.error(`AI Strategy: ${model} failed - ${error.message}`);
@@ -158,10 +222,17 @@ export const getCompletion = async (
     }
   }
 
-  const finalError = new Error(`AI model error: ${lastError?.message}`);
-  if (lastError?.status) finalError.status = lastError.status;
-  if (lastError?.status === 429 || lastError?.message?.includes("429")) finalError.status = 429;
-  if (lastError?.status === 402 || lastError?.message?.includes("402")) finalError.status = 402;
+  const status = lastError?.status || (lastError?.message?.includes("429") ? 429 : (lastError?.message?.includes("402") ? 402 : 500));
+  
+  let friendlyMessage = `AI models are temporarily unavailable. Please try again later.`;
+  if (status === 429) {
+    friendlyMessage = "The AI service is currently busy or experiencing high traffic. Please wait a moment and try again.";
+  } else if (status === 402) {
+    friendlyMessage = "AI service credits are exhausted. Please try again when credits reset.";
+  }
+
+  const finalError = new Error(friendlyMessage);
+  finalError.status = status;
   throw finalError;
 };
 
@@ -177,9 +248,17 @@ export const generateReply = async (req, res) => {
     // Rate limit check first
     checkUserRateLimit(userEmail);
 
-    const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
     
+    // Check cache first — same email + intent = same reply
+    const cacheKey = `reply:${userEmail}:${intent}:${cleanBody.slice(0, 100)}`;
+    const cached = getCachedResponse(cacheKey);
+    if (cached) {
+      console.log('AI Cache hit: reply');
+      return res.json({ reply: cached, aiCredits: null, creditsResetAt: null, cached: true });
+    }
+
+    const openai = getOpenRouterClient();
     const userRecord = await checkCredits(userEmail);
 
     const completion = await getCompletion(openai, [
@@ -194,6 +273,7 @@ export const generateReply = async (req, res) => {
     ]);
 
     const result = (completion.choices[0]?.message?.content || "").trim();
+    setCachedResponse(cacheKey, result);
     const { aiCredits, creditsResetAt } = await deductCredit(userRecord, 1);
 
     // Save to History if metadata is provided
@@ -233,9 +313,17 @@ export const summarizeEmail = async (req, res) => {
     // Rate limit check first
     checkUserRateLimit(userEmail);
 
-    const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
     
+    // Check cache first — same email body = same summary
+    const cacheKey = `summary:${userEmail}:${cleanBody.slice(0, 100)}`;
+    const cached = getCachedResponse(cacheKey);
+    if (cached) {
+      console.log('AI Cache hit: summary');
+      return res.json({ summary: cached, aiCredits: null, creditsResetAt: null, cached: true });
+    }
+
+    const openai = getOpenRouterClient();
     const userRecord = await checkCredits(userEmail);
 
     const completion = await getCompletion(
@@ -254,6 +342,7 @@ export const summarizeEmail = async (req, res) => {
     );
 
     const result = (completion.choices[0]?.message?.content || "").trim();
+    setCachedResponse(cacheKey, result);
     const { aiCredits, creditsResetAt } = await deductCredit(userRecord, 1);
 
     // Save to History if metadata is provided
