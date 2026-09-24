@@ -30,10 +30,10 @@ export const getInbox = async (req, res) => {
     
     const gmail = google.gmail({ version: 'v1', auth: authClient });
 
-    // Fetch list of latest 10 messages for specific label
+    // Fetch list of latest 50 messages for specific label
     const listRes = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 10,
+      maxResults: 50,
       labelIds: [gmailLabel],
     });
 
