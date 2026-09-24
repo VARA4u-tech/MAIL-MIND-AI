@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { getClientForUser } from './authController.js';
+import Summary from '../models/Summary.js';
 
 // POST /api/calendar/create-event
 // Body: { title, description, location, startDate, endDate }
@@ -37,6 +38,19 @@ export const createEvent = async (req, res) => {
       calendarId: 'primary',
       resource: event,
     });
+
+    // Save to Database History
+    if (req.body.metadata && req.body.metadata.emailId) {
+      await Summary.create({
+        userEmail: email,
+        emailId: req.body.metadata.emailId,
+        subject: req.body.metadata.subject || 'Calendar Event',
+        from: req.body.metadata.from || 'Google Calendar',
+        originalContent: `Event: ${title}\nDescription: ${description || 'N/A'}\nLocation: ${location || 'N/A'}`,
+        aiResult: `📅 Scheduled: ${title} from ${new Date(startDate).toLocaleString()} to ${new Date(endDate).toLocaleString()}`,
+        type: 'schedule',
+      });
+    }
 
     res.json({ success: true, event: response.data });
   } catch (error) {
