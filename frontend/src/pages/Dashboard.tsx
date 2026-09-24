@@ -611,8 +611,8 @@ const Dashboard: FC = () => {
           <motion.aside 
             initial={false}
             animate={{ 
-              width: isSidebarOpen ? 260 : (isTablet ? 0 : 80),
-              x: (isTablet && !isSidebarOpen) ? -260 : 0
+              width: isSidebarOpen ? 220 : (isTablet ? 0 : 80),
+              x: (isTablet && !isSidebarOpen) ? -220 : 0
             }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={`h-full border-r border-primary/10 bg-background flex flex-col z-50 overflow-hidden shrink-0 
@@ -706,9 +706,8 @@ const Dashboard: FC = () => {
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {(isMobile || isTablet) && (
-          <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 z-50">
-            <div className="flex items-center gap-4">
+        <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-primary/10 bg-background/95 z-50">
+          <div className="flex items-center gap-4">
               {isTablet && (
                 <button 
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -717,15 +716,17 @@ const Dashboard: FC = () => {
                   <Menu className="w-5 h-5" />
                 </button>
               )}
-              <div 
-                onClick={() => navigate("/")}
-                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-              >
-                <div className="flex items-center gap-2">
-                  <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
-                  <span className="font-display tracking-widest text-primary text-xs uppercase">MailMind</span>
+              {isMobile || isTablet ? (
+                <div 
+                  onClick={() => navigate("/")}
+                  className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <div className="flex items-center gap-2">
+                    <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
+                    <span className="font-display tracking-widest text-primary text-xs uppercase">MailMind</span>
+                  </div>
                 </div>
-              </div>
+              ) : null}
               
               {aiCredits !== null && (
                 <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full ml-4">
@@ -846,7 +847,6 @@ const Dashboard: FC = () => {
               </div>
             </div>
           </header>
-        )}
 
         <div className="flex-1 flex overflow-hidden relative">
           {/* Inbox List */}
