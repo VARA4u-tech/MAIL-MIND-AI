@@ -6,10 +6,34 @@ import {
   ChevronRight, ChevronLeft, RefreshCcw, Sparkles, User, 
   Menu, X, Command, Inbox, LayoutDashboard, ArrowLeft,
   Settings, Bell, MoreVertical, Paperclip, PanelRightOpen, PanelRightClose,
-  AlertCircle
+  AlertCircle, Pencil, Tag, Clock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { sounds } from "@/lib/sounds";
+import { toast } from "sonner";
+
+const sanitizeAiError = (err: unknown) => {
+  if (err instanceof Error) {
+    const msg = err.message;
+    if (msg.includes("5 minutes") || msg.includes("Too many requests")) return msg;
+    if (msg.includes("Prompt tokens") || msg.includes("context length") || msg.includes("tokens limit")) return "This email is too long for the AI to process right now. Please try a shorter one.";
+    if (msg.includes("Rate limit") || msg.includes("429")) return "The AI service is currently busy with too many requests. Please try again in a moment.";
+    if (msg.includes("Server Error") || msg.includes("500") || msg.includes("502")) return "The AI service is temporarily unavailable. Please try again later.";
+    if (msg.includes("AI model error") || msg.includes("Failed to generate")) return "We couldn't connect to the AI service. Please try again.";
+    return msg;
+  }
+  return "An unexpected error occurred.";
+};
+
+const getResetString = (resetDateStr: string | null) => {
+  if (!resetDateStr) return "soon";
+  const diff = new Date(resetDateStr).getTime() - Date.now();
+  if (diff <= 0) return "soon";
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
 
 type Mode = "reply" | "summary" | "schedule" | "history";
 type MobileTab = "inbox" | "ai" | "settings";
@@ -66,6 +90,9 @@ const Dashboard: FC = () => {
    const [scheduling, setScheduling] = useState(false);
    const [scheduleSuccess, setScheduleSuccess] = useState(false);
    const [activeFolder, setActiveFolder] = useState("INBOX");
+
+   const [aiCredits, setAiCredits] = useState<number | null>(null);
+   const [creditsResetAt, setCreditsResetAt] = useState<string | null>(null);
 
   interface RawSchedule {
     title: string;
@@ -179,6 +206,22 @@ const Dashboard: FC = () => {
     }
   }, []);
 
+  const fetchCredits = useCallback(async () => {
+    if (!authToken) return;
+    try {
+      const res = await fetch("/api/ai/credits", {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAiCredits(data.aiCredits);
+        setCreditsResetAt(data.creditsResetAt);
+      }
+    } catch (e) {
+      console.error("Failed to fetch credits", e);
+    }
+  }, [authToken]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const emailParam = params.get('email');
@@ -205,8 +248,9 @@ const Dashboard: FC = () => {
        initialized.current = true;
        fetchInbox(userEmail, activeFolder);
        fetchHistory();
+       fetchCredits();
      }
-   }, [userEmail, authToken, fetchInbox, fetchHistory, activeFolder]);
+   }, [userEmail, authToken, fetchInbox, fetchHistory, fetchCredits, activeFolder]);
 
   useEffect(() => {
     if (selectedEmail?.id !== currentEmailIdRef.current) {
@@ -300,7 +344,47 @@ const Dashboard: FC = () => {
       });
       
       const data = await res.json();
-      if (!res.ok) throw new Error(data.details || data.error || `Server Error ${res.status}`);
+      if (res.status === 429) {
+        const retryDate = data.retryAfter ? new Date(data.retryAfter) : null;
+        const retryStr = retryDate ? `Available again at ${retryDate.toLocaleTimeString()}.` : "Please wait 5 minutes.";
+        toast.error(`⏳ AI usage limit reached`, {
+          description: `You've used AI 5 times in 5 minutes. ${retryStr}`
+        });
+        setAiError(`⏳ ${data.error || "Too many requests."}`);
+        return;
+      }
+      if (res.status === 402) {
+        setAiCredits(0);
+        setCreditsResetAt(data.creditsResetAt);
+        toast.error(`🔥 You've used all your AI credits for now.`, {
+          description: `Your credits will refresh in ${getResetString(data.creditsResetAt)}.\nPlease try again after the refresh.`
+        });
+        return;
+      }
+      
+      if (!res.ok) {
+        if (res.status >= 500) {
+           toast.error(`The AI service is temporarily unavailable. Please try again shortly.`);
+        } else {
+           toast.error(`We couldn't connect to the AI service. Please check your connection and try again.`);
+        }
+        throw new Error(data.details || data.error || `Server Error ${res.status}`);
+      }
+      
+      if (data.aiCredits !== undefined) {
+        setAiCredits(data.aiCredits);
+        setCreditsResetAt(data.creditsResetAt);
+        
+        toast.success(`✨ AI response generated!`, {
+          description: `You have ${data.aiCredits} AI credits remaining.\nCredits refresh in ${getResetString(data.creditsResetAt)}.`
+        });
+        
+        if (data.aiCredits > 0 && data.aiCredits <= 5) {
+          toast.warning(`⚠️ Running low on AI credits`, {
+            description: `You have only ${data.aiCredits} credits remaining. Your credits refresh in ${getResetString(data.creditsResetAt)}.\nMaybe save a few for your next brilliant idea. 😌`
+          });
+        }
+      }
 
       if (mode === "reply") {
         const result = data.reply;
@@ -325,7 +409,7 @@ const Dashboard: FC = () => {
       }
     } catch (error) {
       console.error("AI Error:", error);
-      setAiError(error instanceof Error ? error.message : "An unexpected AI error occurred");
+      setAiError(sanitizeAiError(error));
     } finally {
       setPendingAI(false);
       if (userEmail) fetchHistory();
@@ -373,7 +457,12 @@ const Dashboard: FC = () => {
           description: rawSchedule.description,
           location: rawSchedule.location,
           startDate: rawSchedule.startDate,
-          endDate: rawSchedule.endDate
+          endDate: rawSchedule.endDate,
+          metadata: selectedEmail ? {
+            emailId: selectedEmail.id,
+            subject: selectedEmail.subject,
+            from: selectedEmail.from
+          } : undefined
         })
       });
       if (!res.ok) {
@@ -405,8 +494,25 @@ const Dashboard: FC = () => {
         body: JSON.stringify({ emailIds: selectedEmailIds })
       });
       const data = await res.json();
+      
+      if (res.status === 402) {
+        setAiCredits(0);
+        setCreditsResetAt(data.creditsResetAt);
+        toast.error(`🔥 You've used all your AI credits for now.`, {
+          description: `Your credits will refresh in ${getResetString(data.creditsResetAt)}.\nPlease try again after the refresh.`
+        });
+        throw new Error("AI credits exhausted.");
+      }
+      
       if (data.summary) {
         setGenerated(data.summary);
+        if (data.aiCredits !== undefined) {
+          setAiCredits(data.aiCredits);
+          setCreditsResetAt(data.creditsResetAt);
+          toast.success(`✨ Bulk AI response generated!`, {
+            description: `You have ${data.aiCredits} AI credits remaining.\nCredits refresh in ${getResetString(data.creditsResetAt)}.`
+          });
+        }
       } else {
         throw new Error(data.error || "Bulk summary failed");
       }
@@ -461,13 +567,14 @@ const Dashboard: FC = () => {
     if (isMobile) setMobileView("detail");
   };
 
-  // Background Polling for new emails — isBackgroundPoll=true prevents selectedEmail state updates
+  // Removed background polling to prevent rapid API exhaustion
+  // The user can manually refresh using the refresh button
   useEffect(() => {
     if (!userEmail) return;
-    const interval = setInterval(() => {
-      fetchInbox(userEmail, activeFolder, true);
-    }, 60000); // Check every minute
-    return () => clearInterval(interval);
+    // const interval = setInterval(() => {
+    //   fetchInbox(userEmail, activeFolder, true);
+    // }, 60000);
+    // return () => clearInterval(interval);
   }, [userEmail, activeFolder, fetchInbox]);
 
   const cleanEmailBody = (html: string) => {
@@ -608,6 +715,15 @@ const Dashboard: FC = () => {
                   <span className="font-display tracking-widest text-primary text-xs uppercase">MailMind</span>
                 </div>
               </div>
+              
+              {aiCredits !== null && (
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full ml-4">
+                  <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                    {aiCredits} Credits
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -758,8 +874,14 @@ const Dashboard: FC = () => {
                             {[
                               { id: 'INBOX', label: 'Inbox', icon: <Inbox className="w-3.5 h-3.5" /> },
                               { id: 'STARRED', label: 'Starred', icon: <Star className="w-3.5 h-3.5" /> },
+                              { id: 'SNOOZED', label: 'Snoozed', icon: <Clock className="w-3.5 h-3.5" /> },
                               { id: 'SENT', label: 'Sent', icon: <Send className="w-3.5 h-3.5" /> },
+                              { id: 'DRAFT', label: 'Drafts', icon: <Pencil className="w-3.5 h-3.5" /> },
+                              { id: 'SPAM', label: 'Spam', icon: <AlertCircle className="w-3.5 h-3.5" /> },
                               { id: 'TRASH', label: 'Trash', icon: <Trash2 className="w-3.5 h-3.5" /> },
+                              { id: 'CATEGORY_PROMOTIONS', label: 'Promotions', icon: <Tag className="w-3.5 h-3.5" /> },
+                              { id: 'CATEGORY_SOCIAL', label: 'Social', icon: <User className="w-3.5 h-3.5" /> },
+                              { id: 'CATEGORY_UPDATES', label: 'Updates', icon: <Bell className="w-3.5 h-3.5" /> },
                             ].map((f) => (
                               <button
                                 key={f.id}
@@ -788,14 +910,21 @@ const Dashboard: FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   {selectedEmailIds.length > 1 && (
-                    <button 
-                      onClick={handleBulkSummarize}
-                      disabled={isBulkSummarizing}
-                      className="text-[9px] uppercase tracking-widest font-bold text-primary hover:text-primary/80 flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-sm border border-primary/20"
-                    >
-                      {isBulkSummarizing ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                      BULK AI
-                    </button>
+                    <div className="relative group/bulk">
+                      <button 
+                        onClick={handleBulkSummarize}
+                        disabled={isBulkSummarizing || aiCredits === 0}
+                        className="text-[9px] uppercase tracking-widest font-bold text-primary hover:text-primary/80 flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-sm border border-primary/20 disabled:opacity-50"
+                      >
+                        {isBulkSummarizing ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                        BULK AI
+                      </button>
+                      {aiCredits === 0 && (
+                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-background border border-primary/20 p-2 text-[8px] rounded opacity-0 group-hover/bulk:opacity-100 transition-opacity pointer-events-none whitespace-nowrap text-primary shadow-lg z-50">
+                          Credits exhausted
+                        </div>
+                      )}
+                    </div>
                   )}
                   <button onClick={() => fetchInbox(userEmail!)} className="p-1 hover:text-primary transition-colors">
                     <RefreshCcw className={`w-3 h-3 ${loadingEmails ? 'animate-spin' : ''}`} />
@@ -1007,11 +1136,17 @@ const Dashboard: FC = () => {
                             )}
                             <button 
                                onClick={handleGenerate} 
-                               disabled={pendingAI} 
-                               className="w-full py-5 border border-primary text-primary text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary hover:text-background transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+                               disabled={pendingAI || aiCredits === 0} 
+                               className="w-full py-5 border border-primary text-primary text-[10px] uppercase tracking-[0.5em] font-black hover:bg-primary hover:text-background transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] group relative"
                              >
                                {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
                                {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}
+                               
+                               {aiCredits === 0 && (
+                                 <div className="absolute -top-10 bg-background border border-primary/20 p-2 text-[8px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg text-primary">
+                                   AI credits exhausted. Available again in {getResetString(creditsResetAt)}.
+                                 </div>
+                               )}
                              </button>
                             {(generatedOutputs[mode] || (mode === "history" && generated)) && (
                               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -1102,11 +1237,16 @@ const Dashboard: FC = () => {
 
               <button 
                 onClick={handleGenerate} 
-                disabled={pendingAI} 
-                className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                disabled={pendingAI || aiCredits === 0} 
+                className="w-full py-5 bg-primary text-background text-[10px] uppercase tracking-[0.5em] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50 group relative"
               >
                 {pendingAI ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Command className="w-4 h-4" />}
                 {pendingAI ? "PROCESSING..." : `PROCESS ${mode}`}
+                {aiCredits === 0 && (
+                  <div className="absolute -top-10 bg-background border border-primary/20 p-2 text-[8px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap text-primary shadow-lg">
+                    AI credits exhausted. Available again in {getResetString(creditsResetAt)}.
+                  </div>
+                )}
               </button>
 
               {(generatedOutputs[mode] || (mode === "history" && generated)) && (
