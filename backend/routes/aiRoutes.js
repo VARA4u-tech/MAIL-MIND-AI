@@ -1,11 +1,14 @@
 import express from 'express';
-import { generateReply, summarizeEmail, scheduleEvent, getHistory, summarizeBulk } from '../controllers/aiController.js';
+import { generateReply, summarizeEmail, scheduleEvent, getHistory, summarizeBulk, getCredits } from '../controllers/aiController.js';
 import protect from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 // Apply protection to all AI routes
 router.use(protect);
+
+// GET /api/ai/credits
+router.get('/credits', getCredits);
 
 // POST /api/ai/reply
 router.post('/reply', generateReply);
