@@ -74,7 +74,7 @@ export const getOpenRouterClient = () => {
 
 // All available free models — spread load across all of them
 const MODELS = [
-  "meta-llama/llama-3.1-8b-instruct:free",
+  "liquid/lfm-2.5-2.6b:free",
   "poolside/laguna-xs-2.1:free",
   "thinkingmachines/inkling-small:free",
   "inclusionai/ling-3.0-flash-sante:free",
@@ -158,7 +158,11 @@ export const getCompletion = async (
     }
   }
 
-  throw new Error(`AI model error: ${lastError?.message}`);
+  const finalError = new Error(`AI model error: ${lastError?.message}`);
+  if (lastError?.status) finalError.status = lastError.status;
+  if (lastError?.status === 429 || lastError?.message?.includes("429")) finalError.status = 429;
+  if (lastError?.status === 402 || lastError?.message?.includes("402")) finalError.status = 402;
+  throw finalError;
 };
 
 // Feature 1: Smart Reply Generation
@@ -334,19 +338,7 @@ export const scheduleEvent = async (req, res) => {
       const parsed = JSON.parse(output);
       const { aiCredits, creditsResetAt } = await deductCredit(userRecord, 1);
 
-      // Save to History if metadata is provided
-      if (metadata && metadata.emailId) {
-        await Summary.create({
-          userEmail: userEmail,
-          emailId: metadata.emailId,
-          subject: metadata.subject,
-          from: metadata.from,
-          originalContent: emailBody,
-          aiResult: output, // Store the raw JSON string
-          type: 'schedule',
-        });
-      }
-
+      // Meeting is saved to DB by calendarController after Google Calendar creation
       res.json({ ...parsed, aiCredits, creditsResetAt });
     } catch (parseErr) {
       console.error("Manual JSON Parse Error:", output, parseErr);
