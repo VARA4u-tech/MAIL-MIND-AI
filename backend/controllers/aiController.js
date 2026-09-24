@@ -2,8 +2,40 @@ import OpenAI from "openai";
 import Summary from "../models/Summary.js";
 import { google } from "googleapis";
 import { getClientForUser } from "./authController.js";
+import User from "../models/User.js";
 import { extractBody } from "../utils/gmailUtils.js";
 
+// Helper to check and deduct credits
+export const checkCredits = async (userEmail) => {
+  const user = await User.findOne({ email: userEmail });
+  if (!user) throw new Error("User not found");
+  
+  const now = new Date();
+  if (user.aiCredits === undefined || !user.creditsResetAt) {
+    user.aiCredits = 50;
+    user.creditsResetAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    await user.save();
+  } else if (now > user.creditsResetAt) {
+    user.aiCredits = 50;
+    user.creditsResetAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    await user.save();
+  }
+  
+  if (user.aiCredits <= 0) {
+    const error = new Error("AI credits exhausted.");
+    error.status = 402;
+    error.creditsResetAt = user.creditsResetAt;
+    throw error;
+  }
+  
+  return user;
+};
+
+export const deductCredit = async (user, amount = 1) => {
+  user.aiCredits -= amount;
+  await user.save();
+  return { aiCredits: user.aiCredits, creditsResetAt: user.creditsResetAt };
+};
 // Utility to strip HTML tags for AI consumption
 const stripHtml = (html) => {
   if (!html) return "";
@@ -85,6 +117,8 @@ export const generateReply = async (req, res) => {
     const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
     
+    const userRecord = await checkCredits(userEmail);
+
     const completion = await getCompletion(openai, [
       {
         role: "system",
@@ -96,7 +130,8 @@ export const generateReply = async (req, res) => {
       },
     ]);
 
-    const result = completion.choices[0].message.content.trim();
+    const result = (completion.choices[0]?.message?.content || "").trim();
+    const { aiCredits, creditsResetAt } = await deductCredit(userRecord, 1);
 
     // Save to History if metadata is provided
     if (metadata && metadata.emailId) {
@@ -111,8 +146,11 @@ export const generateReply = async (req, res) => {
       });
     }
 
-    res.json({ reply: result });
+    res.json({ reply: result, aiCredits, creditsResetAt });
   } catch (error) {
+    if (error.status === 402) {
+      return res.status(402).json({ error: error.message, creditsResetAt: error.creditsResetAt });
+    }
     res.status(500).json({ error: "AI Generation Failed", details: error.message });
   }
 };
@@ -128,6 +166,8 @@ export const summarizeEmail = async (req, res) => {
   try {
     const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
+    
+    const userRecord = await checkCredits(userEmail);
 
     const completion = await getCompletion(
       openai,
@@ -144,7 +184,8 @@ export const summarizeEmail = async (req, res) => {
       0.3,
     );
 
-    const result = completion.choices[0].message.content.trim();
+    const result = (completion.choices[0]?.message?.content || "").trim();
+    const { aiCredits, creditsResetAt } = await deductCredit(userRecord, 1);
 
     // Save to History if metadata is provided
     if (metadata && metadata.emailId) {
@@ -159,8 +200,11 @@ export const summarizeEmail = async (req, res) => {
       });
     }
 
-    res.json({ summary: result });
+    res.json({ summary: result, aiCredits, creditsResetAt });
   } catch (error) {
+    if (error.status === 402) {
+      return res.status(402).json({ error: error.message, creditsResetAt: error.creditsResetAt });
+    }
     res.status(500).json({ error: "Failed to summarize", details: error.message });
   }
 };
@@ -177,6 +221,8 @@ export const scheduleEvent = async (req, res) => {
     const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
     const now = new Date().toISOString();
+    
+    const userRecord = await checkCredits(userEmail);
 
     const completion = await getCompletion(
       openai,
@@ -210,11 +256,12 @@ export const scheduleEvent = async (req, res) => {
       0,
     );
 
-    let output = completion.choices[0].message.content.trim();
+    let output = (completion.choices[0]?.message?.content || "").trim();
     output = output.replace(/```json\n?|\n?```/g, "");
     
     try {
       const parsed = JSON.parse(output);
+      const { aiCredits, creditsResetAt } = await deductCredit(userRecord, 1);
 
       // Save to History if metadata is provided
       if (metadata && metadata.emailId) {
@@ -229,12 +276,15 @@ export const scheduleEvent = async (req, res) => {
         });
       }
 
-      res.json(parsed);
+      res.json({ ...parsed, aiCredits, creditsResetAt });
     } catch (parseErr) {
       console.error("Manual JSON Parse Error:", output, parseErr);
       res.status(500).json({ error: "AI returned invalid JSON format", details: output });
     }
   } catch (error) {
+    if (error.status === 402) {
+      return res.status(402).json({ error: error.message, creditsResetAt: error.creditsResetAt });
+    }
     res.status(500).json({ error: "Failed to extract schedule", details: error.message });
   }
 };
@@ -250,6 +300,21 @@ export const getHistory = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch history", details: error.message });
   }
 };
+
+// Feature: Get AI Credits
+export const getCredits = async (req, res) => {
+  const userEmail = req.user.email;
+  try {
+    const user = await checkCredits(userEmail);
+    res.json({ aiCredits: user.aiCredits, creditsResetAt: user.creditsResetAt });
+  } catch (error) {
+    if (error.status === 402) {
+      res.json({ aiCredits: 0, creditsResetAt: error.creditsResetAt });
+    } else {
+      res.status(500).json({ error: "Failed to fetch credits", details: error.message });
+    }
+  }
+};
 // Feature 5: Bulk Summarization
 export const summarizeBulk = async (req, res) => {
   const { emailIds } = req.body;
@@ -260,6 +325,7 @@ export const summarizeBulk = async (req, res) => {
   }
 
   try {
+    const userRecord = await checkCredits(userEmail);
     const authClient = await getClientForUser(userEmail);
     const gmail = google.gmail({ version: "v1", auth: authClient });
 
@@ -294,7 +360,8 @@ export const summarizeBulk = async (req, res) => {
       0.5,
     );
 
-    const bulkSummary = completion.choices[0].message.content.trim();
+    const bulkSummary = (completion.choices[0]?.message?.content || "").trim();
+    const { aiCredits, creditsResetAt } = await deductCredit(userRecord, 1);
 
     // Save to History as a bulk record
     await Summary.create({
@@ -307,8 +374,11 @@ export const summarizeBulk = async (req, res) => {
       type: "summary",
     });
 
-    res.json({ summary: bulkSummary });
+    res.json({ summary: bulkSummary, aiCredits, creditsResetAt });
   } catch (error) {
+    if (error.status === 402) {
+      return res.status(402).json({ error: error.message, creditsResetAt: error.creditsResetAt });
+    }
     console.error("Bulk Summary Error:", error);
     res.status(500).json({ error: "Failed to generate bulk summary", details: error.message });
   }
