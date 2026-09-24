@@ -15,6 +15,13 @@ const userSchema = new mongoose.Schema({
     token_type: String,
     expiry_date: Number,
   },
+  aiCredits: {
+    type: Number,
+    default: 50,
+  },
+  creditsResetAt: {
+    type: Date,
+  }
 }, {
   timestamps: true,
 });
