@@ -72,29 +72,85 @@ export const getOpenRouterClient = () => {
   });
 };
 
-// Locked to your specified Gemma model only
+// All available free models — spread load across all of them
 const MODELS = [
+  "meta-llama/llama-3.1-8b-instruct:free",
+  "poolside/laguna-xs-2.1:free",
+  "thinkingmachines/inkling-small:free",
+  "inclusionai/ling-3.0-flash-sante:free",
   "cohere/north-mini-code:free",
-  "google/gemma-2-27b-it", 
 ];
 
-// Completion handler
+// Round-robin index — distributes requests equally across all models
+let rrIndex = 0;
+
+// ─── Per-User Rate Limiter (in-memory) ───────────────────────────────────────
+// Tracks: { count: number, windowStart: Date, blockedUntil: Date | null }
+const userRateLimitMap = new Map();
+const RATE_LIMIT_MAX      = 5;          // max requests
+const RATE_LIMIT_WINDOW   = 5 * 60 * 1000; // 5-minute window
+const RATE_LIMIT_BLOCK    = 5 * 60 * 1000; // 5-minute cooldown
+
+export const checkUserRateLimit = (userEmail) => {
+  const now = Date.now();
+  let entry = userRateLimitMap.get(userEmail);
+
+  if (!entry) {
+    entry = { count: 0, windowStart: now, blockedUntil: null };
+    userRateLimitMap.set(userEmail, entry);
+  }
+
+  // Still blocked?
+  if (entry.blockedUntil && now < entry.blockedUntil) {
+    const remaining = Math.ceil((entry.blockedUntil - now) / 1000);
+    const error = new Error(`Too many requests. Please wait ${remaining} seconds before trying again.`);
+    error.status = 429;
+    error.retryAfter = entry.blockedUntil;
+    throw error;
+  }
+
+  // Reset window if expired
+  if (now - entry.windowStart > RATE_LIMIT_WINDOW) {
+    entry.count = 0;
+    entry.windowStart = now;
+    entry.blockedUntil = null;
+  }
+
+  // Increment and check
+  entry.count += 1;
+  if (entry.count > RATE_LIMIT_MAX) {
+    entry.blockedUntil = now + RATE_LIMIT_BLOCK;
+    const error = new Error(`You've made ${RATE_LIMIT_MAX} requests in 5 minutes. AI features are paused for 5 minutes to balance usage. Please try again later.`);
+    error.status = 429;
+    error.retryAfter = entry.blockedUntil;
+    throw error;
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Completion handler — Round-Robin across all models, fallback on failure
 export const getCompletion = async (
   openai,
   messages,
   temperature = 0.7,
 ) => {
   let lastError = null;
+  const startIndex = rrIndex % MODELS.length;
 
-  for (const model of MODELS) {
+  // Try all models starting from round-robin position
+  for (let i = 0; i < MODELS.length; i++) {
+    const idx = (startIndex + i) % MODELS.length;
+    const model = MODELS[idx];
     try {
-      console.log(`AI Strategy: Executing with ${model}...`);
+      console.log(`AI Strategy: Executing with ${model} (slot ${idx + 1}/${MODELS.length})...`);
       const response = await openai.chat.completions.create({
-        model: model,
+        model,
         messages,
         temperature,
         max_tokens: MAX_TOKENS,
       });
+      // Advance round-robin ONLY on success
+      rrIndex = (idx + 1) % MODELS.length;
       return response;
     } catch (error) {
       console.error(`AI Strategy: ${model} failed - ${error.message}`);
@@ -114,6 +170,9 @@ export const generateReply = async (req, res) => {
     return res.status(400).json({ error: "emailBody is required" });
 
   try {
+    // Rate limit check first
+    checkUserRateLimit(userEmail);
+
     const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
     
@@ -148,6 +207,9 @@ export const generateReply = async (req, res) => {
 
     res.json({ reply: result, aiCredits, creditsResetAt });
   } catch (error) {
+    if (error.status === 429) {
+      return res.status(429).json({ error: error.message, retryAfter: error.retryAfter });
+    }
     if (error.status === 402) {
       return res.status(402).json({ error: error.message, creditsResetAt: error.creditsResetAt });
     }
