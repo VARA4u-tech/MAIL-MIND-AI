@@ -210,6 +210,25 @@ const Dashboard: FC = () => {
     }
   }, []);
 
+  const handleDeleteHistory = async (id?: string) => {
+    if (!authToken) return;
+    try {
+      const url = `/api/ai/history${id ? `?id=${id}` : ''}`;
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        toast.success(id ? "Log deleted" : "History cleared");
+        fetchHistory();
+      } else {
+        toast.error("Failed to delete history");
+      }
+    } catch (e) {
+      toast.error("An error occurred");
+    }
+  };
+
   const fetchCredits = useCallback(async () => {
     if (!authToken) return;
     try {
@@ -1181,18 +1200,35 @@ const Dashboard: FC = () => {
 
                             {mode === "history" && (
                               <div className="space-y-4">
+                                {history.length > 0 && (
+                                  <div className="flex justify-between items-center mb-4 border-b border-primary/10 pb-2">
+                                    <span className="text-[10px] uppercase tracking-widest opacity-40">AI History Logs</span>
+                                    <button onClick={() => handleDeleteHistory()} className="text-[8px] uppercase tracking-widest text-red-500/70 hover:text-red-500 transition-colors flex items-center gap-1">
+                                      <Trash2 className="w-3 h-3" /> Clear All
+                                    </button>
+                                  </div>
+                                )}
                                 {loadingHistory ? (
                                   <div className="py-12 text-center opacity-20"><RefreshCcw className="w-6 h-6 animate-spin mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">Retrieving AI History...</p></div>
                                 ) : history.length === 0 ? (
                                   <div className="py-12 text-center opacity-20"><Inbox className="w-6 h-6 mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">No Logs Found</p></div>
                                 ) : (
                                   history.map((item) => (
-                                    <div key={item._id} className="p-3 border border-primary/10 bg-primary/[0.02] hover:bg-primary/[0.05] transition-colors group">
-                                      <div className="flex justify-between items-center mb-2">
-                                        <span className={`text-[7px] px-1.5 py-0.5 border border-primary/20 rounded-full uppercase tracking-widest ${item.type === 'summary' ? 'text-blue-400' : item.type === 'reply' ? 'text-green-400' : 'text-purple-400'}`}>{item.type}</span>
-                                        <span className="text-[7px] opacity-30">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                    <div key={item._id} className="p-3 border border-primary/10 bg-primary/[0.02] hover:bg-primary/[0.05] transition-colors group relative">
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className={`text-[7px] px-1.5 py-0.5 border border-primary/20 rounded-full uppercase tracking-widest ${item.type === 'summary' ? 'text-blue-400' : item.type === 'reply' ? 'text-green-400' : 'text-purple-400'}`}>{item.type}</span>
+                                          <span className="text-[7px] opacity-30">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <button 
+                                          onClick={() => handleDeleteHistory(item._id)} 
+                                          className="opacity-0 group-hover:opacity-100 p-1 text-primary/40 hover:text-red-500 transition-colors shrink-0"
+                                          title="Delete log"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
                                       </div>
-                                      <p className="text-[9px] font-bold truncate mb-1 opacity-80">{item.subject}</p>
+                                      <p className="text-[9px] font-bold truncate mb-1 opacity-80 pr-4">{item.subject}</p>
                                       <p className="text-[10px] leading-relaxed opacity-60 line-clamp-3 font-sans italic">"{item.aiResult}"</p>
                                     </div>
                                   ))
@@ -1285,18 +1321,34 @@ const Dashboard: FC = () => {
 
               {mode === "history" && (
                 <div className="space-y-4">
+                  {history.length > 0 && (
+                    <div className="flex justify-between items-center mb-4 border-b border-primary/10 pb-2">
+                      <span className="text-[10px] uppercase tracking-widest opacity-40">AI History Logs</span>
+                      <button onClick={() => handleDeleteHistory()} className="text-[8px] uppercase tracking-widest text-red-500/70 hover:text-red-500 transition-colors flex items-center gap-1">
+                        <Trash2 className="w-3 h-3" /> Clear All
+                      </button>
+                    </div>
+                  )}
                   {loadingHistory ? (
                     <div className="py-12 text-center opacity-20"><RefreshCcw className="w-6 h-6 animate-spin mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">Loading...</p></div>
                   ) : history.length === 0 ? (
                     <div className="py-12 text-center opacity-20"><Inbox className="w-6 h-6 mx-auto mb-2" /><p className="text-[8px] uppercase tracking-widest">No Logs</p></div>
                   ) : (
                     history.map((item) => (
-                      <div key={item._id} className="p-3 border border-primary/10 bg-primary/[0.02]">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[7px] uppercase tracking-widest text-primary/40">{item.type}</span>
-                          <span className="text-[7px] opacity-30">{new Date(item.createdAt).toLocaleDateString()}</span>
+                      <div key={item._id} className="p-3 border border-primary/10 bg-primary/[0.02] relative group">
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[7px] px-1.5 py-0.5 border border-primary/20 rounded-full uppercase tracking-widest ${item.type === 'summary' ? 'text-blue-400' : item.type === 'reply' ? 'text-green-400' : 'text-purple-400'}`}>{item.type}</span>
+                            <span className="text-[7px] opacity-30">{new Date(item.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteHistory(item._id)} 
+                            className="p-1 text-primary/40 hover:text-red-500 transition-colors shrink-0"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
-                        <p className="text-[9px] font-bold truncate opacity-80">{item.subject}</p>
+                        <p className="text-[9px] font-bold truncate opacity-80 pr-4">{item.subject}</p>
                         <p className="text-[10px] leading-relaxed opacity-60 line-clamp-2 font-sans italic">"{item.aiResult}"</p>
                       </div>
                     ))

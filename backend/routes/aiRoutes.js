@@ -1,5 +1,5 @@
 import express from 'express';
-import { generateReply, summarizeEmail, scheduleEvent, getHistory, summarizeBulk, getCredits } from '../controllers/aiController.js';
+import { generateReply, summarizeEmail, scheduleEvent, getHistory, deleteHistory, summarizeBulk, getCredits } from '../controllers/aiController.js';
 import protect from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -24,5 +24,6 @@ router.post('/schedule', scheduleEvent);
 
 // GET /api/ai/history
 router.get('/history', getHistory);
+router.delete('/history', deleteHistory);
 
 export default router;

@@ -367,6 +367,23 @@ export const getHistory = async (req, res) => {
   }
 };
 
+// Feature: Delete AI History
+export const deleteHistory = async (req, res) => {
+  const userEmail = req.user.email;
+  const { id } = req.query; // optional specific id
+
+  try {
+    if (id) {
+      await Summary.findOneAndDelete({ _id: id, userEmail });
+    } else {
+      await Summary.deleteMany({ userEmail });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete history", details: error.message });
+  }
+};
+
 // Feature: Get AI Credits
 export const getCredits = async (req, res) => {
   const userEmail = req.user.email;
