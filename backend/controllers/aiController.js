@@ -226,6 +226,9 @@ export const summarizeEmail = async (req, res) => {
     return res.status(400).json({ error: "emailBody is required" });
 
   try {
+    // Rate limit check first
+    checkUserRateLimit(userEmail);
+
     const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
     
@@ -264,6 +267,9 @@ export const summarizeEmail = async (req, res) => {
 
     res.json({ summary: result, aiCredits, creditsResetAt });
   } catch (error) {
+    if (error.status === 429) {
+      return res.status(429).json({ error: error.message, retryAfter: error.retryAfter });
+    }
     if (error.status === 402) {
       return res.status(402).json({ error: error.message, creditsResetAt: error.creditsResetAt });
     }
@@ -280,6 +286,9 @@ export const scheduleEvent = async (req, res) => {
     return res.status(400).json({ error: "emailBody is required" });
 
   try {
+    // Rate limit check first
+    checkUserRateLimit(userEmail);
+
     const openai = getOpenRouterClient();
     const cleanBody = truncateText(stripHtml(emailBody));
     const now = new Date().toISOString();
@@ -344,6 +353,9 @@ export const scheduleEvent = async (req, res) => {
       res.status(500).json({ error: "AI returned invalid JSON format", details: output });
     }
   } catch (error) {
+    if (error.status === 429) {
+      return res.status(429).json({ error: error.message, retryAfter: error.retryAfter });
+    }
     if (error.status === 402) {
       return res.status(402).json({ error: error.message, creditsResetAt: error.creditsResetAt });
     }
