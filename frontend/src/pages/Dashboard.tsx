@@ -102,6 +102,7 @@ const Dashboard: FC = () => {
     endDate: string;
   }
   const [rawSchedule, setRawSchedule] = useState<RawSchedule | null>(null);
+  const [showCustomDates, setShowCustomDates] = useState(false);
   const [isAISearching, setIsAISearching] = useState(false);
   const [aiSearchResults, setAiSearchResults] = useState<EmailMessage[] | null>(null);
   const [selectedEmailIds, setSelectedEmailIds] = useState<string[]>([]);
@@ -113,6 +114,13 @@ const Dashboard: FC = () => {
   const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1200);
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [activeTab, setActiveTab] = useState<MobileTab>("inbox");
+
+  const formatDatetimeForInput = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  };
   const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false); // Default closed on tablet/small screens
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -424,6 +432,7 @@ const Dashboard: FC = () => {
         if (data.error) setGenerated("AI could not detect a meeting.");
         else {
           setRawSchedule(data);
+          setShowCustomDates(false);
           const result = `📅 Event: ${data.title}\n📍 Location: ${data.location || 'To be confirmed'}\n📝 Note: ${data.description || 'No notes extracted'}`;
           setGenerated(result);
           setGeneratedOutputs(prev => ({ ...prev, schedule: result }));
@@ -1188,11 +1197,37 @@ const Dashboard: FC = () => {
                                   <button onClick={handleSendReply} disabled={sendingEmail || sendSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${sendSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>{sendingEmail ? 'Sending...' : sendSuccess ? 'Sent' : 'Send via Gmail'}</button>
                                 )}
                                 {mode === "schedule" && rawSchedule && (
-                                  <div className="flex gap-2">
-                                    <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className={`flex-1 py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${scheduleSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>
-                                      {scheduling ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Calendar className="w-3 h-3" />}
-                                      {scheduling ? 'Scheduling...' : scheduleSuccess ? 'Saved' : 'Save to Calendar'}
-                                    </button>
+                                  <div className="flex flex-col gap-2 mt-4">
+                                    {!showCustomDates ? (
+                                      <div className="flex gap-2">
+                                        <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className={`flex-1 py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${scheduleSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'hover:bg-primary hover:text-background'}`}>
+                                          {scheduling ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Calendar className="w-3 h-3" />}
+                                          {scheduling ? 'Scheduling...' : scheduleSuccess ? 'Saved' : 'Quick Save'}
+                                        </button>
+                                        <button onClick={() => setShowCustomDates(true)} className="px-4 py-4 border border-primary/40 text-[9px] uppercase tracking-widest text-primary hover:bg-primary hover:text-background transition-colors flex items-center justify-center gap-2" title="Customize Dates">
+                                          <Pencil className="w-3 h-3" /> Edit
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-3 p-3 border border-primary/20 bg-primary/[0.02]">
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[7px] uppercase tracking-widest opacity-60">Start Time</label>
+                                          <input type="datetime-local" value={formatDatetimeForInput(rawSchedule.startDate)} onChange={(e) => setRawSchedule({...rawSchedule, startDate: new Date(e.target.value).toISOString()})} className="bg-transparent border border-primary/20 p-2 text-[10px] outline-none w-full font-sans" />
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[7px] uppercase tracking-widest opacity-60">End Time</label>
+                                          <input type="datetime-local" value={formatDatetimeForInput(rawSchedule.endDate)} onChange={(e) => setRawSchedule({...rawSchedule, endDate: new Date(e.target.value).toISOString()})} className="bg-transparent border border-primary/20 p-2 text-[10px] outline-none w-full font-sans" />
+                                        </div>
+                                        <div className="flex gap-2 mt-2">
+                                          <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className="flex-1 py-3 bg-primary text-background text-[8px] uppercase tracking-widest font-bold">
+                                            {scheduling ? 'Saving...' : 'Save Event'}
+                                          </button>
+                                          <button onClick={() => setShowCustomDates(false)} className="py-3 px-4 border border-primary/40 text-[8px] uppercase tracking-widest hover:bg-primary/10">
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </motion.div>
@@ -1311,10 +1346,38 @@ const Dashboard: FC = () => {
                   )}
 
                   {mode === "schedule" && rawSchedule && (
-                    <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className={`w-full py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] flex items-center justify-center gap-3 ${scheduleSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-primary text-background'}`}>
-                      {scheduling ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Calendar className="w-3 h-3" />}
-                      {scheduling ? 'Scheduling...' : scheduleSuccess ? 'Saved' : 'Save to Calendar'}
-                    </button>
+                    <div className="flex flex-col gap-2 mt-4">
+                      {!showCustomDates ? (
+                        <div className="flex gap-2">
+                          <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className={`flex-1 py-4 border border-primary/40 text-[9px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${scheduleSuccess ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-primary text-background hover:bg-primary/90'}`}>
+                            {scheduling ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Calendar className="w-3 h-3" />}
+                            {scheduling ? 'Scheduling...' : scheduleSuccess ? 'Saved' : 'Quick Save'}
+                          </button>
+                          <button onClick={() => setShowCustomDates(true)} className="px-4 py-4 border border-primary text-[9px] uppercase tracking-widest text-primary hover:bg-primary hover:text-background transition-colors flex items-center justify-center gap-2" title="Customize Dates">
+                            <Pencil className="w-3 h-3" /> Edit
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 p-4 border border-primary/20 bg-primary/[0.02]">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[8px] uppercase tracking-widest opacity-60">Start Time</label>
+                            <input type="datetime-local" value={formatDatetimeForInput(rawSchedule.startDate)} onChange={(e) => setRawSchedule({...rawSchedule, startDate: new Date(e.target.value).toISOString()})} className="bg-transparent border border-primary/20 p-3 text-[12px] outline-none w-full font-sans" />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[8px] uppercase tracking-widest opacity-60">End Time</label>
+                            <input type="datetime-local" value={formatDatetimeForInput(rawSchedule.endDate)} onChange={(e) => setRawSchedule({...rawSchedule, endDate: new Date(e.target.value).toISOString()})} className="bg-transparent border border-primary/20 p-3 text-[12px] outline-none w-full font-sans" />
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <button onClick={handleScheduleToCalendar} disabled={scheduling || scheduleSuccess} className="flex-1 py-4 bg-primary text-background text-[10px] uppercase tracking-widest font-bold">
+                              {scheduling ? 'Saving...' : 'Save Event'}
+                            </button>
+                            <button onClick={() => setShowCustomDates(false)} className="py-4 px-5 border border-primary text-[10px] uppercase tracking-widest hover:bg-primary/10">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
