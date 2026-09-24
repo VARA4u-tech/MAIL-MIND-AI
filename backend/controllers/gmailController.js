@@ -64,7 +64,7 @@ export const getInbox = async (req, res) => {
       e.category = "Updates"; 
     });
 
-    res.json({ emails: emailDetails });
+    res.json({ emails: emailDetails, totalCount: listRes.data.resultSizeEstimate || emailDetails.length });
   } catch (error) {
     console.error('Get inbox error:', error.message);
     res.status(500).json({ error: 'Failed to fetch inbox', details: error.message });

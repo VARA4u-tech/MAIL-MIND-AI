@@ -113,6 +113,7 @@ const Dashboard: FC = () => {
   const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1200);
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [activeTab, setActiveTab] = useState<MobileTab>("inbox");
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false); // Default closed on tablet/small screens
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -170,6 +171,9 @@ const Dashboard: FC = () => {
       const data = JSON.parse(text);
       if (data.emails) {
         setEmails(data.emails);
+        if (data.totalCount !== undefined) {
+          setFolderCounts(prev => ({ ...prev, [label]: data.totalCount }));
+        }
         // Only update selected email on manual fetch, not background poll
         // Background polling updating selectedEmail causes Framer Motion removeChild crash
         if (!isBackgroundPoll && !isMobile) {
@@ -639,17 +643,17 @@ const Dashboard: FC = () => {
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
                {[
                  { icon: <LayoutDashboard className="w-4 h-4" />, label: "Home", id: "HOME" },
-                 { icon: <Inbox className="w-4 h-4" />, label: "Inbox", id: "INBOX", count: activeFolder === "INBOX" ? emails.length : undefined },
-                 { icon: <Star className="w-4 h-4" />, label: "Starred", id: "STARRED", count: activeFolder === "STARRED" ? emails.length : undefined },
-                 { icon: <Send className="w-4 h-4" />, label: "Sent", id: "SENT", count: activeFolder === "SENT" ? emails.length : undefined },
-                 { icon: <FileEdit className="w-4 h-4" />, label: "Drafts", id: "DRAFT", count: activeFolder === "DRAFT" ? emails.length : undefined },
-                 { icon: <Bookmark className="w-4 h-4" />, label: "Important", id: "IMPORTANT", count: activeFolder === "IMPORTANT" ? emails.length : undefined },
-                 { icon: <AlertOctagon className="w-4 h-4" />, label: "Spam", id: "SPAM", count: activeFolder === "SPAM" ? emails.length : undefined },
+                 { icon: <Inbox className="w-4 h-4" />, label: "Inbox", id: "INBOX", count: folderCounts["INBOX"] },
+                 { icon: <Star className="w-4 h-4" />, label: "Starred", id: "STARRED", count: folderCounts["STARRED"] },
+                 { icon: <Send className="w-4 h-4" />, label: "Sent", id: "SENT", count: folderCounts["SENT"] },
+                 { icon: <FileEdit className="w-4 h-4" />, label: "Drafts", id: "DRAFT", count: folderCounts["DRAFT"] },
+                 { icon: <Bookmark className="w-4 h-4" />, label: "Important", id: "IMPORTANT", count: folderCounts["IMPORTANT"] },
+                 { icon: <AlertOctagon className="w-4 h-4" />, label: "Spam", id: "SPAM", count: folderCounts["SPAM"] },
                  { icon: <Archive className="w-4 h-4" />, label: "Archive", id: "ARCHIVE" },
-                 { icon: <Trash2 className="w-4 h-4" />, label: "Trash", id: "TRASH", count: activeFolder === "TRASH" ? emails.length : undefined },
-                 { icon: <Bell className="w-4 h-4" />, label: "Updates", id: "CATEGORY_UPDATES", count: activeFolder === "CATEGORY_UPDATES" ? emails.length : undefined },
-                 { icon: <Tag className="w-4 h-4" />, label: "Promotions", id: "CATEGORY_PROMOTIONS", count: activeFolder === "CATEGORY_PROMOTIONS" ? emails.length : undefined },
-                 { icon: <Users className="w-4 h-4" />, label: "Social", id: "CATEGORY_SOCIAL", count: activeFolder === "CATEGORY_SOCIAL" ? emails.length : undefined },
+                 { icon: <Trash2 className="w-4 h-4" />, label: "Trash", id: "TRASH", count: folderCounts["TRASH"] },
+                 { icon: <Bell className="w-4 h-4" />, label: "Updates", id: "CATEGORY_UPDATES", count: folderCounts["CATEGORY_UPDATES"] },
+                 { icon: <Tag className="w-4 h-4" />, label: "Promotions", id: "CATEGORY_PROMOTIONS", count: folderCounts["CATEGORY_PROMOTIONS"] },
+                 { icon: <Users className="w-4 h-4" />, label: "Social", id: "CATEGORY_SOCIAL", count: folderCounts["CATEGORY_SOCIAL"] },
                ].map((item) => (
                  <button 
                    key={item.label} 
