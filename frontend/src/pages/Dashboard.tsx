@@ -153,7 +153,16 @@ const Dashboard: FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
     window.localStorage.removeItem(STORAGE_KEY + ':email');
     window.localStorage.removeItem(STORAGE_KEY + ':token');
     navigate('/');
@@ -166,8 +175,9 @@ const Dashboard: FC = () => {
     }
     try {
       const res = await fetch(`/api/gmail/inbox?label=${label}`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+          ...(window.localStorage.getItem(STORAGE_KEY + ':token') ? { 'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}` } : {}),
         }
       });
       if (res.status === 401) {
@@ -204,8 +214,9 @@ const Dashboard: FC = () => {
     setLoadingHistory(true);
     try {
       const res = await fetch(`/api/ai/history`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+          ...(window.localStorage.getItem(STORAGE_KEY + ':token') ? { 'Authorization': `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}` } : {}),
         }
       });
       if (!res.ok) throw new Error("Failed to fetch history");
@@ -224,7 +235,10 @@ const Dashboard: FC = () => {
       const url = `/api/ai/history${id ? `?id=${id}` : ''}`;
       const res = await fetch(url, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${authToken}` }
+        credentials: 'include',
+        headers: {
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        }
       });
       if (res.ok) {
         toast.success(id ? "Log deleted" : "History cleared");
@@ -241,7 +255,10 @@ const Dashboard: FC = () => {
     if (!authToken) return;
     try {
       const res = await fetch("/api/ai/credits", {
-        headers: { 'Authorization': `Bearer ${authToken}` }
+        credentials: 'include',
+        headers: {
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        }
       });
       if (res.ok) {
         const data = await res.json();
@@ -258,19 +275,23 @@ const Dashboard: FC = () => {
     const emailParam = params.get('email');
     const tokenParam = params.get('token');
     
-    if (emailParam && tokenParam) {
+    if (emailParam) {
       setUserEmail(emailParam);
-      setAuthToken(tokenParam);
       window.localStorage.setItem(STORAGE_KEY + ':email', emailParam);
-      window.localStorage.setItem(STORAGE_KEY + ':token', tokenParam);
+      if (tokenParam) {
+        setAuthToken(tokenParam);
+        window.localStorage.setItem(STORAGE_KEY + ':token', tokenParam);
+      }
       window.history.replaceState({}, document.title, window.location.pathname);
     } else {
       const savedEmail = window.localStorage.getItem(STORAGE_KEY + ':email');
       const savedToken = window.localStorage.getItem(STORAGE_KEY + ':token');
-      if (savedEmail && savedToken) {
+      if (savedEmail) {
         setUserEmail(savedEmail);
-        setAuthToken(savedToken);
-      } else navigate('/');
+        if (savedToken) setAuthToken(savedToken);
+      } else {
+        navigate('/');
+      }
     }
   }, [navigate]);
 
@@ -368,9 +389,10 @@ const Dashboard: FC = () => {
 
       const res = await fetch(endpoint, {
         method: "POST",
+        credentials: 'include',
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${authToken}`
+          ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify(payload)
       });
@@ -458,9 +480,10 @@ const Dashboard: FC = () => {
       const subject = selectedEmail.subject.toLowerCase().startsWith('re:') ? selectedEmail.subject : `Re: ${selectedEmail.subject}`;
       const res = await fetch("/api/gmail/send", {
         method: "POST",
+        credentials: 'include',
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${authToken}`
+          ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({ to: toEmail, subject, body: generated })
       });
@@ -481,9 +504,10 @@ const Dashboard: FC = () => {
     try {
       const res = await fetch("/api/calendar/create-event", {
         method: "POST",
+        credentials: 'include',
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${authToken}`
+          ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
           title: rawSchedule.title,
