@@ -54,15 +54,10 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
     // 1. Check URL for email (after Google redirect)
     const params = new URLSearchParams(window.location.search);
     const emailParam = params.get('email');
-    const tokenParam = params.get('token');
-    
+
     if (emailParam) {
       setUserEmail(emailParam);
       window.localStorage.setItem(STORAGE_KEY + ':email', emailParam);
-      if (tokenParam) {
-        window.localStorage.setItem(STORAGE_KEY + ':token', tokenParam);
-      }
-      // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname + '#playground');
     } else {
       // 2. Check local storage
@@ -84,8 +79,9 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
     const token = window.localStorage.getItem(STORAGE_KEY + ':token');
     try {
       const res = await fetch(`/api/gmail/inbox?email=${encodeURIComponent(email)}`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         }
       });
       
@@ -129,8 +125,18 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
     }, 2000);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
     window.localStorage.removeItem(STORAGE_KEY + ':email');
+    window.localStorage.removeItem(STORAGE_KEY + ':token');
     setUserEmail(null);
     setEmails([]);
     setSelectedEmail(null);
@@ -173,9 +179,10 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
 
        const res = await fetch(endpoint, {
          method: "POST",
+         credentials: 'include',
          headers: { 
            "Content-Type": "application/json",
-           "Authorization": `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}`
+           ...(window.localStorage.getItem(STORAGE_KEY + ':token') ? { "Authorization": `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}` } : {}),
          },
          body: JSON.stringify(payload)
        });
@@ -227,7 +234,11 @@ const Playground: FC<PlaygroundProps> = ({ previewOnly = false }) => {
 
       const res = await fetch("/api/gmail/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+          ...(window.localStorage.getItem(STORAGE_KEY + ':token') ? { "Authorization": `Bearer ${window.localStorage.getItem(STORAGE_KEY + ':token')}` } : {}),
+        },
         body: JSON.stringify({
           email: userEmail,
           to: toEmail,
