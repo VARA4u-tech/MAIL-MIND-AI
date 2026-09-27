@@ -3,10 +3,23 @@ import { google } from 'googleapis';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
+const jwtCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  path: '/',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 // Step 1: Redirect user to Google consent screen
 export const startAuth = (req, res) => {
   const authUrl = getAuthUrl();
   res.redirect(authUrl);
+};
+
+export const logout = (req, res) => {
+  res.clearCookie('jwt', { path: '/', httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+  return res.json({ success: true });
 };
 
 // Step 2: Handle the callback from Google after user consents
@@ -44,9 +57,10 @@ export const handleCallback = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // Redirect back to frontend with email and token in query string
+    // Store JWT in an HttpOnly cookie and redirect back without exposing it in the URL.
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    res.redirect(`${frontendUrl}/dashboard?email=${encodeURIComponent(userInfo.email)}&token=${token}`);
+    res.cookie('jwt', token, jwtCookieOptions);
+    res.redirect(`${frontendUrl}/dashboard?email=${encodeURIComponent(userInfo.email)}`);
   } catch (error) {
     console.error('Auth callback error:', error.message);
     res.status(500).json({ error: 'Failed to exchange code for tokens' });
