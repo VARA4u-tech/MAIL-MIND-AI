@@ -8,8 +8,12 @@ class SoundEngine {
   private ctx: AudioContext | null = null;
 
   private getContext() {
+    if (typeof window === 'undefined') return null;
+
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return null;
+
     if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioContextClass();
     }
     return this.ctx;
@@ -20,6 +24,7 @@ class SoundEngine {
    */
   playTick() {
     const ctx = this.getContext();
+    if (!ctx) return;
     if (ctx.state === 'suspended') ctx.resume();
 
     const osc = ctx.createOscillator();
@@ -44,6 +49,7 @@ class SoundEngine {
    */
   playSuccess() {
     const ctx = this.getContext();
+    if (!ctx) return;
     if (ctx.state === 'suspended') ctx.resume();
 
     const playNote = (freq: number, delay: number) => {
@@ -73,6 +79,7 @@ class SoundEngine {
    */
   playSweep() {
     const ctx = this.getContext();
+    if (!ctx) return;
     if (ctx.state === 'suspended') ctx.resume();
 
     const osc = ctx.createOscillator();
