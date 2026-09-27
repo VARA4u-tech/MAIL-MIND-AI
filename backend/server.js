@@ -16,6 +16,11 @@ connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const frontendOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+].filter(Boolean);
 
 // Security Firewall Middleware
 app.use(helmet()); // Sets various HTTP headers for security
@@ -29,7 +34,20 @@ const limiter = rateLimit({
 app.use('/api/', limiter); // Apply to all API routes
 
 // Standard Middleware
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || frontendOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Routes
