@@ -157,6 +157,6 @@ mail-mind-ai/
 ---
 
 <p align="center">
-  <b>Developed with Precision by VARA</b><br>
+  <b>Developed with Precision by VARA.</b><br>
   <i>"Transforming Information Overload into Actionable Clarity."</i>
 </p>
